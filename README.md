@@ -8,6 +8,7 @@ This README is based on the provided API reference:
 ## 1. Project Goal
 
 Build Flutter mobile apps that support:
+
 - Authentication and account basics
 - Find professionals and view profile information
 - Session-related flows (video/phone/chat)
@@ -66,11 +67,13 @@ Keep mobile scope intentionally smaller than the full web/back-office platform.
 Two session endpoints expected by mobile are missing as REST in current server behavior:
 
 1. Create session (call)
+
 - Expected equivalent: `POST /web/1.0/call/:typecall/:co_id`
 - `typecall`: `phone | video | chat`
 - Should return `se_id`
 
 2. Session status/wait
+
 - Expected equivalent: `GET /web/1.0/call/wait/:se_id` or `GET /web/1.0/session/:se_id`
 - Should return session state (`pending`, `inprogress`, `completed`, etc.)
 
@@ -122,6 +125,7 @@ Error example shape:
 Use `GET /web/1.0/video/:se_id/:co_id/accesstoken`.
 
 Response may include:
+
 - `provider` (`agora` or `twilio`)
 - `appId` (Agora)
 - `uid` (Agora)
@@ -179,6 +183,7 @@ Development can begin once you request implementation.
 ## Appendix: Endpoint Quick List
 
 ### Auth and Account
+
 - `POST /api/1.0/login`
 - `GET /web/1.0/user/infos`
 - `POST /web/1.0/account`
@@ -186,16 +191,19 @@ Development can begin once you request implementation.
 - `PUT /web/1.0/account/description/:co_id`
 
 ### Discovery and Availability
+
 - `GET /web/1.0/professionals`
 - `GET /web/1.0/professional/:co_id/infos`
 - `GET /web/1.0/professional/disponibilities`
 - `POST /web/1.0/disponibilities`
 
 ### Commercial
+
 - `GET /web/1.0/customer/pricing`
 - `POST /web/1.0/checkpromocode`
 
 ### History and Reviews
+
 - `GET /web/1.0/customer/history`
 - `GET /web/1.0/professional/history`
 - `GET /web/1.0/customer/reviews`
@@ -203,6 +211,7 @@ Development can begin once you request implementation.
 - `POST /web/1.0/review`
 
 ### Session, Video, Chat
+
 - `GET /web/1.0/video/:se_id/:co_id/accesstoken`
 - `POST /web/1.0/video/heartbeat/:se_id`
 - `GET /api/1.0/chat/groups`
@@ -211,4 +220,5 @@ Development can begin once you request implementation.
 - `GET /api/1.0/chat/image/:chme_id`
 
 ### Appointments
+
 - `POST /web/1.0/registration`
