@@ -85,26 +85,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     children: [
                       // ── Logo / Brand ──
                       Container(
-                        width: 80,
-                        height: 80,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppGradients.accent,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.rosePink.withValues(alpha: 0.35),
-                              blurRadius: 32,
-                              spreadRadius: 2,
+                              color: AppColors.rosePink.withValues(alpha: 0.2),
+                              blurRadius: 24,
+                              spreadRadius: 1,
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: 36,
+                        child: Image.asset(
+                          'assets/images/voyanz-logo.png',
+                          width: 120,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
                       Text(
                         'Voyanz',
                         style: GoogleFonts.jost(

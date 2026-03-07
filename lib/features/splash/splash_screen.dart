@@ -28,10 +28,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.deepIndigo,
       body: Center(
-        child: Icon(Icons.auto_awesome, size: 92, color: AppColors.rosePink),
+        child: Image.asset(
+          'assets/images/voyanz-logo.png',
+          width: 170,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }

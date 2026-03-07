@@ -19,12 +19,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _formKey = GlobalKey<FormState>();
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
+  final _displayNameCtrl = TextEditingController();
+  final _dobCtrl = TextEditingController();
+  final _countryCtrl = TextEditingController();
+  final _mobileCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   String _role = 'customer';
+  String _gender = 'other';
+  bool _acceptCgu = false;
+  bool _acceptCgs = false;
   bool _loading = false;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
+
+  static const _countries = [
+    'France',
+    'Belgium',
+    'Canada',
+    'Switzerland',
+    'United Kingdom',
+    'United States',
+    'Other',
+  ];
 
   @override
   void initState() {
@@ -42,20 +60,56 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _fadeCtrl.dispose();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
+    _displayNameCtrl.dispose();
+    _dobCtrl.dispose();
+    _countryCtrl.dispose();
+    _mobileCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final initialDate = DateTime(now.year - 25, now.month, now.day);
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(now.year - 13, now.month, now.day),
+    );
+    if (date == null) return;
+
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    _dobCtrl.text = '${date.year}-$month-$day';
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_acceptCgu || !_acceptCgs) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept CGU and CGS to continue.')),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
     try {
       await ref.read(accountRepositoryProvider).createAccount({
         'co_first_name': _firstNameCtrl.text.trim(),
         'co_last_name': _lastNameCtrl.text.trim(),
+        'co_display_name': _displayNameCtrl.text.trim(),
+        'co_gender': _gender,
+        'co_birth_date': _dobCtrl.text.trim(),
+        'co_country': _countryCtrl.text.trim(),
+        'co_mobile': _mobileCtrl.text.trim(),
         'co_email': _emailCtrl.text.trim(),
         'co_password': _passwordCtrl.text,
+        'co_password_confirmation': _confirmPasswordCtrl.text,
+        'co_accept_cgu': _acceptCgu,
+        'co_accept_cgs': _acceptCgs,
         'co_role': _role,
       });
       if (mounted) {
@@ -97,6 +151,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.rosePink.withValues(alpha: 0.2),
+                            blurRadius: 24,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/voyanz-logo.png',
+                        width: 112,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     Text(
                       'Create Account',
                       style: GoogleFonts.jost(
@@ -140,6 +211,35 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   setState(() => _role = v.first),
                             ),
                             const SizedBox(height: 24),
+                            Text(
+                              'I identify as',
+                              style: GoogleFonts.montserrat(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SegmentedButton<String>(
+                              segments: const [
+                                ButtonSegment(
+                                  value: 'male',
+                                  label: Text('Male'),
+                                ),
+                                ButtonSegment(
+                                  value: 'female',
+                                  label: Text('Female'),
+                                ),
+                                ButtonSegment(
+                                  value: 'other',
+                                  label: Text('Other'),
+                                ),
+                              ],
+                              selected: {_gender},
+                              onSelectionChanged: (v) =>
+                                  setState(() => _gender = v.first),
+                            ),
+                            const SizedBox(height: 16),
                             Row(
                               children: [
                                 Expanded(
@@ -171,6 +271,65 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
+                              controller: _displayNameCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Display name',
+                                prefixIcon: Icon(Icons.badge_outlined),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              validator: (v) =>
+                                  (v == null || v.isEmpty) ? 'Required' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _dobCtrl,
+                              readOnly: true,
+                              onTap: _pickBirthDate,
+                              decoration: const InputDecoration(
+                                labelText: 'Date of birth',
+                                hintText: 'YYYY-MM-DD',
+                                prefixIcon: Icon(Icons.cake_outlined),
+                                suffixIcon: Icon(Icons.calendar_month_outlined),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              validator: (v) =>
+                                  (v == null || v.isEmpty) ? 'Required' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              initialValue: null,
+                              decoration: const InputDecoration(
+                                labelText: 'Country',
+                                prefixIcon: Icon(Icons.flag_outlined),
+                              ),
+                              items: _countries
+                                  .map(
+                                    (c) => DropdownMenuItem<String>(
+                                      value: c,
+                                      child: Text(c),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                _countryCtrl.text = value ?? '';
+                              },
+                              validator: (_) =>
+                                  _countryCtrl.text.isEmpty ? 'Required' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _mobileCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Mobile',
+                                prefixIcon: Icon(Icons.phone_outlined),
+                              ),
+                              keyboardType: TextInputType.phone,
+                              textInputAction: TextInputAction.next,
+                              validator: (v) =>
+                                  (v == null || v.isEmpty) ? 'Required' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
                               controller: _emailCtrl,
                               decoration: const InputDecoration(
                                 labelText: 'Email',
@@ -189,10 +348,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 prefixIcon: Icon(Icons.lock_outline),
                               ),
                               obscureText: true,
-                              textInputAction: TextInputAction.done,
+                              textInputAction: TextInputAction.next,
                               validator: (v) => (v != null && v.length >= 6)
                                   ? null
                                   : 'Min 6 characters',
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _confirmPasswordCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Confirm password',
+                                prefixIcon: Icon(Icons.lock_outline),
+                              ),
+                              obscureText: true,
+                              textInputAction: TextInputAction.done,
+                              validator: (v) => v == _passwordCtrl.text
+                                  ? null
+                                  : 'Passwords do not match',
+                            ),
+                            const SizedBox(height: 14),
+                            CheckboxListTile(
+                              value: _acceptCgu,
+                              onChanged: (v) =>
+                                  setState(() => _acceptCgu = v ?? false),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                'I accept the Terms of Use (CGU)',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            CheckboxListTile(
+                              value: _acceptCgs,
+                              onChanged: (v) =>
+                                  setState(() => _acceptCgs = v ?? false),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                'I accept the Terms of Service (CGS)',
+                                style: GoogleFonts.montserrat(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 28),
                             GradientButton(
