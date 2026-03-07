@@ -12,23 +12,29 @@ import 'package:voyanz/features/reviews/screens/history_screen.dart';
 import 'package:voyanz/features/reviews/screens/reviews_screen.dart';
 import 'package:voyanz/features/reviews/screens/pricing_screen.dart';
 import 'package:voyanz/features/home/home_screen.dart';
+import 'package:voyanz/features/splash/splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final loggedIn = authState.valueOrNull != null;
+      final isSplashRoute = state.matchedLocation == '/splash';
       final isAuthRoute =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
+      if (isSplashRoute) return null;
       if (!loggedIn && !isAuthRoute) return '/login';
       if (loggedIn && isAuthRoute) return '/home';
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
