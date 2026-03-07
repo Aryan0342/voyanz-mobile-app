@@ -25,7 +25,7 @@ class ApiClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           if (EnvConfig.current.apiKey != null)
-            'ApiKey': EnvConfig.current.apiKey,
+            'x-api-key': EnvConfig.current.apiKey,
         },
       ),
     );

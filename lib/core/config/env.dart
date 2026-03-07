@@ -11,21 +11,23 @@ class EnvConfig {
     this.apiKey,
   });
 
-  /// TODO: Replace placeholder URLs when Visioco provides them.
   static const dev = EnvConfig(
     environment: Environment.dev,
-    baseUrl: 'https://dev.visioco.co',
+    baseUrl: 'https://voyanz.com',
+    apiKey: '7645ED1A-235F-459E-8E63-8178078927A3',
   );
 
   static const staging = EnvConfig(
     environment: Environment.staging,
-    baseUrl: 'https://staging.visioco.co',
+    baseUrl: 'https://voyanz.com',
+    apiKey: '7645ED1A-235F-459E-8E63-8178078927A3',
   );
 
   static const prod = EnvConfig(
     environment: Environment.prod,
-    baseUrl: 'https://voyanz.visioco.co',
+    baseUrl: 'https://voyanz.com',
+    apiKey: '7645ED1A-235F-459E-8E63-8178078927A3',
   );
 
-  static EnvConfig current = dev;
+  static EnvConfig current = prod;
 }
