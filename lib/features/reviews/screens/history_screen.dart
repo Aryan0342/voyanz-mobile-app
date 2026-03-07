@@ -246,96 +246,106 @@ class _SessionCard extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(18),
-      child: Row(
+      child: Column(
         children: [
-          // Icon container
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: _statusGradient(status),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: _statusColor(status).withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(_statusIcon(status), color: Colors.white, size: 26),
-          ),
-          const SizedBox(width: 16),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  type,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      duration,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Icon(
-                      Icons.calendar_today,
-                      size: 13,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        date,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
+          Row(
+            children: [
+              // Icon container
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: _statusGradient(status),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _statusColor(status).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Icon(_statusIcon(status), color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: 16),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      type,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          duration,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Status badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _statusColor(status).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _statusColor(status).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  status,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _statusColor(status),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (date.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: AppColors.textMuted,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  date,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                  ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          // Status badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _statusColor(status).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _statusColor(status).withValues(alpha: 0.3),
-              ),
-            ),
-            child: Text(
-              status,
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _statusColor(status),
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
