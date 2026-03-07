@@ -302,9 +302,11 @@ class ProfileScreen extends ConsumerWidget {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
-                        ref.read(authStateProvider.notifier).logout();
-                        context.go('/login');
+                      onTap: () async {
+                        await ref.read(authStateProvider.notifier).logout();
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Padding(
