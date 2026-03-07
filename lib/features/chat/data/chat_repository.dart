@@ -53,7 +53,10 @@ class ChatRepository {
     return _ds.getMessages(chgrId);
   }
 
-  Future<void> sendMessage({required String chgrId, required String content}) async {
+  Future<void> sendMessage({
+    required String chgrId,
+    required String content,
+  }) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 250));
       return;
