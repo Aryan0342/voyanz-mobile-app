@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/routing/router.dart';
+import 'package:voyanz/core/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0xFF160F36),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   runApp(const ProviderScope(child: VoyanzApp()));
 }
 
@@ -16,16 +27,9 @@ class VoyanzApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Voyanz',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6750A4),
-        useMaterial3: true,
-        brightness: Brightness.light,
-      ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6750A4),
-        useMaterial3: true,
-        brightness: Brightness.dark,
-      ),
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
     );
   }

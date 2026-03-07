@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
 class ReviewsScreen extends ConsumerWidget {
@@ -14,39 +16,110 @@ class ReviewsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reviews')),
+      appBar: AppBar(
+        title: Text(
+          'Reviews',
+          style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: reviewsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.rosePink),
+        ),
+        error: (e, _) => Center(
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('No reviews yet.'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.star_outline,
+                    size: 64,
+                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No reviews yet',
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textMuted,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
           return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             itemCount: items.length,
             itemBuilder: (_, i) {
               final r = items[i] as Map<String, dynamic>;
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Padding(
+              final rating =
+                  double.tryParse(r['re_rating']?.toString() ?? '') ?? 0;
+              final comment = r['re_comment']?.toString() ?? '';
+              final date = r['re_date']?.toString() ?? '';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
                   padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.mediumPurple.withValues(alpha: 0.12),
+                    ),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 18),
-                          const SizedBox(width: 4),
-                          Text(r['re_rating']?.toString() ?? '-'),
+                          ...List.generate(5, (j) {
+                            return Icon(
+                              j < rating.round()
+                                  ? Icons.star
+                                  : Icons.star_outline,
+                              size: 16,
+                              color: AppColors.rosePink,
+                            );
+                          }),
+                          const SizedBox(width: 8),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                           const Spacer(),
                           Text(
-                            r['re_date']?.toString() ?? '',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            date,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 11,
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(r['re_comment']?.toString() ?? ''),
+                      if (comment.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          comment,
+                          style: GoogleFonts.lora(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
