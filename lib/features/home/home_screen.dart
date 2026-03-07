@@ -47,7 +47,7 @@ class HomeShell extends StatelessWidget {
       case 3:
         context.go('/reviews');
       case 4:
-        context.go('/pricing');
+        context.go('/profile');
     }
   }
 
@@ -94,89 +94,289 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
+    final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+    final email = user?.email ?? '';
+    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return GradientScaffold(
-      appBar: AppBar(title: const Text('Profile')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              // ── Avatar ──
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppGradients.accent,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.rosePink.withValues(alpha: 0.3),
-                      blurRadius: 24,
+        child: CustomScrollView(
+          slivers: [
+            // ── Header with avatar ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    // Avatar
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppGradients.accent,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.rosePink.withValues(alpha: 0.4),
+                            blurRadius: 32,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.jost(
+                            fontSize: 44,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Name
+                    Text(
+                      name.isEmpty ? 'Guest User' : name,
+                      style: GoogleFonts.jost(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (email.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        email,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            // ── Stats cards ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.history,
+                        value: '12',
+                        label: 'Sessions',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.star,
+                        value: '4.8',
+                        label: 'Rating',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.access_time,
+                        value: '6h',
+                        label: 'Total Time',
+                      ),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: Text(
-                    (user?.firstName?.isNotEmpty == true)
-                        ? user!.firstName![0].toUpperCase()
-                        : '?',
-                    style: GoogleFonts.jost(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              ),
+            ),
+            // ── Menu section ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+                child: Text(
+                  'Settings',
+                  style: GoogleFonts.jost(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _ProfileTile(
+                      icon: Icons.person_outline,
+                      title: 'Edit Profile',
+                      subtitle: 'Update your information',
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.notifications_outlined,
+                      title: 'Notifications',
+                      subtitle: 'Manage preferences',
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.payment_outlined,
+                      title: 'Payment Methods',
+                      subtitle: 'Cards and billing',
+                      onTap: () => context.push('/pricing'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // ── Support section ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                child: Text(
+                  'Support',
+                  style: GoogleFonts.jost(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _ProfileTile(
+                      icon: Icons.help_outline,
+                      title: 'Help Center',
+                      subtitle: 'FAQs and guides',
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy Policy',
+                      subtitle: 'Read our terms',
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.info_outline,
+                      title: 'About Voyanz',
+                      subtitle: 'Version 1.0.0',
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // ── Logout button ──
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.error,
+                        AppColors.error.withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.error.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(authStateProvider.notifier).logout();
+                        context.go('/login');
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.logout,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Log Out',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                '${user?.firstName ?? ''} ${user?.lastName ?? ''}',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              if (user?.email != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  user!.email!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-              const SizedBox(height: 32),
-
-              // ── Menu cards ──
-              _ProfileTile(
-                icon: Icons.settings_outlined,
-                title: 'Settings',
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ProfileTile(
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                onTap: () {},
-              ),
-              const SizedBox(height: 12),
-              _ProfileTile(
-                icon: Icons.info_outline,
-                title: 'About Voyanz',
-                onTap: () {},
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ref.read(authStateProvider.notifier).logout();
-                    context.go('/login');
-                  },
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Log Out'),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _StatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.rosePink, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.jost(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -185,25 +385,66 @@ class ProfileScreen extends ConsumerWidget {
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const _ProfileTile({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: EdgeInsets.zero,
-      borderRadius: BorderRadius.circular(14),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.rosePink),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: AppGradients.accent.scale(0.3),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: AppColors.rosePink, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

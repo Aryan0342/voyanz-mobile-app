@@ -16,11 +16,13 @@ class ChatMessagesScreen extends ConsumerStatefulWidget {
 
 class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   final _msgCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
   bool _sending = false;
 
   @override
   void dispose() {
     _msgCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -36,9 +38,12 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       ref.invalidate(chatMessagesProvider(widget.chgrId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -52,15 +57,51 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceDark.withValues(alpha: 0.92),
-        title: Text(
-          'Conversation',
-          style: GoogleFonts.jost(fontSize: 20, fontWeight: FontWeight.w600),
+        backgroundColor: AppColors.deepIndigo.withValues(alpha: 0.95),
+        elevation: 0,
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppGradients.accent,
+              ),
+              child: const Icon(Icons.person, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Conversation',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Active now',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),
@@ -72,80 +113,75 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                   child: CircularProgressIndicator(color: AppColors.rosePink),
                 ),
                 error: (e, _) => Center(
-                  child: Text(
-                    'Error: $e',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load messages',
+                        style: GoogleFonts.montserrat(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 data: (messages) {
                   if (messages.isEmpty) {
                     return Center(
-                      child: Text(
-                        'No messages yet',
-                        style: GoogleFonts.montserrat(
-                          color: AppColors.textMuted,
-                          fontSize: 15,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppGradients.accent.scale(0.3),
+                            ),
+                            child: const Icon(
+                              Icons.chat,
+                              size: 36,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'No messages yet',
+                            style: GoogleFonts.jost(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Start the conversation!',
+                            style: GoogleFonts.montserrat(
+                              color: AppColors.textMuted,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
                   return ListView.builder(
+                    controller: _scrollCtrl,
                     reverse: true,
-                    padding: const EdgeInsets.fromLTRB(16, 100, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
                     itemCount: messages.length,
                     itemBuilder: (_, i) {
                       final msg = messages[messages.length - 1 - i];
+                      final isMe = msg.senderName == 'You'; // Mock check
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 4,
-                                bottom: 4,
-                              ),
-                              child: Text(
-                                msg.senderName ?? 'Unknown',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.rosePink,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceCard.withValues(
-                                  alpha: 0.8,
-                                ),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(4),
-                                  topRight: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
-                                border: Border.all(
-                                  color: AppColors.mediumPurple.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                msg.content ?? '',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  color: AppColors.textPrimary,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _MessageBubble(message: msg, isMe: isMe),
                       );
                     },
                   );
@@ -154,65 +190,87 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             ),
             // ── Message input ──
             Container(
-              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
               decoration: BoxDecoration(
-                color: AppColors.surfaceDark,
+                color: AppColors.deepIndigo.withValues(alpha: 0.95),
                 border: Border(
                   top: BorderSide(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.12),
+                    color: AppColors.mediumPurple.withValues(alpha: 0.2),
+                    width: 1,
                   ),
                 ),
               ),
               child: SafeArea(
                 top: false,
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _msgCtrl,
-                        style: GoogleFonts.montserrat(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Type a message…',
-                          filled: true,
-                          fillColor: AppColors.surfaceCard,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(
-                              color: AppColors.rosePink,
-                              width: 1,
+                      child: Container(
+                        constraints: const BoxConstraints(maxHeight: 120),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceCard.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: AppColors.mediumPurple.withValues(
+                              alpha: 0.2,
                             ),
                           ),
                         ),
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _send(),
+                        child: TextField(
+                          controller: _msgCtrl,
+                          maxLines: null,
+                          textInputAction: TextInputAction.newline,
+                          style: GoogleFonts.montserrat(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Type your message...',
+                            hintStyle: GoogleFonts.montserrat(
+                              color: AppColors.textMuted,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            border: InputBorder.none,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: AppGradients.accent,
+                        gradient: _sending
+                            ? LinearGradient(
+                                colors: [
+                                  AppColors.mediumPurple.withValues(alpha: 0.5),
+                                  AppColors.darkPurple.withValues(alpha: 0.5),
+                                ],
+                              )
+                            : AppGradients.accent,
+                        boxShadow: _sending
+                            ? []
+                            : [
+                                BoxShadow(
+                                  color: AppColors.rosePink.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                       ),
                       child: IconButton(
                         onPressed: _sending ? null : _send,
-                        icon: const Icon(Icons.send, size: 20),
+                        icon: Icon(
+                          _sending ? Icons.hourglass_empty : Icons.send_rounded,
+                          size: 20,
+                        ),
                         color: Colors.white,
                       ),
                     ),
@@ -223,6 +281,98 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  final dynamic message;
+  final bool isMe;
+
+  const _MessageBubble({required this.message, required this.isMe});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (!isMe) ...[
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppGradients.accent,
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 8),
+        ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              if (!isMe)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 6),
+                  child: Text(
+                    message.senderName ?? 'Unknown',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.rosePink,
+                    ),
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isMe ? AppGradients.accent : null,
+                  color: isMe
+                      ? null
+                      : AppColors.surfaceCard.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(isMe ? 20 : 4),
+                    topRight: Radius.circular(isMe ? 4 : 20),
+                    bottomLeft: const Radius.circular(20),
+                    bottomRight: const Radius.circular(20),
+                  ),
+                  border: isMe
+                      ? null
+                      : Border.all(
+                          color: AppColors.mediumPurple.withValues(alpha: 0.15),
+                        ),
+                  boxShadow: isMe
+                      ? [
+                          BoxShadow(
+                            color: AppColors.rosePink.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Text(
+                  message.content ?? '',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 15,
+                    color: isMe ? Colors.white : AppColors.textPrimary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (isMe) const SizedBox(width: 40),
+        if (!isMe) const SizedBox(width: 40),
+      ],
     );
   }
 }

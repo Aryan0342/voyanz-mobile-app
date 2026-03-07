@@ -73,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/pricing',
             builder: (context, state) => const PricingScreen(),
           ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
         ],
       ),
       GoRoute(

@@ -4,126 +4,326 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 
-class ChatGroupsScreen extends ConsumerWidget {
+class ChatGroupsScreen extends ConsumerStatefulWidget {
   const ChatGroupsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatGroupsScreen> createState() => _ChatGroupsScreenState();
+}
+
+class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final groupsAsync = ref.watch(chatGroupsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Conversations',
-          style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: groupsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.rosePink),
-        ),
-        error: (e, _) => Center(
-          child: Text(
-            'Error: $e',
-            style: const TextStyle(color: AppColors.textSecondary),
+    return GradientScaffold(
+      body: SafeArea(
+        child: groupsAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.rosePink),
           ),
-        ),
-        data: (groups) {
-          if (groups.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 64,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No conversations yet',
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textMuted,
-                      fontSize: 16,
+          error: (e, _) => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load conversations',
+                  style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          data: (groups) {
+            if (groups.isEmpty) {
+              return _EmptyState();
+            }
+
+            final searchQuery = _searchCtrl.text.toLowerCase();
+            final filtered = searchQuery.isEmpty
+                ? groups
+                : groups.where((g) {
+                    final name = (g.otherUserName ?? g.name ?? '')
+                        .toLowerCase();
+                    return name.contains(searchQuery);
+                  }).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(chatGroupsProvider);
+              },
+              child: CustomScrollView(
+                slivers: [
+                  // ── Header with title ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                      child: Text(
+                        'Messages',
+                        style: GoogleFonts.jost(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            itemCount: groups.length,
-            separatorBuilder: (context, index) => Divider(
-              color: AppColors.mediumPurple.withValues(alpha: 0.1),
-              height: 1,
-              indent: 72,
-            ),
-            itemBuilder: (_, i) {
-              final g = groups[i];
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 6,
-                ),
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppGradients.accent,
-                  ),
-                  child: g.otherUserAvatar != null
-                      ? ClipOval(
-                          child: Image.network(
-                            g.otherUserAvatar!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) => Center(
-                              child: Icon(
-                                Icons.person,
-                                color: Colors.white.withValues(alpha: 0.8),
+                  // ── Search bar ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        style: GoogleFonts.montserrat(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Search conversations...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.textMuted,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.surfaceCard.withValues(
+                            alpha: 0.6,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: AppColors.mediumPurple.withValues(
+                                alpha: 0.15,
                               ),
                             ),
                           ),
-                        )
-                      : Center(
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white.withValues(alpha: 0.8),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(
+                              color: AppColors.rosePink,
+                              width: 1.5,
+                            ),
                           ),
                         ),
-                ),
-                title: Text(
-                  g.otherUserName ?? g.name ?? 'Chat',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
                   ),
-                ),
-                subtitle: g.lastMessage != null
-                    ? Text(
-                        g.lastMessage!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          color: AppColors.textMuted,
+                  // ── Conversations list ──
+                  if (filtered.isEmpty)
+                    SliverFillRemaining(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 56,
+                              color: AppColors.textMuted.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No conversations found',
+                              style: GoogleFonts.montserrat(
+                                color: AppColors.textMuted,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
                         ),
-                      )
-                    : null,
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textMuted,
-                  size: 20,
-                ),
-                onTap: () => context.push('/chat/${g.chgrId}'),
-              );
-            },
-          );
-        },
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      sliver: SliverList.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, i) {
+                          final g = filtered[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _ConversationCard(
+                              group: g,
+                              onTap: () => context.push('/chat/${g.chgrId}'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ConversationCard extends StatelessWidget {
+  final dynamic group;
+  final VoidCallback onTap;
+
+  const _ConversationCard({required this.group, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppGradients.accent,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.rosePink.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: group.otherUserAvatar != null
+                  ? ClipOval(
+                      child: Image.network(
+                        group.otherUserAvatar!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => const Center(
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.person, color: Colors.white, size: 28),
+                    ),
+            ),
+            const SizedBox(width: 16),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.otherUserName ?? group.name ?? 'Chat',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (group.lastMessage != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      group.lastMessage!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: AppColors.textMuted,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Arrow
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.mediumPurple.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: AppColors.rosePink,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppGradients.accent.scale(0.3),
+            ),
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              size: 56,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No Conversations Yet',
+            style: GoogleFonts.jost(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 48),
+            child: Text(
+              'Start a conversation with an advisor\nfrom the Explore tab',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: AppColors.textMuted,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
