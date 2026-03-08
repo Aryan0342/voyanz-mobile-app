@@ -28,6 +28,20 @@ class Professional {
     for (final key in keys) {
       final value = json[key];
       if (value == null) continue;
+
+      if (value is Map<String, dynamic>) {
+        final nested =
+            value['url'] ??
+            value['src'] ??
+            value['path'] ??
+            value['value'] ??
+            value['original'];
+        if (nested != null) {
+          final nestedText = nested.toString().trim();
+          if (nestedText.isNotEmpty) return nestedText;
+        }
+      }
+
       final text = value.toString().trim();
       if (text.isNotEmpty) return text;
     }
@@ -74,7 +88,15 @@ class Professional {
       coId: json['co_id']?.toString() ?? '',
       firstName: firstName,
       lastName: lastName,
-      avatar: _readString(json, ['co_avatar', 'co_photo', 'co_picture']),
+      avatar: _readString(json, [
+        'co_avatar',
+        'co_avatar_url',
+        'co_photo',
+        'co_picture',
+        'co_picture_url',
+        'co_image',
+        'co_photo_url',
+      ]),
       specialty: _readString(json, [
         'co_specialty',
         'co_subtype',
@@ -125,8 +147,12 @@ class ProfessionalDetail extends Professional {
       ]),
       avatar: Professional._readString(json, [
         'co_avatar',
+        'co_avatar_url',
         'co_photo',
         'co_picture',
+        'co_picture_url',
+        'co_image',
+        'co_photo_url',
       ]),
       specialty: Professional._readString(json, [
         'co_specialty',

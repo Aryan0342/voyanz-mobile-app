@@ -2,10 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+
+String? _resolveImageUrl(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return null;
+
+  final value = raw.trim();
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+
+  final base = EnvConfig.current.baseUrl;
+  if (value.startsWith('//')) {
+    final scheme = Uri.parse(base).scheme;
+    return '$scheme:$value';
+  }
+
+  final normalizedPath = value.startsWith('/') ? value : '/$value';
+  return '$base$normalizedPath';
+}
+
+String _profileImageUrl({String? rawAvatar, required String seed}) {
+  final resolved = _resolveImageUrl(rawAvatar);
+  if (resolved != null) return resolved;
+
+  // Backend currently returns empty avatar for many professionals.
+  // Use deterministic fallback photo so each profile keeps a stable image.
+  final encodedSeed = Uri.encodeComponent(seed);
+  return 'https://i.pravatar.cc/300?u=voyanz-$encodedSeed';
+}
 
 class ProfessionalsListScreen extends ConsumerStatefulWidget {
   const ProfessionalsListScreen({super.key});
@@ -279,6 +308,7 @@ class _ProfessionalsListScreenState
                           i == filteredPros.length - 1 ? 24 : 0,
                         ),
                         child: _ProfessionalCard(
+                          coId: pro.coId,
                           name: pro.displayName,
                           specialty: pro.specialty,
                           avatarUrl: pro.avatar,
@@ -402,6 +432,13 @@ class _FeaturedProfessionalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _profileImageUrl(
+      rawAvatar: professional.avatar,
+      seed: professional.coId.isNotEmpty
+          ? professional.coId
+          : professional.displayName,
+    );
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -424,16 +461,13 @@ class _FeaturedProfessionalCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: AppGradients.accent,
               ),
-              child: professional.avatar != null
-                  ? ClipOval(
-                      child: Image.network(
-                        professional.avatar!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) =>
-                            _avatarInitial(),
-                      ),
-                    )
-                  : _avatarInitial(),
+              child: ClipOval(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => _avatarInitial(),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -544,6 +578,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ProfessionalCard extends StatelessWidget {
+  final String coId;
   final String name;
   final String? specialty;
   final String? avatarUrl;
@@ -553,6 +588,7 @@ class _ProfessionalCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ProfessionalCard({
+    required this.coId,
     required this.name,
     this.specialty,
     this.avatarUrl,
@@ -564,6 +600,11 @@ class _ProfessionalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _profileImageUrl(
+      rawAvatar: avatarUrl,
+      seed: coId.isNotEmpty ? coId : name,
+    );
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -590,16 +631,13 @@ class _ProfessionalCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: AppGradients.accent,
                     ),
-                    child: avatarUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              avatarUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  _initials(),
-                            ),
-                          )
-                        : _initials(),
+                    child: ClipOval(
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => _initials(),
+                      ),
+                    ),
                   ),
                   Positioned(
                     bottom: 2,
