@@ -18,6 +18,9 @@ class Professional {
   final bool isRecommended;
   final bool isFavorite;
   final int? experienceYears;
+  final bool isVerified;
+  final bool isAvailableNow;
+  final String? availabilityText;
 
   const Professional({
     required this.coId,
@@ -39,6 +42,9 @@ class Professional {
     this.isRecommended = false,
     this.isFavorite = false,
     this.experienceYears,
+    this.isVerified = false,
+    this.isAvailableNow = false,
+    this.availabilityText,
   });
 
   String get displayName =>
@@ -93,6 +99,10 @@ class Professional {
         final normalized = value.toLowerCase().trim();
         if (normalized == 'true' || normalized == '1') return true;
         if (normalized == 'false' || normalized == '0') return false;
+        // Check for timestamp fields (co_profile_verified_at, etc.)
+        if (normalized.isNotEmpty && normalized != '0000-00-00 00:00:00') {
+          return true;
+        }
       }
     }
     return null;
@@ -246,6 +256,9 @@ class Professional {
           _readBool(json, ['co_recommended', 'recommended']) ?? false,
       isFavorite: _readBool(json, ['co_favorite', 'favorite']) ?? false,
       experienceYears: _readExperienceYears(json),
+      isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
+      isAvailableNow: _readBool(json, ['disponibilityNow']) ?? false,
+      availabilityText: _readString(json, ['disponibilityText']),
     );
   }
 }
@@ -264,6 +277,13 @@ class ProfessionalDetail extends Professional {
     super.rating,
     super.pricePerMinute,
     super.isOnline,
+    super.isVerified,
+    super.isAvailableNow,
+    super.availabilityText,
+    super.isFavorite,
+    super.supportsPhone,
+    super.supportsVideo,
+    super.supportsChat,
     this.description,
     this.phone,
     this.email,
@@ -319,6 +339,19 @@ class ProfessionalDetail extends Professional {
       ]),
       phone: Professional._readString(json, ['co_phone', 'co_mobile']),
       email: json['co_email'] as String?,
+      isVerified:
+          Professional._readBool(json, ['co_profile_verified_at']) ?? false,
+      isAvailableNow:
+          Professional._readBool(json, ['disponibilityNow']) ?? false,
+      availabilityText: Professional._readString(json, ['disponibilityText']),
+      isFavorite:
+          Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
+      supportsPhone:
+          Professional._readBool(json, ['co_use_phone', 'use_phone']) ?? false,
+      supportsVideo:
+          Professional._readBool(json, ['co_use_video', 'use_video']) ?? false,
+      supportsChat:
+          Professional._readBool(json, ['co_use_chat', 'use_chat']) ?? false,
     );
   }
 }
