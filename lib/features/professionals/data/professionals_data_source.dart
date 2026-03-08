@@ -10,7 +10,25 @@ class ProfessionalsDataSource {
   Future<List<Professional>> getProfessionals() async {
     final response = await _dio.get(ApiEndpoints.professionals);
     final body = response.data as Map<String, dynamic>;
-    final list = body['data'] as List? ?? [];
+
+    final topLevelError = body['error'];
+    final wrappedError = body['err'];
+    if (topLevelError != null) {
+      throw Exception('Professionals API error: $topLevelError');
+    }
+    if (wrappedError is Map<String, dynamic> && wrappedError.isNotEmpty) {
+      final message =
+          wrappedError['message'] ?? wrappedError['code'] ?? 'Unknown error';
+      throw Exception('Professionals API error: $message');
+    }
+
+    // Backend variants can return list in `data` or `allProfessionals`.
+    final list =
+        (body['data'] as List?) ??
+        (body['allProfessionals'] as List?) ??
+        (body['recommendedProfessionals'] as List?) ??
+        const [];
+
     return list
         .map((e) => Professional.fromJson(e as Map<String, dynamic>))
         .toList();

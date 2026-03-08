@@ -24,8 +24,11 @@ class ApiClient {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          if (EnvConfig.current.apiKey != null)
+          if (EnvConfig.current.apiKey != null) ...{
+            // Some deployments still read legacy `ApiKey` while newer ones use `x-api-key`.
             'x-api-key': EnvConfig.current.apiKey,
+            'ApiKey': EnvConfig.current.apiKey,
+          },
         },
       ),
     );

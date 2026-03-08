@@ -24,16 +24,70 @@ class Professional {
       ? 'Professional'
       : '${firstName ?? ''} ${lastName ?? ''}'.trim();
 
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  static double? _readDouble(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+      if (value is num) return value.toDouble();
+      if (value is String) {
+        final parsed = double.tryParse(value);
+        if (parsed != null) return parsed;
+      }
+    }
+    return null;
+  }
+
+  static bool? _readBool(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      if (value is String) {
+        final normalized = value.toLowerCase().trim();
+        if (normalized == 'true' || normalized == '1') return true;
+        if (normalized == 'false' || normalized == '0') return false;
+      }
+    }
+    return null;
+  }
+
   factory Professional.fromJson(Map<String, dynamic> json) {
+    final firstName = _readString(json, ['co_first_name', 'co_firstname']);
+    final lastName = _readString(json, [
+      'co_last_name',
+      'co_name',
+      'co_lastname',
+    ]);
+
     return Professional(
       coId: json['co_id']?.toString() ?? '',
-      firstName: json['co_first_name'] as String?,
-      lastName: json['co_last_name'] as String?,
-      avatar: json['co_avatar'] as String?,
-      specialty: json['co_specialty'] as String?,
-      rating: (json['co_rating'] as num?)?.toDouble(),
-      pricePerMinute: (json['co_price_per_minute'] as num?)?.toDouble(),
-      isOnline: json['co_is_online'] as bool?,
+      firstName: firstName,
+      lastName: lastName,
+      avatar: _readString(json, ['co_avatar', 'co_photo', 'co_picture']),
+      specialty: _readString(json, [
+        'co_specialty',
+        'co_subtype',
+        'co_type_label',
+        'co_type',
+      ]),
+      rating: _readDouble(json, ['co_rating', 'co_rating_average', 'rating']),
+      pricePerMinute: _readDouble(json, [
+        'co_price_per_minute',
+        'co_price',
+        'co_fees',
+      ]),
+      isOnline: _readBool(json, ['co_is_online', 'co_online', 'is_online']),
     );
   }
 }
@@ -60,15 +114,47 @@ class ProfessionalDetail extends Professional {
   factory ProfessionalDetail.fromJson(Map<String, dynamic> json) {
     return ProfessionalDetail(
       coId: json['co_id']?.toString() ?? '',
-      firstName: json['co_first_name'] as String?,
-      lastName: json['co_last_name'] as String?,
-      avatar: json['co_avatar'] as String?,
-      specialty: json['co_specialty'] as String?,
-      rating: (json['co_rating'] as num?)?.toDouble(),
-      pricePerMinute: (json['co_price_per_minute'] as num?)?.toDouble(),
-      isOnline: json['co_is_online'] as bool?,
-      description: json['co_description'] as String?,
-      phone: json['co_phone'] as String?,
+      firstName: Professional._readString(json, [
+        'co_first_name',
+        'co_firstname',
+      ]),
+      lastName: Professional._readString(json, [
+        'co_last_name',
+        'co_name',
+        'co_lastname',
+      ]),
+      avatar: Professional._readString(json, [
+        'co_avatar',
+        'co_photo',
+        'co_picture',
+      ]),
+      specialty: Professional._readString(json, [
+        'co_specialty',
+        'co_subtype',
+        'co_type_label',
+        'co_type',
+      ]),
+      rating: Professional._readDouble(json, [
+        'co_rating',
+        'co_rating_average',
+        'rating',
+      ]),
+      pricePerMinute: Professional._readDouble(json, [
+        'co_price_per_minute',
+        'co_price',
+        'co_fees',
+      ]),
+      isOnline: Professional._readBool(json, [
+        'co_is_online',
+        'co_online',
+        'is_online',
+      ]),
+      description: Professional._readString(json, [
+        'co_description',
+        'co_presentation',
+        'co_bio',
+      ]),
+      phone: Professional._readString(json, ['co_phone', 'co_mobile']),
       email: json['co_email'] as String?,
     );
   }
