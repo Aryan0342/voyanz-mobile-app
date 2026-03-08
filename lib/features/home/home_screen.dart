@@ -65,9 +65,17 @@ class HomeShell extends StatelessWidget {
           color: AppColors.surfaceDark,
           border: Border(
             top: BorderSide(
-              color: AppColors.mediumPurple.withValues(alpha: 0.12),
+              color: AppColors.borderSubtle.withValues(alpha: 0.3),
+              width: 1,
             ),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
         child: NavigationBar(
           selectedIndex: idx,

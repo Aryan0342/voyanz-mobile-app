@@ -88,38 +88,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.rosePink.withValues(alpha: 0.2),
-                              blurRadius: 24,
-                              spreadRadius: 1,
+                              color: AppColors.rosePink.withValues(alpha: 0.15),
+                              blurRadius: 32,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
                         child: Image.asset(
                           'assets/images/voyanz-logo.png',
-                          width: 120,
+                          width: 100,
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       Text(
                         'Voyanz',
                         style: GoogleFonts.jost(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
-                          letterSpacing: 2,
+                          letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         'Your spiritual journey begins here',
                         style: GoogleFonts.lora(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontStyle: FontStyle.italic,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 48),
 
                       // ── Glass Card Login Form ──
                       GlassCard(
@@ -131,13 +131,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               Text(
                                 'Welcome Back',
                                 style: GoogleFonts.jost(
-                                  fontSize: 22,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 20),
                               TextFormField(
                                 controller: _emailCtrl,
                                 decoration: const InputDecoration(

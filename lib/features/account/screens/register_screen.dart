@@ -155,32 +155,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.rosePink.withValues(alpha: 0.2),
-                            blurRadius: 24,
-                            spreadRadius: 1,
+                            color: AppColors.rosePink.withValues(alpha: 0.15),
+                            blurRadius: 32,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
                       child: Image.asset(
                         'assets/images/voyanz-logo.png',
-                        width: 112,
+                        width: 100,
                         fit: BoxFit.contain,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     Text(
                       'Create Account',
                       style: GoogleFonts.jost(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       'Join our community of seekers',
                       style: GoogleFonts.lora(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontStyle: FontStyle.italic,
                         color: AppColors.textSecondary,
                       ),
