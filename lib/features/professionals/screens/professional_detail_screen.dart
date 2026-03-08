@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
@@ -77,7 +78,226 @@ class _ProfessionalDetailScreenState
     _favoriteController.forward().then((_) {
       _favoriteController.reverse();
     });
+    // Show feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _isFavorite ? 'Added to favorites ❤️' : 'Removed from favorites',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: _isFavorite
+            ? AppColors.rosePink
+            : AppColors.mediumPurple,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
     // TODO: Call API to update favorite status
+  }
+
+  void _showNotifyMeDialog(BuildContext context, dynamic pro) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Get Notified',
+          style: GoogleFonts.jost(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'We\'ll notify you when ${pro.firstName ?? 'this professional'} becomes available.',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.online.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.online.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.online,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Notification enabled',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.online,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Close',
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.rosePink,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'You\'ll be notified when availability changes',
+                    style: GoogleFonts.montserrat(),
+                  ),
+                  backgroundColor: AppColors.online,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            },
+            child: Text(
+              'Enable',
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _bookSession(BuildContext context, dynamic pro) {
+    // Navigate to pricing screen for this professional
+    context.push('/pricing/${pro.coId}');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Booking session with ${pro.firstName ?? 'professional'}...',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: AppColors.rosePink,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _startSession(BuildContext context, dynamic pro) {
+    // For now, navigate to pricing/booking since we need to create a session first
+    // In production, this would create a session and get a session ID
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Start Session',
+          style: GoogleFonts.jost(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose session type:',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (pro.supportsPhone) ...[
+              _SessionTypeOption(
+                icon: Icons.phone,
+                label: 'Phone Call',
+                price: pro.pricePerMinute ?? 0,
+                onTap: () => _startSessionType(context, pro, 'phone'),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (pro.supportsVideo) ...[
+              _SessionTypeOption(
+                icon: Icons.videocam,
+                label: 'Video Call',
+                price: pro.pricePerMinute ?? 0,
+                onTap: () => _startSessionType(context, pro, 'video'),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (pro.supportsChat) ...[
+              _SessionTypeOption(
+                icon: Icons.chat_bubble_outline,
+                label: 'Text Chat',
+                price: (pro.pricePerMinute ?? 0) * 0.8,
+                onTap: () => _startSessionType(context, pro, 'chat'),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startSessionType(BuildContext context, dynamic pro, String type) {
+    Navigator.pop(context); // Close dialog
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Starting $type session with ${pro.firstName ?? 'professional'}...',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: AppColors.online,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+    // TODO: In production, would create session on backend and navigate to video screen
+    // context.push('/video/{seId}/${pro.coId}');
   }
 
   @override
@@ -459,22 +679,8 @@ class _ProfessionalDetailScreenState
                         if (!pro.isAvailableNow) ...[
                           Expanded(
                             child: _ActionButton(
-                              onPressed: () {
-                                // TODO: Implement notify me functionality
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'You will be notified when ${pro.firstName ?? 'professional'} becomes available',
-                                      style: GoogleFonts.montserrat(),
-                                    ),
-                                    backgroundColor: AppColors.mediumPurple,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              },
+                              onPressed: () =>
+                                  _showNotifyMeDialog(context, pro),
                               icon: Icons.notifications_outlined,
                               label: 'Notify Me',
                               isPrimary: false,
@@ -485,22 +691,7 @@ class _ProfessionalDetailScreenState
                         Expanded(
                           flex: pro.isAvailableNow ? 1 : 1,
                           child: _ActionButton(
-                            onPressed: () {
-                              // TODO: Navigate to appointment booking
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Opening appointment booking...',
-                                    style: GoogleFonts.montserrat(),
-                                  ),
-                                  backgroundColor: AppColors.rosePink,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                            },
+                            onPressed: () => _bookSession(context, pro),
                             icon: Icons.calendar_today_outlined,
                             label: 'Book Session',
                             isPrimary: true,
@@ -662,22 +853,7 @@ class _ProfessionalDetailScreenState
                     // ── Start Session CTA ──
                     if (pro.isAvailableNow)
                       GradientButton(
-                        onPressed: () {
-                          // TODO: Navigate to session/call creation
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Starting session with ${pro.displayName}...',
-                                style: GoogleFonts.montserrat(),
-                              ),
-                              backgroundColor: AppColors.online,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: () => _startSession(context, pro),
                         width: double.infinity,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -904,6 +1080,92 @@ class _ServiceChip extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SessionTypeOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final double? price;
+  final VoidCallback onTap;
+
+  const _SessionTypeOption({
+    required this.icon,
+    required this.label,
+    this.price,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final priceText = price != null
+        ? '€${(price! / 100).toStringAsFixed(2)}/min'
+        : null;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.textMuted.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.online.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.online.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(icon, color: AppColors.online, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (priceText != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      priceText,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: AppColors.textMuted.withValues(alpha: 0.5),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
