@@ -1183,7 +1183,7 @@ class _ProfessionalCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '${pricePerMinute!.toStringAsFixed(0)}€/min',
+                    '€${pricePerMinute!.toStringAsFixed(2)}/min',
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

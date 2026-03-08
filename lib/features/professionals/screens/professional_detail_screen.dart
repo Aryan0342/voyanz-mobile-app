@@ -159,7 +159,7 @@ class ProfessionalDetailScreen extends ConsumerWidget {
                             _detailRow(
                               Icons.payments_outlined,
                               'Price / min',
-                              '${pro.pricePerMinute} €',
+                              '€${pro.pricePerMinute!.toStringAsFixed(2)}',
                             ),
                           if (pro.phone != null) ...[
                             const Divider(height: 24),
