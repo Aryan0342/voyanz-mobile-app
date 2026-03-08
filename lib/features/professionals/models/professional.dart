@@ -221,7 +221,12 @@ class Professional {
       ]),
       specialties: specialties,
       languages: languages,
-      rating: _readDouble(json, ['co_rating', 'co_rating_average', 'rating']),
+      rating: _readDouble(json, [
+        'co_rating',
+        'co_rating_average',
+        'co_calculatednote',
+        'rating',
+      ]),
       pricePerMinute: prices.isNotEmpty
           ? prices.reduce((a, b) => a < b ? a : b)
           : fallbackPrice,
@@ -294,6 +299,7 @@ class ProfessionalDetail extends Professional {
       rating: Professional._readDouble(json, [
         'co_rating',
         'co_rating_average',
+        'co_calculatednote',
         'rating',
       ]),
       pricePerMinute: Professional._readDouble(json, [

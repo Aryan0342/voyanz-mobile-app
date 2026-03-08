@@ -949,6 +949,21 @@ class _FeaturedProfessionalCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: AppColors.rosePink,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        (professional.rating ?? 0).toStringAsFixed(1),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       Icon(
                         Icons.circle,
                         size: 10,
@@ -1132,30 +1147,27 @@ class _ProfessionalCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (rating != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          ...List.generate(5, (i) {
-                            return Icon(
-                              i < rating!.round()
-                                  ? Icons.star
-                                  : Icons.star_outline,
-                              size: 14,
-                              color: AppColors.rosePink,
-                            );
-                          }),
-                          const SizedBox(width: 6),
-                          Text(
-                            rating!.toStringAsFixed(1),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              color: AppColors.textMuted,
-                            ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        ...List.generate(5, (i) {
+                          final value = (rating ?? 0).round();
+                          return Icon(
+                            i < value ? Icons.star : Icons.star_outline,
+                            size: 14,
+                            color: AppColors.rosePink,
+                          );
+                        }),
+                        const SizedBox(width: 6),
+                        Text(
+                          (rating ?? 0).toStringAsFixed(1),
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
