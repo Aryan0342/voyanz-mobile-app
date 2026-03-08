@@ -4,9 +4,20 @@ class Professional {
   final String? lastName;
   final String? avatar;
   final String? specialty;
+  final List<String> specialties;
+  final List<String> languages;
   final double? rating;
   final double? pricePerMinute;
+  final double? pricePhonePerMinute;
+  final double? priceVideoPerMinute;
+  final double? priceChatPerMinute;
   final bool? isOnline;
+  final bool supportsPhone;
+  final bool supportsVideo;
+  final bool supportsChat;
+  final bool isRecommended;
+  final bool isFavorite;
+  final int? experienceYears;
 
   const Professional({
     required this.coId,
@@ -14,9 +25,20 @@ class Professional {
     this.lastName,
     this.avatar,
     this.specialty,
+    this.specialties = const [],
+    this.languages = const [],
     this.rating,
     this.pricePerMinute,
+    this.pricePhonePerMinute,
+    this.priceVideoPerMinute,
+    this.priceChatPerMinute,
     this.isOnline,
+    this.supportsPhone = false,
+    this.supportsVideo = false,
+    this.supportsChat = false,
+    this.isRecommended = false,
+    this.isFavorite = false,
+    this.experienceYears,
   });
 
   String get displayName =>
@@ -76,6 +98,74 @@ class Professional {
     return null;
   }
 
+  static List<String> _readStringList(
+    Map<String, dynamic> json,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+
+      if (value is List) {
+        final result = <String>[];
+        for (final item in value) {
+          if (item == null) continue;
+          if (item is String) {
+            final text = item.trim();
+            if (text.isNotEmpty) result.add(text);
+            continue;
+          }
+          if (item is Map<String, dynamic>) {
+            final text = _readString(item, [
+              'name',
+              'label',
+              'value',
+              'title',
+              'la_name',
+              'sp_name',
+              'speciality',
+            ]);
+            if (text != null && text.isNotEmpty) result.add(text);
+          }
+        }
+        if (result.isNotEmpty) return result;
+      }
+
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) continue;
+        final split = trimmed
+            .split(RegExp(r'[,;|]'))
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        if (split.isNotEmpty) return split;
+      }
+    }
+    return const [];
+  }
+
+  static double? _normalizePrice(double? value) {
+    if (value == null) return null;
+    // Backend often returns cents (e.g. 150 => 1.50 EUR/min).
+    return value > 20 ? value / 100 : value;
+  }
+
+  static int? _readExperienceYears(Map<String, dynamic> json) {
+    final started = _readString(json, ['co_activity_started', 'createdAt']);
+    if (started == null || started.isEmpty) return null;
+
+    final date = DateTime.tryParse(started);
+    if (date == null) return null;
+
+    final now = DateTime.now();
+    var years = now.year - date.year;
+    if (DateTime(now.year, date.month, date.day).isAfter(now)) {
+      years -= 1;
+    }
+    return years < 0 ? 0 : years;
+  }
+
   factory Professional.fromJson(Map<String, dynamic> json) {
     final firstName = _readString(json, ['co_first_name', 'co_firstname']);
     final lastName = _readString(json, [
@@ -83,6 +173,32 @@ class Professional {
       'co_name',
       'co_lastname',
     ]);
+
+    final pricePhone = _normalizePrice(
+      _readDouble(json, ['co_price_phone', 'price_phone']),
+    );
+    final priceVideo = _normalizePrice(
+      _readDouble(json, ['co_price_video', 'price_video']),
+    );
+    final priceChat = _normalizePrice(
+      _readDouble(json, ['co_price_chat', 'price_chat']),
+    );
+
+    final fallbackPrice = _normalizePrice(
+      _readDouble(json, ['co_price_per_minute', 'co_price', 'co_fees']),
+    );
+    final prices = [
+      pricePhone,
+      priceVideo,
+      priceChat,
+    ].whereType<double>().where((p) => p > 0).toList();
+
+    final specialties = _readStringList(json, [
+      'co_specialities',
+      'co_specialty',
+      'co_subtype',
+    ]);
+    final languages = _readStringList(json, ['co_languages', 'languages']);
 
     return Professional(
       coId: json['co_id']?.toString() ?? '',
@@ -103,13 +219,28 @@ class Professional {
         'co_type_label',
         'co_type',
       ]),
+      specialties: specialties,
+      languages: languages,
       rating: _readDouble(json, ['co_rating', 'co_rating_average', 'rating']),
-      pricePerMinute: _readDouble(json, [
-        'co_price_per_minute',
-        'co_price',
-        'co_fees',
-      ]),
+      pricePerMinute: prices.isNotEmpty
+          ? prices.reduce((a, b) => a < b ? a : b)
+          : fallbackPrice,
+      pricePhonePerMinute: pricePhone,
+      priceVideoPerMinute: priceVideo,
+      priceChatPerMinute: priceChat,
       isOnline: _readBool(json, ['co_is_online', 'co_online', 'is_online']),
+      supportsPhone:
+          _readBool(json, ['co_use_phone', 'use_phone']) ??
+          (pricePhone ?? 0) > 0,
+      supportsVideo:
+          _readBool(json, ['co_use_video', 'use_video']) ??
+          (priceVideo ?? 0) > 0,
+      supportsChat:
+          _readBool(json, ['co_use_chat', 'use_chat']) ?? (priceChat ?? 0) > 0,
+      isRecommended:
+          _readBool(json, ['co_recommended', 'recommended']) ?? false,
+      isFavorite: _readBool(json, ['co_favorite', 'favorite']) ?? false,
+      experienceYears: _readExperienceYears(json),
     );
   }
 }

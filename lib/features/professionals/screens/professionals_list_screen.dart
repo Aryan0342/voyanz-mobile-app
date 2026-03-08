@@ -48,6 +48,12 @@ class _ProfessionalsListScreenState
     extends ConsumerState<ProfessionalsListScreen> {
   final _searchCtrl = TextEditingController();
   String _selectedSpecialty = 'All';
+  String _selectedType = 'All';
+  String _selectedExperience = 'All';
+  String _selectedPrice = 'All';
+  String _selectedLanguage = 'All';
+  bool _favoritesOnly = false;
+  final Set<String> _selectedSessionTypes = <String>{};
 
   @override
   void dispose() {
@@ -62,22 +68,153 @@ class _ProfessionalsListScreenState
       if (value.isNotEmpty) {
         values.add(value);
       }
+      for (final item in pro.specialties) {
+        final text = item.trim();
+        if (text.isNotEmpty) values.add(text);
+      }
     }
 
     final result = values.toList()..sort();
     return ['All', ...result];
   }
 
+  List<String> _buildLanguages(List<Professional> pros) {
+    final values = <String>{};
+    for (final pro in pros) {
+      for (final item in pro.languages) {
+        final text = item.trim();
+        if (text.isNotEmpty) values.add(text);
+      }
+    }
+    final result = values.toList()..sort();
+    return ['All', ...result];
+  }
+
+  bool _matchesType(Professional pro) {
+    switch (_selectedType) {
+      case 'Online':
+        return pro.isOnline == true;
+      case 'Recommended':
+        return pro.isRecommended;
+      default:
+        return true;
+    }
+  }
+
+  bool _matchesExperience(Professional pro) {
+    if (_selectedExperience == 'All') return true;
+    final years = pro.experienceYears;
+    if (years == null) return false;
+    switch (_selectedExperience) {
+      case '0-5':
+        return years <= 5;
+      case '5-10':
+        return years > 5 && years <= 10;
+      case '10-15':
+        return years > 10 && years <= 15;
+      case '15+':
+        return years > 15;
+      default:
+        return true;
+    }
+  }
+
+  bool _matchesPrice(Professional pro) {
+    if (_selectedPrice == 'All') return true;
+    final price = pro.pricePerMinute;
+    if (price == null) return false;
+    switch (_selectedPrice) {
+      case '<2':
+        return price < 2;
+      case '2-3':
+        return price >= 2 && price < 3;
+      case '3-4':
+        return price >= 3 && price < 4;
+      case '4+':
+        return price >= 4;
+      default:
+        return true;
+    }
+  }
+
+  bool _matchesSessionTypes(Professional pro) {
+    if (_selectedSessionTypes.isEmpty) return true;
+    for (final type in _selectedSessionTypes) {
+      if (type == 'Phone' && pro.supportsPhone) return true;
+      if (type == 'Video' && pro.supportsVideo) return true;
+      if (type == 'Chat' && pro.supportsChat) return true;
+    }
+    return false;
+  }
+
+  bool _matchesLanguage(Professional pro) {
+    if (_selectedLanguage == 'All') return true;
+    return pro.languages.any(
+      (l) => l.toLowerCase() == _selectedLanguage.toLowerCase(),
+    );
+  }
+
+  int _activeFiltersCount() {
+    var count = 0;
+    if (_selectedType != 'All') count++;
+    if (_selectedExperience != 'All') count++;
+    if (_selectedPrice != 'All') count++;
+    if (_selectedLanguage != 'All') count++;
+    if (_favoritesOnly) count++;
+    count += _selectedSessionTypes.length;
+    if (_selectedSpecialty != 'All') count++;
+    return count;
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _selectedType = 'All';
+      _selectedExperience = 'All';
+      _selectedPrice = 'All';
+      _selectedLanguage = 'All';
+      _favoritesOnly = false;
+      _selectedSessionTypes.clear();
+      _selectedSpecialty = 'All';
+    });
+  }
+
   List<Professional> _filterProfessionals(List<Professional> pros) {
     final query = _searchCtrl.text.trim().toLowerCase();
     return pros.where((pro) {
       final bySpecialty =
-          _selectedSpecialty == 'All' || pro.specialty == _selectedSpecialty;
+          _selectedSpecialty == 'All' ||
+          pro.specialty == _selectedSpecialty ||
+          pro.specialties.any(
+            (s) => s.toLowerCase() == _selectedSpecialty.toLowerCase(),
+          );
+
+      final searchableSpecialties = [
+        if (pro.specialty != null) pro.specialty!,
+        ...pro.specialties,
+      ].join(' ').toLowerCase();
+      final searchableLanguages = pro.languages.join(' ').toLowerCase();
+
       final byQuery =
           query.isEmpty ||
           pro.displayName.toLowerCase().contains(query) ||
-          (pro.specialty ?? '').toLowerCase().contains(query);
-      return bySpecialty && byQuery;
+          searchableSpecialties.contains(query) ||
+          searchableLanguages.contains(query);
+
+      final byType = _matchesType(pro);
+      final byExperience = _matchesExperience(pro);
+      final byPrice = _matchesPrice(pro);
+      final bySessionType = _matchesSessionTypes(pro);
+      final byLanguage = _matchesLanguage(pro);
+      final byFavorites = !_favoritesOnly || pro.isFavorite;
+
+      return bySpecialty &&
+          byQuery &&
+          byType &&
+          byExperience &&
+          byPrice &&
+          bySessionType &&
+          byLanguage &&
+          byFavorites;
     }).toList();
   }
 
@@ -140,6 +277,12 @@ class _ProfessionalsListScreenState
           if (!specialties.contains(_selectedSpecialty)) {
             _selectedSpecialty = 'All';
           }
+          final languages = _buildLanguages(pros);
+          if (!languages.contains(_selectedLanguage)) {
+            _selectedLanguage = 'All';
+          }
+
+          final activeFilters = _activeFiltersCount();
 
           final filteredPros = _filterProfessionals(pros);
           final featuredPros = [
@@ -211,26 +354,38 @@ class _ProfessionalsListScreenState
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: SizedBox(
-                      height: 42,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemBuilder: (context, index) {
-                          final specialty = specialties[index];
-                          final selected = specialty == _selectedSpecialty;
-                          return ChoiceChip(
-                            selected: selected,
-                            onSelected: (_) =>
-                                setState(() => _selectedSpecialty = specialty),
-                            label: Text(specialty),
-                          );
-                        },
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 10),
-                        itemCount: specialties.length,
-                      ),
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    child: _FilterPanel(
+                      specialties: specialties,
+                      selectedSpecialty: _selectedSpecialty,
+                      selectedType: _selectedType,
+                      selectedExperience: _selectedExperience,
+                      selectedPrice: _selectedPrice,
+                      selectedLanguage: _selectedLanguage,
+                      selectedSessionTypes: _selectedSessionTypes,
+                      languages: languages,
+                      favoritesOnly: _favoritesOnly,
+                      activeFiltersCount: activeFilters,
+                      onSpecialtyChanged: (v) =>
+                          setState(() => _selectedSpecialty = v),
+                      onTypeChanged: (v) => setState(() => _selectedType = v),
+                      onExperienceChanged: (v) =>
+                          setState(() => _selectedExperience = v),
+                      onPriceChanged: (v) => setState(() => _selectedPrice = v),
+                      onLanguageChanged: (v) =>
+                          setState(() => _selectedLanguage = v),
+                      onFavoritesChanged: (v) =>
+                          setState(() => _favoritesOnly = v),
+                      onToggleSessionType: (value) {
+                        setState(() {
+                          if (_selectedSessionTypes.contains(value)) {
+                            _selectedSessionTypes.remove(value);
+                          } else {
+                            _selectedSessionTypes.add(value);
+                          }
+                        });
+                      },
+                      onReset: _resetFilters,
                     ),
                   ),
                 ),
@@ -383,6 +538,301 @@ class _ExploreHero extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterPanel extends StatelessWidget {
+  final List<String> specialties;
+  final String selectedSpecialty;
+  final String selectedType;
+  final String selectedExperience;
+  final String selectedPrice;
+  final String selectedLanguage;
+  final Set<String> selectedSessionTypes;
+  final List<String> languages;
+  final bool favoritesOnly;
+  final int activeFiltersCount;
+  final ValueChanged<String> onSpecialtyChanged;
+  final ValueChanged<String> onTypeChanged;
+  final ValueChanged<String> onExperienceChanged;
+  final ValueChanged<String> onPriceChanged;
+  final ValueChanged<String> onLanguageChanged;
+  final ValueChanged<bool> onFavoritesChanged;
+  final ValueChanged<String> onToggleSessionType;
+  final VoidCallback onReset;
+
+  const _FilterPanel({
+    required this.specialties,
+    required this.selectedSpecialty,
+    required this.selectedType,
+    required this.selectedExperience,
+    required this.selectedPrice,
+    required this.selectedLanguage,
+    required this.selectedSessionTypes,
+    required this.languages,
+    required this.favoritesOnly,
+    required this.activeFiltersCount,
+    required this.onSpecialtyChanged,
+    required this.onTypeChanged,
+    required this.onExperienceChanged,
+    required this.onPriceChanged,
+    required this.onLanguageChanged,
+    required this.onFavoritesChanged,
+    required this.onToggleSessionType,
+    required this.onReset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.mediumPurple.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Filters',
+                style: GoogleFonts.jost(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (activeFiltersCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.rosePink.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    '$activeFiltersCount',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.rosePink,
+                    ),
+                  ),
+                ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: onReset,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Reset'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: const ['All', 'Online', 'Recommended']
+                .map(
+                  (value) => ChoiceChip(
+                    label: Text(value),
+                    selected: selectedType == value,
+                    onSelected: (_) => onTypeChanged(value),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 8),
+          if (selectedSpecialty != 'All' ||
+              selectedSessionTypes.isNotEmpty ||
+              favoritesOnly)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (selectedSpecialty != 'All')
+                  InputChip(
+                    label: Text('Specialty: $selectedSpecialty'),
+                    onDeleted: () => onSpecialtyChanged('All'),
+                  ),
+                ...selectedSessionTypes.map(
+                  (s) => InputChip(
+                    label: Text(s),
+                    onDeleted: () => onToggleSessionType(s),
+                  ),
+                ),
+                if (favoritesOnly)
+                  InputChip(
+                    label: const Text('Favorites only'),
+                    onDeleted: () => onFavoritesChanged(false),
+                  ),
+              ],
+            ),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(top: 8),
+              iconColor: AppColors.textSecondary,
+              collapsedIconColor: AppColors.textSecondary,
+              title: Text(
+                'More Filters',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              subtitle: Text(
+                'Specialty, experience, price, session type, language',
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              children: [
+                _FilterSection(
+                  title: 'Specialties',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: specialties
+                        .take(8)
+                        .map(
+                          (value) => ChoiceChip(
+                            label: Text(value),
+                            selected: selectedSpecialty == value,
+                            onSelected: (_) => onSpecialtyChanged(value),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                _FilterSection(
+                  title: 'Experience',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const ['All', '0-5', '5-10', '10-15', '15+']
+                        .map(
+                          (value) => ChoiceChip(
+                            label: Text(value),
+                            selected: selectedExperience == value,
+                            onSelected: (_) => onExperienceChanged(value),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                _FilterSection(
+                  title: 'Price (EUR/min)',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const ['All', '<2', '2-3', '3-4', '4+']
+                        .map(
+                          (value) => ChoiceChip(
+                            label: Text(value),
+                            selected: selectedPrice == value,
+                            onSelected: (_) => onPriceChanged(value),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                _FilterSection(
+                  title: 'Session Type',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const ['Chat', 'Phone', 'Video']
+                        .map(
+                          (value) => FilterChip(
+                            label: Text(value),
+                            selected: selectedSessionTypes.contains(value),
+                            onSelected: (_) => onToggleSessionType(value),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                if (languages.length > 1)
+                  _FilterSection(
+                    title: 'Language',
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: languages
+                          .take(8)
+                          .map(
+                            (value) => ChoiceChip(
+                              label: Text(value),
+                              selected: selectedLanguage == value,
+                              onSelected: (_) => onLanguageChanged(value),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                Row(
+                  children: [
+                    Switch(
+                      value: favoritesOnly,
+                      onChanged: onFavoritesChanged,
+                      activeThumbColor: AppColors.rosePink,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Favorites only',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _FilterSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          child,
         ],
       ),
     );
