@@ -38,9 +38,14 @@ class GradientButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: AppColors.rosePink.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
+                    color: AppColors.rosePink.withValues(alpha: 0.25),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -82,20 +87,26 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = borderRadius ?? BorderRadius.circular(20);
+    final radius = borderRadius ?? BorderRadius.circular(16);
 
     return Container(
-      padding: padding ?? const EdgeInsets.all(24),
+      padding: padding ?? const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard.withValues(alpha: 0.7),
+        color: AppColors.surfaceCard.withValues(alpha: 0.8),
         borderRadius: radius,
         border: Border.all(
-          color: AppColors.mediumPurple.withValues(alpha: 0.15),
+          color: AppColors.borderSubtle.withValues(alpha: 0.3),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 24,
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: AppColors.mediumPurple.withValues(alpha: 0.05),
+            blurRadius: 40,
             offset: const Offset(0, 8),
           ),
         ],

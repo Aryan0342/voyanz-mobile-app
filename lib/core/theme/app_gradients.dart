@@ -3,12 +3,11 @@ import 'package:voyanz/core/theme/app_colors.dart';
 
 /// Reusable gradient definitions matching voyanz.com.
 abstract final class AppGradients {
-  /// Hero section gradient — dark indigo to magenta rose.
+  /// Hero section gradient — refined dark purple.
   static const hero = LinearGradient(
-    begin: Alignment(-0.6, -0.8),
-    end: Alignment(0.8, 0.8),
-    colors: [AppColors.darkPurple, AppColors.deepIndigo, AppColors.magentaRose],
-    stops: [0.0, 0.05, 1.0],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [AppColors.deepIndigo, AppColors.darkPurple],
   );
 
   /// Primary accent gradient — rose pink to medium purple.
