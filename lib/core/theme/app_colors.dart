@@ -16,6 +16,8 @@ abstract final class AppColors {
   static const surfaceDark = Color(0xFF160F36);
   static const surfaceCard = Color(0xFF1E1848);
   static const surfaceElevated = Color(0xFF261E52);
+  static const surfaceLight = Color(0xFF2D2458);
+  static const borderSubtle = Color(0xFF3D3366);
 
   // ── Text ──
   static const textPrimary = Color(0xFFFFFFFF);
