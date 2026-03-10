@@ -276,6 +276,9 @@ class ProfessionalDetail extends Professional {
     super.specialty,
     super.rating,
     super.pricePerMinute,
+    super.pricePhonePerMinute,
+    super.priceVideoPerMinute,
+    super.priceChatPerMinute,
     super.isOnline,
     super.isVerified,
     super.isAvailableNow,
@@ -290,6 +293,23 @@ class ProfessionalDetail extends Professional {
   });
 
   factory ProfessionalDetail.fromJson(Map<String, dynamic> json) {
+    final pricePhone = Professional._normalizePrice(
+      Professional._readDouble(json, ['co_price_phone', 'price_phone']),
+    );
+    final priceVideo = Professional._normalizePrice(
+      Professional._readDouble(json, ['co_price_video', 'price_video']),
+    );
+    final priceChat = Professional._normalizePrice(
+      Professional._readDouble(json, ['co_price_chat', 'price_chat']),
+    );
+    final fallbackPrice = Professional._normalizePrice(
+      Professional._readDouble(json, [
+        'co_price_per_minute',
+        'co_price',
+        'co_fees',
+      ]),
+    );
+
     return ProfessionalDetail(
       coId: json['co_id']?.toString() ?? '',
       firstName: Professional._readString(json, [
@@ -322,11 +342,10 @@ class ProfessionalDetail extends Professional {
         'co_calculatednote',
         'rating',
       ]),
-      pricePerMinute: Professional._readDouble(json, [
-        'co_price_per_minute',
-        'co_price',
-        'co_fees',
-      ]),
+      pricePerMinute: fallbackPrice,
+      pricePhonePerMinute: pricePhone,
+      priceVideoPerMinute: priceVideo,
+      priceChatPerMinute: priceChat,
       isOnline: Professional._readBool(json, [
         'co_is_online',
         'co_online',
@@ -347,11 +366,14 @@ class ProfessionalDetail extends Professional {
       isFavorite:
           Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
       supportsPhone:
-          Professional._readBool(json, ['co_use_phone', 'use_phone']) ?? false,
+          Professional._readBool(json, ['co_use_phone', 'use_phone']) ??
+          (pricePhone ?? 0) > 0,
       supportsVideo:
-          Professional._readBool(json, ['co_use_video', 'use_video']) ?? false,
+          Professional._readBool(json, ['co_use_video', 'use_video']) ??
+          (priceVideo ?? 0) > 0,
       supportsChat:
-          Professional._readBool(json, ['co_use_chat', 'use_chat']) ?? false,
+          Professional._readBool(json, ['co_use_chat', 'use_chat']) ??
+          (priceChat ?? 0) > 0,
     );
   }
 }

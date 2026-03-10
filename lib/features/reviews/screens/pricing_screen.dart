@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
@@ -16,6 +17,7 @@ class PricingScreen extends ConsumerWidget {
     // If coId is provided, show professional pricing; otherwise show customer pricing
     if (coId != null) {
       final professionalAsync = ref.watch(professionalDetailProvider(coId!));
+      final listAsync = ref.watch(professionalsListProvider);
 
       return Scaffold(
         appBar: AppBar(
@@ -35,7 +37,16 @@ class PricingScreen extends ConsumerWidget {
             ),
           ),
           data: (professional) {
-            return _buildSessionPricingList(professional);
+            final list = listAsync.asData?.value ?? const <Professional>[];
+            Professional? fromList;
+            for (final item in list) {
+              if (item.coId == coId) {
+                fromList = item;
+                break;
+              }
+            }
+
+            return _buildSessionPricingList(professional, fromList: fromList);
           },
         ),
       );
@@ -143,24 +154,59 @@ class PricingScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildSessionPricingList(dynamic professional) {
+  Widget _buildSessionPricingList(
+    dynamic professional, {
+    Professional? fromList,
+  }) {
     final pricing = <String, String>{};
-
-    if (professional.supportsPhone &&
-        professional.pricePhonePerMinute != null) {
-      pricing['Phone Call'] =
-          '€${(professional.pricePhonePerMinute! / 100).toStringAsFixed(2)}/min';
+    final fallback =
+        professional.pricePerMinute as double? ?? fromList?.pricePerMinute;
+    String formatPrice(double value) {
+      final normalized = value > 20 ? value / 100 : value;
+      return '€${normalized.toStringAsFixed(2)}/min';
     }
 
-    if (professional.supportsVideo &&
-        professional.priceVideoPerMinute != null) {
-      pricing['Video Call'] =
-          '€${(professional.priceVideoPerMinute! / 100).toStringAsFixed(2)}/min';
+    final phonePrice =
+        professional.pricePhonePerMinute as double? ??
+        fromList?.pricePhonePerMinute;
+    final videoPrice =
+        professional.priceVideoPerMinute as double? ??
+        fromList?.priceVideoPerMinute;
+    final chatPrice =
+        professional.priceChatPerMinute as double? ??
+        fromList?.priceChatPerMinute;
+
+    final supportsPhone =
+        (professional.supportsPhone as bool? ?? false) ||
+        (fromList?.supportsPhone ?? false);
+    final supportsVideo =
+        (professional.supportsVideo as bool? ?? false) ||
+        (fromList?.supportsVideo ?? false);
+    final supportsChat =
+        (professional.supportsChat as bool? ?? false) ||
+        (fromList?.supportsChat ?? false);
+
+    if (phonePrice != null) {
+      pricing['Phone Call'] = formatPrice(phonePrice);
+    } else if (supportsPhone && fallback != null) {
+      pricing['Phone Call'] = formatPrice(fallback);
     }
 
-    if (professional.supportsChat && professional.priceChatPerMinute != null) {
-      pricing['Text Chat'] =
-          '€${(professional.priceChatPerMinute! / 100).toStringAsFixed(2)}/min';
+    if (videoPrice != null) {
+      pricing['Video Call'] = formatPrice(videoPrice);
+    } else if (supportsVideo && fallback != null) {
+      pricing['Video Call'] = formatPrice(fallback);
+    }
+
+    if (chatPrice != null) {
+      pricing['Text Chat'] = formatPrice(chatPrice);
+    } else if (supportsChat && fallback != null) {
+      pricing['Text Chat'] = formatPrice(fallback);
+    }
+
+    // Some profiles only provide one generic price without session flags.
+    if (pricing.isEmpty && fallback != null) {
+      pricing['Consultation'] = formatPrice(fallback);
     }
 
     if (pricing.isEmpty) {
