@@ -88,6 +88,14 @@ class ProfessionalsRepository {
     return _ds.getProfessionalInfos(coId);
   }
 
+  Future<void> setProfessionalFavorite(String coId, bool isFavorite) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    return _ds.setProfessionalFavorite(coId, isFavorite);
+  }
+
   Future<List<dynamic>> getDisponibilities() async {
     if (kUseMockBackend) {
       return const [

@@ -71,29 +71,71 @@ class _ProfessionalDetailScreenState
     super.dispose();
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
+    final coId = widget.coId;
+    final currentlyFavorite =
+        ref.read(favoriteProfessionalIdsProvider).contains(coId) || _isFavorite;
+    final nextValue = !currentlyFavorite;
+
     setState(() {
-      _isFavorite = !_isFavorite;
+      _isFavorite = nextValue;
     });
+    ref
+        .read(favoriteProfessionalIdsProvider.notifier)
+        .setFavorite(coId, nextValue);
     _favoriteController.forward().then((_) {
       _favoriteController.reverse();
     });
-    // Show feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavorite ? 'Added to favorites ❤️' : 'Removed from favorites',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+
+    try {
+      await ref
+          .read(professionalsRepositoryProvider)
+          .setProfessionalFavorite(coId, nextValue);
+
+      ref.invalidate(professionalsListProvider);
+      ref.invalidate(professionalDetailProvider(widget.coId));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextValue ? 'Added to favorites ❤️' : 'Removed from favorites',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: nextValue
+              ? AppColors.rosePink
+              : AppColors.mediumPurple,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-        backgroundColor: _isFavorite
-            ? AppColors.rosePink
-            : AppColors.mediumPurple,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-    // TODO: Call API to update favorite status
+      );
+    } catch (_) {
+      setState(() {
+        _isFavorite = currentlyFavorite;
+      });
+      ref
+          .read(favoriteProfessionalIdsProvider.notifier)
+          .setFavorite(coId, currentlyFavorite);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not update favorite. Please try again.',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   void _showNotifyMeDialog(BuildContext context, dynamic pro) {
@@ -292,6 +334,8 @@ class _ProfessionalDetailScreenState
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(professionalDetailProvider(widget.coId));
+    final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
+    final isMarkedFavorite = favoriteIds.contains(widget.coId) || _isFavorite;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -322,8 +366,8 @@ class _ProfessionalDetailScreenState
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: _isFavorite
+                    isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isMarkedFavorite
                         ? AppColors.rosePink
                         : AppColors.textMuted,
                     size: 22,
@@ -376,6 +420,9 @@ class _ProfessionalDetailScreenState
           // Initialize favorite status from data
           if (!_isFavorite && pro.isFavorite) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref
+                  .read(favoriteProfessionalIdsProvider.notifier)
+                  .setFavorite(pro.coId, true);
               setState(() {
                 _isFavorite = pro.isFavorite;
               });

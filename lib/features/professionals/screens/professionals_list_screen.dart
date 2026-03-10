@@ -178,7 +178,10 @@ class _ProfessionalsListScreenState
     });
   }
 
-  List<Professional> _filterProfessionals(List<Professional> pros) {
+  List<Professional> _filterProfessionals(
+    List<Professional> pros,
+    Set<String> favoriteIds,
+  ) {
     final query = _searchCtrl.text.trim().toLowerCase();
     return pros.where((pro) {
       final bySpecialty =
@@ -205,7 +208,8 @@ class _ProfessionalsListScreenState
       final byPrice = _matchesPrice(pro);
       final bySessionType = _matchesSessionTypes(pro);
       final byLanguage = _matchesLanguage(pro);
-      final byFavorites = !_favoritesOnly || pro.isFavorite;
+      final byFavorites =
+          !_favoritesOnly || pro.isFavorite || favoriteIds.contains(pro.coId);
 
       return bySpecialty &&
           byQuery &&
@@ -221,6 +225,7 @@ class _ProfessionalsListScreenState
   @override
   Widget build(BuildContext context) {
     final professionalsAsync = ref.watch(professionalsListProvider);
+    final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -284,7 +289,7 @@ class _ProfessionalsListScreenState
 
           final activeFilters = _activeFiltersCount();
 
-          final filteredPros = _filterProfessionals(pros);
+          final filteredPros = _filterProfessionals(pros, favoriteIds);
           final featuredPros = [
             ...filteredPros.where((p) => p.isOnline == true),
             ...filteredPros.where((p) => p.isOnline != true),

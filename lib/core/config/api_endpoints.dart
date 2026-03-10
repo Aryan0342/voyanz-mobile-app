@@ -16,6 +16,8 @@ class ApiEndpoints {
   static const String professionals = '/web/1.0/professionals';
   static String professionalInfos(String coId) =>
       '/web/1.0/professional/$coId/infos';
+  static String professionalFavorite(String coId) =>
+      '/web/1.0/professional/favorite/$coId';
   static const String professionalDisponibilities =
       '/web/1.0/professional/disponibilities';
   static const String createDisponibilities = '/web/1.0/disponibilities';

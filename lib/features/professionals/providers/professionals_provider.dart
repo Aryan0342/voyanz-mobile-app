@@ -4,6 +4,25 @@ import 'package:voyanz/features/professionals/data/professionals_data_source.dar
 import 'package:voyanz/features/professionals/data/professionals_repository.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 
+class FavoriteProfessionalsNotifier extends StateNotifier<Set<String>> {
+  FavoriteProfessionalsNotifier() : super(<String>{});
+
+  void setFavorite(String coId, bool isFavorite) {
+    final next = <String>{...state};
+    if (isFavorite) {
+      next.add(coId);
+    } else {
+      next.remove(coId);
+    }
+    state = next;
+  }
+}
+
+final favoriteProfessionalIdsProvider =
+    StateNotifierProvider<FavoriteProfessionalsNotifier, Set<String>>((ref) {
+      return FavoriteProfessionalsNotifier();
+    });
+
 final professionalsDataSourceProvider = Provider<ProfessionalsDataSource>((
   ref,
 ) {

@@ -42,6 +42,13 @@ class ProfessionalsDataSource {
     );
   }
 
+  Future<void> setProfessionalFavorite(String coId, bool isFavorite) async {
+    await _dio.post(
+      ApiEndpoints.professionalFavorite(coId),
+      data: {'favorite': isFavorite, 'co_favorite': isFavorite ? 1 : 0},
+    );
+  }
+
   Future<List<dynamic>> getDisponibilities() async {
     final response = await _dio.get(ApiEndpoints.professionalDisponibilities);
     final body = response.data as Map<String, dynamic>;
