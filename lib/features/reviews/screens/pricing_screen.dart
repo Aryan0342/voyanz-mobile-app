@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
-import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';

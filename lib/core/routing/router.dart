@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
@@ -12,6 +13,7 @@ import 'package:voyanz/features/reviews/screens/history_screen.dart';
 import 'package:voyanz/features/reviews/screens/reviews_screen.dart';
 import 'package:voyanz/features/reviews/screens/pricing_screen.dart';
 import 'package:voyanz/features/home/home_screen.dart';
+import 'package:voyanz/features/home/professional_dashboard_screen.dart';
 import 'package:voyanz/features/splash/splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -45,7 +47,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => const ProfessionalsListScreen(),
+            builder: (context, state) {
+              // Show dashboard for professionals, professionals list for customers
+              return _HomeScreenRouter();
+            },
           ),
           GoRoute(
             path: '/professional/:coId',
@@ -63,11 +68,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/history',
-            builder: (context, state) => const HistoryScreen(),
+            builder: (context, state) =>
+                const HistoryScreen(isProfessional: false),
           ),
           GoRoute(
             path: '/reviews',
-            builder: (context, state) => const ReviewsScreen(),
+            builder: (context, state) =>
+                const ReviewsScreen(isProfessional: false),
+          ),
+          GoRoute(
+            path: '/availability',
+            builder: (context, state) => const ProfessionalAvailabilityScreen(),
+          ),
+          GoRoute(
+            path: '/clients',
+            builder: (context, state) => const ProfessionalClientsScreen(),
           ),
           GoRoute(
             path: '/pricing/:coId',
@@ -90,3 +105,47 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Routes conditionally to Dashboard (professional) or ProfessionalsList (customer)
+class _HomeScreenRouter extends ConsumerWidget {
+  const _HomeScreenRouter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final isProfessional = user?.isProfessional ?? false;
+
+    if (isProfessional) {
+      return const ProfessionalDashboardScreen();
+    }
+    return const ProfessionalsListScreen();
+  }
+}
+
+/// Professional availability management screen (placeholder).
+class ProfessionalAvailabilityScreen extends StatelessWidget {
+  const ProfessionalAvailabilityScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Manage Availability'),
+      ),
+      body: const Center(child: Text('Availability management coming soon')),
+    );
+  }
+}
+
+/// Professional clients/reviews screen (shows clients and their reviews).
+class ProfessionalClientsScreen extends ConsumerWidget {
+  const ProfessionalClientsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // This can show professional reviews from clients
+    return const ReviewsScreen(isProfessional: true);
+  }
+}

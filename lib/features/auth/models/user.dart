@@ -9,6 +9,8 @@ class User {
   final String? phone;
   final String? avatar;
 
+  bool get isProfessional => role == 'professional';
+
   const User({
     required this.coId,
     this.email,
@@ -20,15 +22,46 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final rawRole =
+        json['co_role'] ??
+        json['co_role_label'] ??
+        json['co_type_label'] ??
+        json['co_type'] ??
+        json['role'] ??
+        json['user_type'];
+
     return User(
       coId: json['co_id']?.toString() ?? '',
       email: json['co_email'] as String?,
       firstName: json['co_first_name'] as String?,
       lastName: json['co_last_name'] as String?,
-      role: json['co_role'] as String?,
+      role: _normalizeRole(rawRole),
       phone: json['co_phone'] as String?,
       avatar: json['co_avatar'] as String?,
     );
+  }
+
+  static String _normalizeRole(dynamic value) {
+    if (value is num) {
+      // Common role codes used by some backends.
+      if (value == 2) return 'professional';
+      if (value == 1 || value == 0) return 'customer';
+    }
+
+    final role = value?.toString().trim().toLowerCase() ?? '';
+
+    if (role.isEmpty) return 'customer';
+
+    // Normalize common backend variants.
+    if (role == 'professional' || role == 'pro' || role == 'advisor') {
+      return 'professional';
+    }
+
+    if (role == 'customer' || role == 'client' || role == 'user') {
+      return 'customer';
+    }
+
+    return role;
   }
 }
 

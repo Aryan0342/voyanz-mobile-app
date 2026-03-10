@@ -9,12 +9,14 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
 /// Bottom-navigation shell that wraps most authenticated screens.
-class HomeShell extends StatelessWidget {
+/// Shows different tabs based on user role (customer vs professional).
+class HomeShell extends ConsumerWidget {
   final Widget child;
 
   const HomeShell({super.key, required this.child});
 
-  static const _tabs = [
+  // Customer tabs
+  static const _customerTabs = [
     (icon: Icons.explore_outlined, activeIcon: Icons.explore, label: 'Explore'),
     (
       icon: Icons.chat_bubble_outline,
@@ -26,7 +28,28 @@ class HomeShell extends StatelessWidget {
     (icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
   ];
 
-  int _currentIndex(BuildContext context) {
+  // Professional tabs
+  static const _professionalTabs = [
+    (
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      label: 'Dashboard',
+    ),
+    (
+      icon: Icons.calendar_today_outlined,
+      activeIcon: Icons.calendar_today,
+      label: 'Availability',
+    ),
+    (
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
+      label: 'Chat',
+    ),
+    (icon: Icons.people_outline, activeIcon: Icons.people, label: 'Clients'),
+    (icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+  ];
+
+  int _currentIndexCustomer(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/chat')) return 1;
     if (location.startsWith('/history')) return 2;
@@ -37,7 +60,16 @@ class HomeShell extends StatelessWidget {
     return 0;
   }
 
-  void _onTap(BuildContext context, int idx) {
+  int _currentIndexProfessional(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/availability')) return 1;
+    if (location.startsWith('/chat')) return 2;
+    if (location.startsWith('/clients')) return 3;
+    if (location.startsWith('/profile')) return 4;
+    return 0; // dashboard (home)
+  }
+
+  void _onTapCustomer(BuildContext context, int idx) {
     switch (idx) {
       case 0:
         context.go('/home');
@@ -52,9 +84,31 @@ class HomeShell extends StatelessWidget {
     }
   }
 
+  void _onTapProfessional(BuildContext context, int idx) {
+    switch (idx) {
+      case 0:
+        context.go('/home');
+      case 1:
+        context.go('/availability');
+      case 2:
+        context.go('/chat');
+      case 3:
+        context.go('/clients');
+      case 4:
+        context.go('/profile');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final idx = _currentIndex(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final isProfessional = user?.isProfessional ?? false;
+
+    final tabs = isProfessional ? _professionalTabs : _customerTabs;
+    final currentIdx = isProfessional
+        ? _currentIndexProfessional(context)
+        : _currentIndexCustomer(context);
+    final onTap = isProfessional ? _onTapProfessional : _onTapCustomer;
 
     return Scaffold(
       body: Container(
@@ -79,9 +133,9 @@ class HomeShell extends StatelessWidget {
           ],
         ),
         child: NavigationBar(
-          selectedIndex: idx,
-          onDestinationSelected: (i) => _onTap(context, i),
-          destinations: _tabs
+          selectedIndex: currentIdx,
+          onDestinationSelected: (i) => onTap(context, i),
+          destinations: tabs
               .map(
                 (t) => NavigationDestination(
                   icon: Icon(t.icon),
@@ -110,12 +164,12 @@ class ProfileScreen extends ConsumerWidget {
 
     // Fetch dynamic stats from backend
     final historyAsync = ref.watch(
-      user?.role == 'professional'
+      (user?.isProfessional ?? false)
           ? professionalHistoryProvider
           : customerHistoryProvider,
     );
     final reviewsAsync = ref.watch(
-      user?.role == 'professional'
+      (user?.isProfessional ?? false)
           ? professionalReviewsProvider
           : customerReviewsProvider,
     );

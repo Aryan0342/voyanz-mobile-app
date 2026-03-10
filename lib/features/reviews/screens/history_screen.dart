@@ -213,7 +213,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       sliver: SliverList.builder(
                         itemCount: filteredItems.length,
                         itemBuilder: (context, i) {
-                          final item = filteredItems[i] as Map<String, dynamic>;
+                          final item = filteredItems[i];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: _SessionCard(item: item),

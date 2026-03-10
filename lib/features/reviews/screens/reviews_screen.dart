@@ -146,7 +146,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                           ),
                           const SizedBox(height: 20),
                           _RatingOverviewCard(
-                            avgRating: avgRating,
+                            avgRating: avgRating.toDouble(),
                             totalReviews: totalReviews,
                           ),
                         ],
@@ -232,7 +232,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                       sliver: SliverList.builder(
                         itemCount: filteredItems.length,
                         itemBuilder: (context, i) {
-                          final r = filteredItems[i] as Map<String, dynamic>;
+                          final r = filteredItems[i];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: _ReviewCard(review: r),
