@@ -6,6 +6,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
 /// Bottom-navigation shell that wraps most authenticated screens.
 class HomeShell extends StatelessWidget {
@@ -104,7 +105,20 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider).valueOrNull;
     final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final email = user?.email ?? '';
+    final phone = user?.phone ?? '';
     final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    // Fetch dynamic stats from backend
+    final historyAsync = ref.watch(
+      user?.role == 'professional'
+          ? professionalHistoryProvider
+          : customerHistoryProvider,
+    );
+    final reviewsAsync = ref.watch(
+      user?.role == 'professional'
+          ? professionalReviewsProvider
+          : customerReviewsProvider,
+    );
 
     return GradientScaffold(
       body: SafeArea(
@@ -163,6 +177,16 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    if (phone.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        phone,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -171,32 +195,146 @@ class ProfileScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.history,
-                        value: '12',
-                        label: 'Sessions',
+                child: historyAsync.when(
+                  loading: () => Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.history,
+                          value: '--',
+                          label: 'Sessions',
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.star,
-                        value: '4.8',
-                        label: 'Rating',
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.access_time,
+                          value: '--',
+                          label: 'Total Time',
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.access_time,
-                        value: '6h',
-                        label: 'Total Time',
+                    ],
+                  ),
+                  error: (_, __) => Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.history,
+                          value: '0',
+                          label: 'Sessions',
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.access_time,
+                          value: '0h',
+                          label: 'Total Time',
+                        ),
+                      ),
+                    ],
+                  ),
+                  data: (history) {
+                    // Calculate sessions count
+                    final sessionCount = history.length;
+
+                    // Calculate total duration
+                    double totalMinutes = 0;
+                    for (final item in history) {
+                      final itemMap = item as Map<String, dynamic>;
+                      final durationStr =
+                          itemMap['se_duration']?.toString() ?? '';
+                      final minutes = _parseDuration(durationStr);
+                      totalMinutes += minutes;
+                    }
+                    final totalHours = (totalMinutes / 60).toStringAsFixed(1);
+
+                    return reviewsAsync.when(
+                      loading: () => Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.history,
+                              value: sessionCount.toString(),
+                              label: 'Sessions',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.access_time,
+                              value: '${totalHours}h',
+                              label: 'Total Time',
+                            ),
+                          ),
+                        ],
+                      ),
+                      error: (_, __) => Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.history,
+                              value: sessionCount.toString(),
+                              label: 'Sessions',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.access_time,
+                              value: '${totalHours}h',
+                              label: 'Total Time',
+                            ),
+                          ),
+                        ],
+                      ),
+                      data: (reviews) {
+                        // Calculate average rating
+                        double avgRating = 0;
+                        if (reviews.isNotEmpty) {
+                          double totalRating = 0;
+                          for (final review in reviews) {
+                            final reviewMap = review as Map<String, dynamic>;
+                            final rating = reviewMap['re_rating'] as num?;
+                            if (rating != null) {
+                              totalRating += rating.toDouble();
+                            }
+                          }
+                          avgRating = totalRating / reviews.length;
+                        }
+
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.history,
+                                value: sessionCount.toString(),
+                                label: 'Sessions',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.star,
+                                value: avgRating > 0
+                                    ? avgRating.toStringAsFixed(1)
+                                    : 'N/A',
+                                label: 'Rating',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.access_time,
+                                value: '${totalHours}h',
+                                label: 'Total Time',
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),
@@ -223,14 +361,36 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.person_outline,
                       title: 'Edit Profile',
                       subtitle: 'Update your information',
-                      onTap: () {},
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Edit Profile Coming Soon',
+                              style: GoogleFonts.montserrat(fontSize: 14),
+                            ),
+                            backgroundColor: AppColors.mediumPurple,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.notifications_outlined,
                       title: 'Notifications',
                       subtitle: 'Manage preferences',
-                      onTap: () {},
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Notification Settings Coming Soon',
+                              style: GoogleFonts.montserrat(fontSize: 14),
+                            ),
+                            backgroundColor: AppColors.mediumPurple,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
@@ -266,21 +426,46 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.help_outline,
                       title: 'Help Center',
                       subtitle: 'FAQs and guides',
-                      onTap: () {},
+                      onTap: () {
+                        _showAboutDialog(
+                          context,
+                          title: 'Help Center',
+                          content:
+                              'Frequently asked questions and guides will be available soon. '
+                              'For immediate support, please contact our team.',
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.privacy_tip_outlined,
                       title: 'Privacy Policy',
                       subtitle: 'Read our terms',
-                      onTap: () {},
+                      onTap: () {
+                        _showAboutDialog(
+                          context,
+                          title: 'Privacy Policy',
+                          content:
+                              'Our privacy policy details how we collect, use, and protect your data. '
+                              'Full policy will be available in the next update.',
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.info_outline,
                       title: 'About Voyanz',
                       subtitle: 'Version 1.0.0',
-                      onTap: () {},
+                      onTap: () {
+                        _showAboutDialog(
+                          context,
+                          title: 'About Voyanz',
+                          content:
+                              'Voyanz - Your trusted platform for professional consultations.\n\n'
+                              'Version: 1.0.0\n'
+                              'Built with Flutter & ❤️',
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -349,6 +534,73 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Parse duration string (e.g., "30 min", "1h 30min") and return total minutes
+double _parseDuration(String durationStr) {
+  if (durationStr.isEmpty) return 0;
+
+  final str = durationStr.toLowerCase().trim();
+  double totalMinutes = 0;
+
+  // Match hours
+  final hourMatch = RegExp(r'(\d+(?:\.\d+)?)\s*h(?:our)?s?').firstMatch(str);
+  if (hourMatch != null) {
+    totalMinutes += double.parse(hourMatch.group(1)!) * 60;
+  }
+
+  // Match minutes
+  final minMatch = RegExp(
+    r'(\d+(?:\.\d+)?)\s*m(?:in)?(?:ute)?s?',
+  ).firstMatch(str);
+  if (minMatch != null) {
+    totalMinutes += double.parse(minMatch.group(1)!);
+  }
+
+  return totalMinutes;
+}
+
+/// Show an about dialog with title and content
+void _showAboutDialog(
+  BuildContext context, {
+  required String title,
+  required String content,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
+      title: Text(
+        title,
+        style: GoogleFonts.jost(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      content: Text(
+        content,
+        style: GoogleFonts.montserrat(
+          fontSize: 14,
+          color: AppColors.textSecondary,
+          height: 1.6,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Close',
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.rosePink,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _StatCard extends StatelessWidget {

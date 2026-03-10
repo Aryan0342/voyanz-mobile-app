@@ -32,57 +32,92 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.rosePink),
           ),
-          error: (e, _) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load reviews',
-                  style: GoogleFonts.montserrat(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-          ),
+          error: (e, st) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load reviews',
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Error: ${e.toString()}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(
+                        widget.isProfessional
+                            ? professionalReviewsProvider
+                            : customerReviewsProvider,
+                      );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.rosePink,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
           data: (items) {
-            if (items.isEmpty) {
-              return _EmptyState();
+            // Filter items safely, excluding non-Map items
+            final validItems = items
+                .where((item) => item is Map<String, dynamic>)
+                .cast<Map<String, dynamic>>()
+                .toList();
+
+            if (validItems.isEmpty) {
+              return _EmptyState(isProfessional: widget.isProfessional);
             }
 
             final filteredItems = _selectedFilter == 'All'
-                ? items
-                : items.where((item) {
+                ? validItems
+                : validItems.where((item) {
                     final rating =
-                        double.tryParse(
-                          (item as Map<String, dynamic>)['re_rating']
-                                  ?.toString() ??
-                              '',
-                        ) ??
+                        double.tryParse(item['re_rating']?.toString() ?? '') ??
                         0;
                     final filterValue = int.tryParse(_selectedFilter) ?? 0;
                     return rating.round() == filterValue;
                   }).toList();
 
             // Calculate statistics
-            final totalReviews = items.length;
-            final avgRating =
-                items.fold<double>(
-                  0,
-                  (sum, item) =>
-                      sum +
-                      (double.tryParse(
-                            (item as Map<String, dynamic>)['re_rating']
-                                    ?.toString() ??
-                                '',
-                          ) ??
-                          0),
-                ) /
-                totalReviews;
+            final totalReviews = validItems.length;
+            final avgRating = totalReviews > 0
+                ? validItems.fold<double>(
+                        0,
+                        (sum, item) =>
+                            sum +
+                            (double.tryParse(
+                                  item['re_rating']?.toString() ?? '',
+                                ) ??
+                                0),
+                      ) /
+                      totalReviews
+                : 0;
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -502,6 +537,10 @@ class _ReviewCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  final bool isProfessional;
+
+  const _EmptyState({this.isProfessional = false});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -534,7 +573,9 @@ class _EmptyState extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Reviews from your consultations\nwill appear here',
+              isProfessional
+                  ? 'Reviews from your clients\nwill appear here'
+                  : 'Reviews from your consultations\nwill appear here',
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 14,

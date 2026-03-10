@@ -32,36 +32,77 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.rosePink),
           ),
-          error: (e, _) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load history',
-                  style: GoogleFonts.montserrat(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-          ),
+          error: (e, st) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load history',
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Error: ${e.toString()}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(
+                        widget.isProfessional
+                            ? professionalHistoryProvider
+                            : customerHistoryProvider,
+                      );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.rosePink,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
           data: (items) {
             if (items.isEmpty) {
               return _EmptyState();
             }
 
+            // Filter items safely, excluding non-Map items
+            final validItems = items
+                .where((item) => item is Map<String, dynamic>)
+                .cast<Map<String, dynamic>>()
+                .toList();
+
+            if (validItems.isEmpty) {
+              return _EmptyState();
+            }
+
             final filteredItems = _selectedFilter == 'All'
-                ? items
-                : items.where((item) {
+                ? validItems
+                : validItems.where((item) {
                     final status =
-                        (item as Map<String, dynamic>)['se_status']
-                            ?.toString()
-                            .toLowerCase() ??
-                        '';
+                        item['se_status']?.toString().toLowerCase() ?? '';
                     return status == _selectedFilter.toLowerCase();
                   }).toList();
 
