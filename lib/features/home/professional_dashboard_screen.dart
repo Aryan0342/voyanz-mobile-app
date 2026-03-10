@@ -13,7 +13,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
-    final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
+    final name = _displayName(user);
 
     // Fetch professional history (sessions)
     final historyAsync = ref.watch(professionalHistoryProvider);
@@ -76,7 +76,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                       child: _StatCard(
                         title: 'Total Sessions',
                         value: historyAsync.when(
-                          data: (items) => '${items.length}',
+                          data: (items) => '${_validSessions(items).length}',
                           loading: () => '-',
                           error: (_, __) => '0',
                         ),
@@ -89,10 +89,8 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                         title: 'Avg Rating',
                         value: reviewsAsync.when(
                           data: (items) {
-                            if (items.isEmpty) return '0.0';
                             final validItems = items
-                                .where((item) => item is Map<String, dynamic>)
-                                .cast<Map<String, dynamic>>()
+                                .whereType<Map<String, dynamic>>()
                                 .toList();
                             if (validItems.isEmpty) return '0.0';
                             final totalRating = validItems.fold<double>(
@@ -115,6 +113,32 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _StatCard(
+                  title: 'Upcoming Sessions',
+                  value: historyAsync.when(
+                    data: (items) {
+                      final upcoming = _validSessions(items).where((s) {
+                        final status = (s['se_status']?.toString() ?? '')
+                            .toLowerCase();
+                        return status == 'pending' ||
+                            status == 'calling' ||
+                            status == 'inprogress';
+                      }).length;
+                      return '$upcoming';
+                    },
+                    loading: () => '-',
+                    error: (_, __) => '0',
+                  ),
+                  icon: Icons.schedule,
                 ),
               ),
             ),
@@ -178,21 +202,20 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                   );
                 }
 
-                final validItems = items
-                    .where((item) => item is Map<String, dynamic>)
-                    .cast<Map<String, dynamic>>()
-                    .toList()
-                    .take(5)
-                    .toList();
+                final validItems = _validSessions(items).take(5).toList();
 
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, idx) {
                     final session = validItems[idx];
-                    final clientName =
-                        session['co_fullname']?.toString() ?? 'Unknown';
+                    final clientName = _clientName(session);
                     final sessionType =
-                        session['se_type']?.toString() ?? 'Session';
-                    final sessionDate = session['se_date']?.toString() ?? '';
+                        (session['se_type'] ?? session['session_type'])
+                            ?.toString() ??
+                        'Session';
+                    final sessionDate =
+                        (session['se_date'] ?? session['session_date'])
+                            ?.toString() ??
+                        '';
                     final status = session['se_status']?.toString() ?? '';
 
                     return Padding(
@@ -338,6 +361,28 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+String _displayName(dynamic user) {
+  if (user == null) return 'Professional';
+  final full = '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim();
+  if (full.isNotEmpty) return full;
+  final email = (user.email ?? '').toString();
+  if (email.contains('@')) return email.split('@').first;
+  return 'Professional';
+}
+
+List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
+  return items.whereType<Map<String, dynamic>>().toList();
+}
+
+String _clientName(Map<String, dynamic> session) {
+  return (session['co_fullname'] ??
+              session['co_display_name'] ??
+              session['customer_name'] ??
+              session['client_name'])
+          ?.toString() ??
+      'Unknown';
 }
 
 class _StatCard extends StatelessWidget {

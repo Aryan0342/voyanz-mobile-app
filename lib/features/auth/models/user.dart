@@ -32,11 +32,24 @@ class User {
 
     return User(
       coId: json['co_id']?.toString() ?? '',
-      email: json['co_email'] as String?,
-      firstName: json['co_first_name'] as String?,
-      lastName: json['co_last_name'] as String?,
+      email:
+          json['co_email'] as String? ??
+          json['co_email1'] as String? ??
+          json['email'] as String?,
+      firstName:
+          json['co_first_name'] as String? ??
+          json['co_firstname'] as String? ??
+          json['co_fullname'] as String? ??
+          json['firstname'] as String?,
+      lastName:
+          json['co_last_name'] as String? ??
+          json['co_name'] as String? ??
+          json['lastname'] as String?,
       role: _normalizeRole(rawRole),
-      phone: json['co_phone'] as String?,
+      phone:
+          json['co_phone'] as String? ??
+          json['co_mobile'] as String? ??
+          json['co_mobile1'] as String?,
       avatar: json['co_avatar'] as String?,
     );
   }

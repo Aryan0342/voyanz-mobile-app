@@ -33,12 +33,12 @@ class HomeShell extends ConsumerWidget {
     (
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard,
-      label: 'Dashboard',
+      label: 'Home',
     ),
     (
       icon: Icons.calendar_today_outlined,
       activeIcon: Icons.calendar_today,
-      label: 'Availability',
+      label: 'Slots',
     ),
     (
       icon: Icons.chat_bubble_outline,
@@ -132,18 +132,33 @@ class HomeShell extends ConsumerWidget {
             ),
           ],
         ),
-        child: NavigationBar(
-          selectedIndex: currentIdx,
-          onDestinationSelected: (i) => onTap(context, i),
-          destinations: tabs
-              .map(
-                (t) => NavigationDestination(
-                  icon: Icon(t.icon),
-                  selectedIcon: Icon(t.activeIcon),
-                  label: t.label,
-                ),
-              )
-              .toList(),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            navigationBarTheme: NavigationBarThemeData(
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return GoogleFonts.montserrat(
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                );
+              }),
+            ),
+          ),
+          child: NavigationBar(
+            selectedIndex: currentIdx,
+            onDestinationSelected: (i) => onTap(context, i),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            height: 72,
+            destinations: tabs
+                .map(
+                  (t) => NavigationDestination(
+                    icon: Icon(t.icon),
+                    selectedIcon: Icon(t.activeIcon),
+                    label: t.label,
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ),
     );
