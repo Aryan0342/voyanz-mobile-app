@@ -47,3 +47,9 @@ final professionalDetailProvider =
           .watch(professionalsRepositoryProvider)
           .getProfessionalInfos(coId);
     });
+
+final professionalDisponibilitiesProvider = FutureProvider<List<dynamic>>((
+  ref,
+) async {
+  return ref.watch(professionalsRepositoryProvider).getDisponibilities();
+});

@@ -51,11 +51,65 @@ class ProfessionalsDataSource {
 
   Future<List<dynamic>> getDisponibilities() async {
     final response = await _dio.get(ApiEndpoints.professionalDisponibilities);
-    final body = response.data as Map<String, dynamic>;
-    return body['data'] as List? ?? [];
+    final raw = response.data;
+
+    if (raw is List) {
+      return raw;
+    }
+
+    if (raw is! Map<String, dynamic>) {
+      return const [];
+    }
+
+    _throwIfApiError(raw, fallbackPrefix: 'Disponibilities API error');
+
+    final data =
+        raw['data'] ?? raw['disponibilities'] ?? raw['availability'] ?? raw;
+
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map<String, dynamic>) {
+      // Convert map payloads like {"Monday": ["09:00"]} to list rows.
+      return data.entries
+          .map((e) => <String, dynamic>{'day': e.key, 'slots': e.value})
+          .toList();
+    }
+
+    return const [];
   }
 
   Future<void> createDisponibility(Map<String, dynamic> data) async {
-    await _dio.post(ApiEndpoints.createDisponibilities, data: data);
+    final response = await _dio.post(
+      ApiEndpoints.createDisponibilities,
+      data: data,
+    );
+
+    final raw = response.data;
+    if (raw is Map<String, dynamic>) {
+      _throwIfApiError(raw, fallbackPrefix: 'Create disponibility failed');
+    }
+  }
+
+  void _throwIfApiError(
+    Map<String, dynamic> body, {
+    required String fallbackPrefix,
+  }) {
+    final topLevelError = body['error'];
+    final wrappedError = body['err'];
+
+    if (topLevelError != null) {
+      throw Exception('$fallbackPrefix: $topLevelError');
+    }
+
+    if (wrappedError is Map<String, dynamic> && wrappedError.isNotEmpty) {
+      final message =
+          wrappedError['message']?.toString() ??
+          wrappedError['key']?.toString() ??
+          wrappedError['code']?.toString() ??
+          'Unknown error';
+      throw Exception('$fallbackPrefix: $message');
+    }
   }
 }

@@ -6,6 +6,7 @@ import 'package:voyanz/features/auth/screens/login_screen.dart';
 import 'package:voyanz/features/account/screens/register_screen.dart';
 import 'package:voyanz/features/professionals/screens/professionals_list_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_detail_screen.dart';
+import 'package:voyanz/features/professionals/screens/professional_availability_screen.dart';
 import 'package:voyanz/features/sessions/screens/video_call_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_groups_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_messages_screen.dart';
@@ -120,23 +121,6 @@ class _HomeScreenRouter extends ConsumerWidget {
       return const ProfessionalDashboardScreen();
     }
     return const ProfessionalsListScreen();
-  }
-}
-
-/// Professional availability management screen (placeholder).
-class ProfessionalAvailabilityScreen extends StatelessWidget {
-  const ProfessionalAvailabilityScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Manage Availability'),
-      ),
-      body: const Center(child: Text('Availability management coming soon')),
-    );
   }
 }
 
