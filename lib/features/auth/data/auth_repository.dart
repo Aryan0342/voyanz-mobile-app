@@ -21,7 +21,23 @@ class AuthRepository {
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
     );
-    return response;
+
+    // Some login payloads omit/encode role inconsistently.
+    // Resolve canonical user data from /user/infos when possible.
+    try {
+      final userInfos = await _dataSource.getUserInfos();
+      return LoginResponse(
+        user: userInfos,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        agency: response.agency,
+        preferences: response.preferences,
+        i18n: response.i18n,
+      );
+    } catch (_) {
+      // Fallback to login payload if user infos request fails.
+      return response;
+    }
   }
 
   Future<LoginResponse> _mockLogin({

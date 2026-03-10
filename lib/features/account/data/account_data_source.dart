@@ -11,7 +11,9 @@ class AccountDataSource {
     required Map<String, dynamic> body,
   }) async {
     final response = await _dio.post(ApiEndpoints.createAccount, data: body);
-    return response.data as Map<String, dynamic>;
+    final result = response.data as Map<String, dynamic>;
+    _throwIfApiError(result);
+    return result;
   }
 
   /// PUT /web/1.0/account/:co_id
@@ -23,7 +25,9 @@ class AccountDataSource {
       ApiEndpoints.updateAccount(coId),
       data: body,
     );
-    return response.data as Map<String, dynamic>;
+    final result = response.data as Map<String, dynamic>;
+    _throwIfApiError(result);
+    return result;
   }
 
   /// PUT /web/1.0/account/description/:co_id (pro only)
@@ -35,6 +39,21 @@ class AccountDataSource {
       ApiEndpoints.updateProDescription(coId),
       data: body,
     );
-    return response.data as Map<String, dynamic>;
+    final result = response.data as Map<String, dynamic>;
+    _throwIfApiError(result);
+    return result;
+  }
+
+  void _throwIfApiError(Map<String, dynamic> body) {
+    final err = body['err'];
+    if (err == null) return;
+
+    if (err is Map<String, dynamic>) {
+      final message =
+          err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
+      throw Exception(message);
+    }
+
+    throw Exception(err.toString());
   }
 }

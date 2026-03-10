@@ -50,6 +50,9 @@ class User {
 
     final role = value?.toString().trim().toLowerCase() ?? '';
 
+    if (role == '2') return 'professional';
+    if (role == '1' || role == '0') return 'customer';
+
     if (role.isEmpty) return 'customer';
 
     // Normalize common backend variants.

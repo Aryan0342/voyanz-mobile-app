@@ -114,6 +114,7 @@ class _HomeScreenRouter extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
     final isProfessional = user?.isProfessional ?? false;
+    debugPrint('Home route: role=${user?.role} isProfessional=$isProfessional');
 
     if (isProfessional) {
       return const ProfessionalDashboardScreen();

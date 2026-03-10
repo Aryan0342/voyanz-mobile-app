@@ -98,6 +98,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     setState(() => _loading = true);
     try {
       await ref.read(accountRepositoryProvider).createAccount({
+        // Preferred backend keys from API spec.
+        'co_email1': _emailCtrl.text.trim(),
+        'co_mobile1': _mobileCtrl.text.trim(),
+        'co_type': _role,
+        'cgv': _acceptCgu,
+        'cgs': _acceptCgs,
+
+        // Existing app keys kept for compatibility with alternate server mappings.
         'co_first_name': _firstNameCtrl.text.trim(),
         'co_last_name': _lastNameCtrl.text.trim(),
         'co_display_name': _displayNameCtrl.text.trim(),

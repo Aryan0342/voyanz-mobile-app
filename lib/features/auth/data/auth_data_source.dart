@@ -15,12 +15,28 @@ class AuthDataSource {
       ApiEndpoints.login,
       data: {'login': email, 'password': password},
     );
-    return LoginResponse.fromJson(response.data as Map<String, dynamic>);
+    final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body);
+    return LoginResponse.fromJson(body);
   }
 
   Future<User> getUserInfos() async {
     final response = await _dio.get(ApiEndpoints.userInfos);
     final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body);
     return User.fromJson(body['data'] as Map<String, dynamic>? ?? body);
+  }
+
+  void _throwIfApiError(Map<String, dynamic> body) {
+    final err = body['err'];
+    if (err == null) return;
+
+    if (err is Map<String, dynamic>) {
+      final message =
+          err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
+      throw Exception(message);
+    }
+
+    throw Exception(err.toString());
   }
 }

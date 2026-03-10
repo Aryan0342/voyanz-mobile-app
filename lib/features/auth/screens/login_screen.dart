@@ -60,6 +60,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
+        final user = next.value;
+        debugPrint(
+          'Login success: role=${user?.role} isProfessional=${user?.isProfessional}',
+        );
         context.go('/home');
       }
       if (next.hasError) {
