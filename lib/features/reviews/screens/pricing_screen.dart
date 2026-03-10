@@ -118,7 +118,6 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                 return _buildPricingTile(
                   title: entry.key,
                   value: entry.value.toString(),
-                  isPrimary: i == 0,
                 );
               },
             );
@@ -212,20 +211,12 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       itemCount: entries.length,
       itemBuilder: (_, i) {
         final entry = entries[i];
-        return _buildPricingTile(
-          title: entry.key,
-          value: entry.value,
-          isPrimary: i == 0,
-        );
+        return _buildPricingTile(title: entry.key, value: entry.value);
       },
     );
   }
 
-  Widget _buildPricingTile({
-    required String title,
-    required String value,
-    required bool isPrimary,
-  }) {
+  Widget _buildPricingTile({required String title, required String value}) {
     final isSelected = _selectedPricingKey == title;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -237,12 +228,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: isPrimary && !isSelected ? AppGradients.accent : null,
               color: isSelected
                   ? AppColors.mediumPurple.withValues(alpha: 0.25)
-                  : (isPrimary
-                        ? null
-                        : AppColors.surfaceCard.withValues(alpha: 0.7)),
+                  : AppColors.surfaceCard.withValues(alpha: 0.7),
               border: Border.all(
                 color: isSelected
                     ? AppColors.rosePink
