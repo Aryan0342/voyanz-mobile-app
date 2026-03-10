@@ -676,20 +676,7 @@ class _ProfessionalDetailScreenState
                     // ── Action Buttons ──
                     Row(
                       children: [
-                        if (!pro.isAvailableNow) ...[
-                          Expanded(
-                            child: _ActionButton(
-                              onPressed: () =>
-                                  _showNotifyMeDialog(context, pro),
-                              icon: Icons.notifications_outlined,
-                              label: 'Notify Me',
-                              isPrimary: false,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
                         Expanded(
-                          flex: pro.isAvailableNow ? 1 : 1,
                           child: _ActionButton(
                             onPressed: () => _bookSession(context, pro),
                             icon: Icons.calendar_today_outlined,
