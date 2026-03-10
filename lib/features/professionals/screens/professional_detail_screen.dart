@@ -200,17 +200,6 @@ class _ProfessionalDetailScreenState
   void _bookSession(BuildContext context, dynamic pro) {
     // Navigate to pricing screen for this professional
     context.push('/pricing/${pro.coId}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Booking session with ${pro.firstName ?? 'professional'}...',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: AppColors.rosePink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   void _startSession(BuildContext context, dynamic pro) {

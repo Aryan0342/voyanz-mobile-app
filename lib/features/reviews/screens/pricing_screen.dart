@@ -7,16 +7,31 @@ import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
-class PricingScreen extends ConsumerWidget {
+class PricingScreen extends ConsumerStatefulWidget {
   final String? coId;
 
   const PricingScreen({super.key, this.coId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PricingScreen> createState() => _PricingScreenState();
+}
+
+class _PricingScreenState extends ConsumerState<PricingScreen> {
+  String? _selectedPricingKey;
+
+  void _selectPricing(String key) {
+    setState(() {
+      _selectedPricingKey = key;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // If coId is provided, show professional pricing; otherwise show customer pricing
-    if (coId != null) {
-      final professionalAsync = ref.watch(professionalDetailProvider(coId!));
+    if (widget.coId != null) {
+      final professionalAsync = ref.watch(
+        professionalDetailProvider(widget.coId!),
+      );
       final listAsync = ref.watch(professionalsListProvider);
 
       return Scaffold(
@@ -40,7 +55,7 @@ class PricingScreen extends ConsumerWidget {
             final list = listAsync.asData?.value ?? const <Professional>[];
             Professional? fromList;
             for (final item in list) {
-              if (item.coId == coId) {
+              if (item.coId == widget.coId) {
                 fromList = item;
                 break;
               }
@@ -100,51 +115,10 @@ class PricingScreen extends ConsumerWidget {
               itemCount: entries.length,
               itemBuilder: (_, i) {
                 final entry = entries[i];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: i == 0 ? AppGradients.accent : null,
-                      color: i == 0
-                          ? null
-                          : AppColors.surfaceCard.withValues(alpha: 0.7),
-                      border: i == 0
-                          ? null
-                          : Border.all(
-                              color: AppColors.mediumPurple.withValues(
-                                alpha: 0.12,
-                              ),
-                            ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              entry.key,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: i == 0
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            entry.value.toString(),
-                            style: GoogleFonts.jost(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: i == 0 ? Colors.white : AppColors.rosePink,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                return _buildPricingTile(
+                  title: entry.key,
+                  value: entry.value.toString(),
+                  isPrimary: i == 0,
                 );
               },
             );
@@ -238,20 +212,43 @@ class PricingScreen extends ConsumerWidget {
       itemCount: entries.length,
       itemBuilder: (_, i) {
         final entry = entries[i];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+        return _buildPricingTile(
+          title: entry.key,
+          value: entry.value,
+          isPrimary: i == 0,
+        );
+      },
+    );
+  }
+
+  Widget _buildPricingTile({
+    required String title,
+    required String value,
+    required bool isPrimary,
+  }) {
+    final isSelected = _selectedPricingKey == title;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _selectPricing(title),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: i == 0 ? AppGradients.accent : null,
-              color: i == 0
-                  ? null
-                  : AppColors.surfaceCard.withValues(alpha: 0.7),
-              border: i == 0
-                  ? null
-                  : Border.all(
-                      color: AppColors.mediumPurple.withValues(alpha: 0.12),
-                    ),
+              gradient: isPrimary && !isSelected ? AppGradients.accent : null,
+              color: isSelected
+                  ? AppColors.mediumPurple.withValues(alpha: 0.25)
+                  : (isPrimary
+                        ? null
+                        : AppColors.surfaceCard.withValues(alpha: 0.7)),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.rosePink
+                    : AppColors.mediumPurple.withValues(alpha: 0.12),
+                width: isSelected ? 1.6 : 1,
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -259,28 +256,38 @@ class PricingScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      entry.key,
+                      title,
                       style: GoogleFonts.montserrat(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: i == 0 ? Colors.white : AppColors.textPrimary,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
                   Text(
-                    entry.value,
+                    value,
                     style: GoogleFonts.jost(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: i == 0 ? Colors.white : AppColors.rosePink,
+                      color: isSelected
+                          ? AppColors.textPrimary
+                          : AppColors.rosePink,
                     ),
                   ),
+                  if (isSelected) ...[
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.check_circle,
+                      color: AppColors.rosePink,
+                      size: 18,
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
