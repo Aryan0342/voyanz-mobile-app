@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -25,6 +26,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     final groupsAsync = ref.watch(chatGroupsProvider);
 
     return GradientScaffold(
@@ -44,7 +46,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load conversations',
+                  t.failedLoadConversations,
                   style: GoogleFonts.montserrat(color: AppColors.textSecondary),
                 ),
               ],
@@ -75,7 +77,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                       child: Text(
-                        'Messages',
+                        t.messages,
                         style: GoogleFonts.jost(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -95,7 +97,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                           fontSize: 15,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search conversations...',
+                          hintText: t.searchConversations,
                           prefixIcon: const Icon(
                             Icons.search,
                             color: AppColors.textMuted,
@@ -146,7 +148,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No conversations found',
+                              t.noConversationsFound,
                               style: GoogleFonts.montserrat(
                                 color: AppColors.textMuted,
                                 fontSize: 15,
@@ -281,9 +283,10 @@ class _ConversationCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -303,7 +306,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Conversations Yet',
+            t.noConversationsYet,
             style: GoogleFonts.jost(
               fontSize: 22,
               fontWeight: FontWeight.w600,
@@ -314,7 +317,7 @@ class _EmptyState extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Start a conversation with an advisor\nfrom the Explore tab',
+              t.startChatExplore,
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 14,

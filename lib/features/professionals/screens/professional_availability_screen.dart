@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 
 class ProfessionalAvailabilityScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,7 @@ class _ProfessionalAvailabilityScreenState
   bool _submitting = false;
 
   Future<void> _showAddSlotDialog() async {
+    final t = ref.read(translationsProvider);
     final dayCtrl = TextEditingController();
     final timeCtrl = TextEditingController();
     final timeEndCtrl = TextEditingController();
@@ -44,7 +47,7 @@ class _ProfessionalAvailabilityScreenState
             return AlertDialog(
               backgroundColor: AppColors.surfaceCard,
               title: Text(
-                'Add Availability Slot',
+                t.addAvailabilitySlot,
                 style: GoogleFonts.jost(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -57,10 +60,15 @@ class _ProfessionalAvailabilityScreenState
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: selectedDay,
-                      decoration: const InputDecoration(labelText: 'Day'),
+                      decoration: InputDecoration(labelText: t.day),
                       items: days
+                          .asMap()
+                          .entries
                           .map(
-                            (d) => DropdownMenuItem(value: d, child: Text(d)),
+                            (entry) => DropdownMenuItem(
+                              value: entry.value,
+                              child: Text(t.days[entry.key]),
+                            ),
                           )
                           .toList(),
                       onChanged: (v) {
@@ -72,26 +80,26 @@ class _ProfessionalAvailabilityScreenState
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: timeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Start Time (HH:mm)',
-                        hintText: '09:00',
+                      decoration: InputDecoration(
+                        labelText: t.startTime,
+                        hintText: t.startTimeHint,
                       ),
                       validator: (v) {
                         final value = (v ?? '').trim();
-                        if (value.isEmpty) return 'Start time is required';
+                        if (value.isEmpty) return t.startTimeRequired;
                         final ok = RegExp(
                           r'^([01]\d|2[0-3]):[0-5]\d$',
                         ).hasMatch(value);
-                        if (!ok) return 'Use 24h format, e.g. 09:00';
+                        if (!ok) return t.use24hFormat;
                         return null;
                       },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: timeEndCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'End Time (HH:mm)',
-                        hintText: '10:00',
+                      decoration: InputDecoration(
+                        labelText: t.endTime,
+                        hintText: t.endTimeHint,
                       ),
                       validator: (v) {
                         final value = (v ?? '').trim();
@@ -99,7 +107,7 @@ class _ProfessionalAvailabilityScreenState
                         final ok = RegExp(
                           r'^([01]\d|2[0-3]):[0-5]\d$',
                         ).hasMatch(value);
-                        if (!ok) return 'Use 24h format, e.g. 10:00';
+                        if (!ok) return t.use24hFormat;
                         return null;
                       },
                     ),
@@ -109,14 +117,14 @@ class _ProfessionalAvailabilityScreenState
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
+                  child: Text(t.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     if (!formKey.currentState!.validate()) return;
                     Navigator.pop(ctx, true);
                   },
-                  child: const Text('Save'),
+                  child: Text(t.save),
                 ),
               ],
             );
@@ -147,15 +155,15 @@ class _ProfessionalAvailabilityScreenState
       final _ = await ref.refresh(professionalDisponibilitiesProvider.future);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Availability slot added successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.slotAddedSuccess)));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add slot: $e')));
+        ).showSnackBar(SnackBar(content: Text(t.failedAddSlot('$e'))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -167,6 +175,7 @@ class _ProfessionalAvailabilityScreenState
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     final availabilityAsync = ref.watch(professionalDisponibilitiesProvider);
 
     return GradientScaffold(
@@ -174,7 +183,7 @@ class _ProfessionalAvailabilityScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Manage Slots',
+          t.manageSlots,
           style: GoogleFonts.jost(fontWeight: FontWeight.w600),
         ),
         actions: [
@@ -182,7 +191,7 @@ class _ProfessionalAvailabilityScreenState
             onPressed: () =>
                 ref.invalidate(professionalDisponibilitiesProvider),
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: t.refresh,
           ),
         ],
       ),
@@ -195,7 +204,7 @@ class _ProfessionalAvailabilityScreenState
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add),
-        label: const Text('Add Slot'),
+        label: Text(t.addSlot),
       ),
       body: availabilityAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -208,7 +217,7 @@ class _ProfessionalAvailabilityScreenState
                 const Icon(Icons.error_outline, size: 44),
                 const SizedBox(height: 10),
                 Text(
-                  'Failed to load availability',
+                  t.failedLoadAvailability,
                   style: GoogleFonts.jost(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -229,7 +238,7 @@ class _ProfessionalAvailabilityScreenState
                   onPressed: () =>
                       ref.invalidate(professionalDisponibilitiesProvider),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  label: Text(t.retry),
                 ),
               ],
             ),
@@ -250,7 +259,7 @@ class _ProfessionalAvailabilityScreenState
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'No slots added yet',
+                    t.noSlotsYet,
                     style: GoogleFonts.jost(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -259,7 +268,7 @@ class _ProfessionalAvailabilityScreenState
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Tap "Add Slot" to set your availability.',
+                    t.tapAddSlot,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textSecondary,
                       fontSize: 12,
@@ -287,7 +296,7 @@ class _ProfessionalAvailabilityScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      row.day,
+                      _localizedDay(row.day, t),
                       style: GoogleFonts.jost(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -431,3 +440,24 @@ String _toEnglishDay(String frenchDay) {
 
 String _capitalizeDay(String s) =>
     s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+
+String _localizedDay(String englishDay, AppTranslations t) {
+  switch (englishDay) {
+    case 'Monday':
+      return t.monday;
+    case 'Tuesday':
+      return t.tuesday;
+    case 'Wednesday':
+      return t.wednesday;
+    case 'Thursday':
+      return t.thursday;
+    case 'Friday':
+      return t.friday;
+    case 'Saturday':
+      return t.saturday;
+    case 'Sunday':
+      return t.sunday;
+    default:
+      return englishDay;
+  }
+}

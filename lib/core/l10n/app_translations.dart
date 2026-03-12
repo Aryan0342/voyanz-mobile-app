@@ -248,6 +248,14 @@ class AppTranslations {
   String get beFirstToReview => _fr
       ? 'Soyez le premier à laisser un avis !'
       : 'Be the first to leave a review!';
+  String nReviews(int count) => _fr ? '$count avis' : '$count reviews';
+  String get reviewsFromClientsWillAppear => _fr
+      ? 'Les avis de vos clients\napparaîtront ici'
+      : 'Reviews from your clients\nwill appear here';
+  String get reviewsFromConsultationsWillAppear => _fr
+      ? 'Les avis de vos consultations\napparaîtront ici'
+      : 'Reviews from your consultations\nwill appear here';
+  String get anonymous => _fr ? 'Anonyme' : 'Anonymous';
 
   // ── History ──────────────────────────────────────────────────────────────────
   String get sessionHistory =>

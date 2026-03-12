@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -20,6 +21,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     final reviewsAsync = ref.watch(
       widget.isProfessional
           ? professionalReviewsProvider
@@ -44,7 +46,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Failed to load reviews',
+                    t.failedLoadReviews,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textSecondary,
                       fontSize: 16,
@@ -69,7 +71,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                       );
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(t.retry),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.rosePink,
                       foregroundColor: Colors.white,
@@ -137,7 +139,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.isProfessional ? 'My Reviews' : 'Reviews',
+                            widget.isProfessional ? t.myReviews : t.reviews,
                             style: GoogleFonts.jost(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -162,7 +164,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         children: [
                           _FilterChip(
-                            label: 'All',
+                            label: t.all,
                             isSelected: _selectedFilter == 'All',
                             onTap: () =>
                                 setState(() => _selectedFilter = 'All'),
@@ -216,7 +218,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No reviews found',
+                              t.noReviewsFound,
                               style: GoogleFonts.montserrat(
                                 color: AppColors.textMuted,
                                 fontSize: 15,
@@ -250,7 +252,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
   }
 }
 
-class _RatingOverviewCard extends StatelessWidget {
+class _RatingOverviewCard extends ConsumerWidget {
   final double avgRating;
   final int totalReviews;
 
@@ -260,7 +262,8 @@ class _RatingOverviewCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Container(
       decoration: BoxDecoration(
         gradient: AppGradients.accent,
@@ -299,7 +302,7 @@ class _RatingOverviewCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '$totalReviews reviews',
+                t.nReviews(totalReviews),
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.8),
@@ -536,13 +539,14 @@ class _ReviewCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   final bool isProfessional;
 
   const _EmptyState({this.isProfessional = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -562,7 +566,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Reviews Yet',
+            t.noReviewsYet,
             style: GoogleFonts.jost(
               fontSize: 22,
               fontWeight: FontWeight.w600,
@@ -574,8 +578,8 @@ class _EmptyState extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
               isProfessional
-                  ? 'Reviews from your clients\nwill appear here'
-                  : 'Reviews from your consultations\nwill appear here',
+                  ? t.reviewsFromClientsWillAppear
+                  : t.reviewsFromConsultationsWillAppear,
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 14,
