@@ -5,6 +5,8 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/l10n/language_switcher.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
 class ProfessionalDashboardScreen extends ConsumerWidget {
@@ -20,13 +22,15 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
 
     // Fetch professional reviews
     final reviewsAsync = ref.watch(professionalReviewsProvider);
+    final t = ref.watch(translationsProvider);
 
     return GradientScaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
         title: Text(
-          'Dashboard',
+          t.dashboard,
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -45,7 +49,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome back, $name',
+                      t.welcomeBackName(name),
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -54,7 +58,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your professional dashboard',
+                      t.yourProDashboard,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
@@ -74,7 +78,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _StatCard(
-                        title: 'Total Sessions',
+                        title: t.totalSessions,
                         value: historyAsync.when(
                           data: (items) => '${_validSessions(items).length}',
                           loading: () => '-',
@@ -86,7 +90,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
-                        title: 'Avg Rating',
+                        title: t.avgRating,
                         value: reviewsAsync.when(
                           data: (items) {
                             final validItems = items
@@ -123,7 +127,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _StatCard(
-                  title: 'Upcoming Sessions',
+                  title: t.upcomingSessions,
                   value: historyAsync.when(
                     data: (items) {
                       final upcoming = _validSessions(items).where((s) {
@@ -150,7 +154,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  'Recent Sessions',
+                  t.recentSessions,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -188,7 +192,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No sessions yet',
+                              t.noSessionsYet,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -342,7 +346,7 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Failed to load sessions',
+                        t.failedLoadSessions,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

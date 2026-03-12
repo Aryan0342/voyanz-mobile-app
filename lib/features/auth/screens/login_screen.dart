@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final t = ref.watch(translationsProvider);
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
@@ -116,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Your spiritual journey begins here',
+                        t.tagline,
                         style: GoogleFonts.lora(
                           fontSize: 13,
                           fontStyle: FontStyle.italic,
@@ -133,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'Welcome Back',
+                                t.welcomeBack,
                                 style: GoogleFonts.jost(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -144,21 +146,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               const SizedBox(height: 20),
                               TextFormField(
                                 controller: _emailCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Email',
-                                  prefixIcon: Icon(Icons.email_outlined),
+                                decoration: InputDecoration(
+                                  labelText: t.email,
+                                  prefixIcon: const Icon(Icons.email_outlined),
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Email is required'
+                                    ? t.emailRequired
                                     : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _passwordCtrl,
                                 decoration: InputDecoration(
-                                  labelText: 'Password',
+                                  labelText: t.password,
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
@@ -173,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 obscureText: _obscure,
                                 textInputAction: TextInputAction.done,
                                 validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Password is required'
+                                    ? t.passwordRequired
                                     : null,
                                 onFieldSubmitted: (_) => _submit(),
                               ),
@@ -190,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('Log In'),
+                                    : Text(t.logIn),
                               ),
                             ],
                           ),
@@ -201,14 +203,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         onPressed: () => context.push('/register'),
                         child: Text.rich(
                           TextSpan(
-                            text: "Don't have an account? ",
+                            text: t.noAccount,
                             style: GoogleFonts.montserrat(
                               color: AppColors.textMuted,
                               fontSize: 14,
                             ),
                             children: [
                               TextSpan(
-                                text: 'Sign Up',
+                                text: t.signUp,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.rosePink,
                                   fontWeight: FontWeight.w600,

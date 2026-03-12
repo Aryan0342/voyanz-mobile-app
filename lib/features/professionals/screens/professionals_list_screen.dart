@@ -7,6 +7,8 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/l10n/language_switcher.dart';
 
 String? _resolveImageUrl(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
@@ -227,10 +229,12 @@ class _ProfessionalsListScreenState
     final professionalsAsync = ref.watch(professionalsListProvider);
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
 
+    final t = ref.watch(translationsProvider);
     return Scaffold(
       appBar: AppBar(
+        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
         title: Text(
-          'Explore',
+          t.explore,
           style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
         ),
       ),
@@ -251,7 +255,7 @@ class _ProfessionalsListScreenState
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Unable to load explore data',
+                  t.unableLoadExplore,
                   style: GoogleFonts.jost(
                     color: AppColors.textPrimary,
                     fontSize: 20,
@@ -271,7 +275,7 @@ class _ProfessionalsListScreenState
                 OutlinedButton.icon(
                   onPressed: () => ref.refresh(professionalsListProvider),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Try Again'),
+                  label: Text(t.tryAgain),
                 ),
               ],
             ),
@@ -307,7 +311,7 @@ class _ProfessionalsListScreenState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No professionals found',
+                    t.noProfessionalsFound,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textMuted,
                       fontSize: 16,
@@ -341,7 +345,7 @@ class _ProfessionalsListScreenState
                       controller: _searchCtrl,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Search advisor or specialty',
+                        hintText: t.searchAdvisor,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchCtrl.text.isNotEmpty
                             ? IconButton(
@@ -399,8 +403,8 @@ class _ProfessionalsListScreenState
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: _SectionTitle(
-                      title: 'Featured Advisors',
-                      subtitle: 'Top online professionals ready now',
+                      title: t.featuredAdvisors,
+                      subtitle: t.topProsReadyNow,
                     ),
                   ),
                 ),
@@ -409,9 +413,7 @@ class _ProfessionalsListScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: _EmptyState(
-                        message: 'No featured advisors for current filters.',
-                      ),
+                      child: _EmptyState(message: t.noFeaturedAdvisors),
                     ),
                   )
                 else
@@ -440,8 +442,8 @@ class _ProfessionalsListScreenState
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                     child: _SectionTitle(
-                      title: 'All Advisors',
-                      subtitle: '${filteredPros.length} results',
+                      title: t.allAdvisors,
+                      subtitle: t.nResults(filteredPros.length),
                     ),
                   ),
                 ),
@@ -450,9 +452,7 @@ class _ProfessionalsListScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      child: _EmptyState(
-                        message: 'No advisors match your search right now.',
-                      ),
+                      child: _EmptyState(message: t.noAdvisorsMatch),
                     ),
                   )
                 else
@@ -490,13 +490,14 @@ class _ProfessionalsListScreenState
   }
 }
 
-class _ExploreHero extends StatelessWidget {
+class _ExploreHero extends ConsumerWidget {
   final int totalCount;
 
   const _ExploreHero({required this.totalCount});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -524,7 +525,7 @@ class _ExploreHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Discover Your Guide',
+                  t.discoverYourGuide,
                   style: GoogleFonts.jost(
                     fontSize: 21,
                     fontWeight: FontWeight.w600,
@@ -533,7 +534,7 @@ class _ExploreHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$totalCount advisors available for chat and video sessions',
+                  t.nAdvisorsAvailable(totalCount),
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -549,7 +550,7 @@ class _ExploreHero extends StatelessWidget {
   }
 }
 
-class _FilterPanel extends StatelessWidget {
+class _FilterPanel extends ConsumerWidget {
   final List<String> specialties;
   final String selectedSpecialty;
   final String selectedType;
@@ -591,7 +592,8 @@ class _FilterPanel extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -607,7 +609,7 @@ class _FilterPanel extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Filters',
+                t.filters,
                 style: GoogleFonts.jost(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -638,7 +640,7 @@ class _FilterPanel extends StatelessWidget {
               TextButton.icon(
                 onPressed: onReset,
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Reset'),
+                label: Text(t.reset),
               ),
             ],
           ),
@@ -646,7 +648,7 @@ class _FilterPanel extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: const ['All', 'Online', 'Recommended']
+            children: ['All', 'Online', 'Recommended']
                 .map(
                   (value) => ChoiceChip(
                     label: Text(value),
@@ -666,7 +668,7 @@ class _FilterPanel extends StatelessWidget {
               children: [
                 if (selectedSpecialty != 'All')
                   InputChip(
-                    label: Text('Specialty: $selectedSpecialty'),
+                    label: Text(t.specialtyFilterLabel(selectedSpecialty)),
                     onDeleted: () => onSpecialtyChanged('All'),
                   ),
                 ...selectedSessionTypes.map(
@@ -677,7 +679,7 @@ class _FilterPanel extends StatelessWidget {
                 ),
                 if (favoritesOnly)
                   InputChip(
-                    label: const Text('Favorites only'),
+                    label: Text(t.favoritesOnly),
                     onDeleted: () => onFavoritesChanged(false),
                   ),
               ],
@@ -690,7 +692,7 @@ class _FilterPanel extends StatelessWidget {
               iconColor: AppColors.textSecondary,
               collapsedIconColor: AppColors.textSecondary,
               title: Text(
-                'More Filters',
+                t.moreFilters,
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -698,7 +700,7 @@ class _FilterPanel extends StatelessWidget {
                 ),
               ),
               subtitle: Text(
-                'Specialty, experience, price, session type, language',
+                t.filterSubtitle,
                 style: GoogleFonts.montserrat(
                   fontSize: 11,
                   color: AppColors.textMuted,
@@ -706,7 +708,7 @@ class _FilterPanel extends StatelessWidget {
               ),
               children: [
                 _FilterSection(
-                  title: 'Specialties',
+                  title: t.specialties,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -714,7 +716,13 @@ class _FilterPanel extends StatelessWidget {
                         .take(8)
                         .map(
                           (value) => ChoiceChip(
-                            label: Text(value),
+                            label: Text(
+                              value == 'All'
+                                  ? t.all
+                                  : value == 'Online'
+                                  ? t.online
+                                  : t.recommended,
+                            ),
                             selected: selectedSpecialty == value,
                             onSelected: (_) => onSpecialtyChanged(value),
                           ),
@@ -723,7 +731,7 @@ class _FilterPanel extends StatelessWidget {
                   ),
                 ),
                 _FilterSection(
-                  title: 'Experience',
+                  title: t.experience,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -739,7 +747,7 @@ class _FilterPanel extends StatelessWidget {
                   ),
                 ),
                 _FilterSection(
-                  title: 'Price (EUR/min)',
+                  title: t.pricingEurMin,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -755,14 +763,20 @@ class _FilterPanel extends StatelessWidget {
                   ),
                 ),
                 _FilterSection(
-                  title: 'Session Type',
+                  title: t.sessionType,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: const ['Chat', 'Phone', 'Video']
+                    children: ['Chat', 'Phone', 'Video']
                         .map(
                           (value) => FilterChip(
-                            label: Text(value),
+                            label: Text(
+                              value == 'Chat'
+                                  ? t.textChat
+                                  : value == 'Phone'
+                                  ? t.phoneCall
+                                  : t.videoCall,
+                            ),
                             selected: selectedSessionTypes.contains(value),
                             onSelected: (_) => onToggleSessionType(value),
                           ),
@@ -772,7 +786,7 @@ class _FilterPanel extends StatelessWidget {
                 ),
                 if (languages.length > 1)
                   _FilterSection(
-                    title: 'Language',
+                    title: t.language,
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -797,7 +811,7 @@ class _FilterPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Favorites only',
+                      t.favoritesOnly,
                       style: GoogleFonts.montserrat(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,

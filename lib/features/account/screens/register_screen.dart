@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -90,7 +91,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (!_formKey.currentState!.validate()) return;
     if (!_acceptCgu || !_acceptCgs) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept CGU and CGS to continue.')),
+        SnackBar(
+          content: Text(ref.read(translationsProvider).pleaseAcceptCguCgs),
+        ),
       );
       return;
     }
@@ -122,7 +125,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created! Please log in.')),
+          SnackBar(
+            content: Text(ref.read(translationsProvider).accountCreated),
+          ),
         );
         context.go('/login');
       }
@@ -139,6 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -177,7 +183,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Create Account',
+                      t.createAccount,
                       style: GoogleFonts.jost(
                         fontSize: 26,
                         fontWeight: FontWeight.w600,
@@ -186,7 +192,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Join our community of seekers',
+                      t.joinCommunity,
                       style: GoogleFonts.lora(
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
@@ -202,15 +208,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           children: [
                             // ── Role selector ──
                             SegmentedButton<String>(
-                              segments: const [
+                              segments: [
                                 ButtonSegment(
                                   value: 'customer',
-                                  label: Text('Customer'),
+                                  label: Text(t.customer),
                                   icon: Icon(Icons.person_outline, size: 18),
                                 ),
                                 ButtonSegment(
                                   value: 'professional',
-                                  label: Text('Professional'),
+                                  label: Text(t.professional),
                                   icon: Icon(Icons.auto_awesome, size: 18),
                                 ),
                               ],
@@ -220,7 +226,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'I identify as',
+                              t.iIdentifyAs,
                               style: GoogleFonts.montserrat(
                                 color: AppColors.textSecondary,
                                 fontSize: 13,
@@ -229,18 +235,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             ),
                             const SizedBox(height: 10),
                             SegmentedButton<String>(
-                              segments: const [
+                              segments: [
                                 ButtonSegment(
                                   value: 'male',
-                                  label: Text('Male'),
+                                  label: Text(t.male),
                                 ),
                                 ButtonSegment(
                                   value: 'female',
-                                  label: Text('Female'),
+                                  label: Text(t.female),
                                 ),
                                 ButtonSegment(
                                   value: 'other',
-                                  label: Text('Other'),
+                                  label: Text(t.other),
                                 ),
                               ],
                               selected: {_gender},
@@ -253,12 +259,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 Expanded(
                                   child: TextFormField(
                                     controller: _firstNameCtrl,
-                                    decoration: const InputDecoration(
-                                      labelText: 'First name',
+                                    decoration: InputDecoration(
+                                      labelText: t.firstName,
                                     ),
                                     textInputAction: TextInputAction.next,
                                     validator: (v) => (v == null || v.isEmpty)
-                                        ? 'Required'
+                                        ? t.required
                                         : null,
                                   ),
                                 ),
@@ -266,12 +272,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 Expanded(
                                   child: TextFormField(
                                     controller: _lastNameCtrl,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Last name',
+                                    decoration: InputDecoration(
+                                      labelText: t.lastName,
                                     ),
                                     textInputAction: TextInputAction.next,
                                     validator: (v) => (v == null || v.isEmpty)
-                                        ? 'Required'
+                                        ? t.required
                                         : null,
                                   ),
                                 ),
@@ -280,34 +286,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _displayNameCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Display name',
+                              decoration: InputDecoration(
+                                labelText: t.displayName,
                                 prefixIcon: Icon(Icons.badge_outlined),
                               ),
                               textInputAction: TextInputAction.next,
                               validator: (v) =>
-                                  (v == null || v.isEmpty) ? 'Required' : null,
+                                  (v == null || v.isEmpty) ? t.required : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _dobCtrl,
                               readOnly: true,
                               onTap: _pickBirthDate,
-                              decoration: const InputDecoration(
-                                labelText: 'Date of birth',
+                              decoration: InputDecoration(
+                                labelText: t.dateOfBirth,
                                 hintText: 'YYYY-MM-DD',
                                 prefixIcon: Icon(Icons.cake_outlined),
                                 suffixIcon: Icon(Icons.calendar_month_outlined),
                               ),
                               textInputAction: TextInputAction.next,
                               validator: (v) =>
-                                  (v == null || v.isEmpty) ? 'Required' : null,
+                                  (v == null || v.isEmpty) ? t.required : null,
                             ),
                             const SizedBox(height: 16),
                             DropdownButtonFormField<String>(
                               initialValue: null,
-                              decoration: const InputDecoration(
-                                labelText: 'Country',
+                              decoration: InputDecoration(
+                                labelText: t.country,
                                 prefixIcon: Icon(Icons.flag_outlined),
                               ),
                               items: _countries
@@ -322,57 +328,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 _countryCtrl.text = value ?? '';
                               },
                               validator: (_) =>
-                                  _countryCtrl.text.isEmpty ? 'Required' : null,
+                                  _countryCtrl.text.isEmpty ? t.required : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _mobileCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Mobile',
+                              decoration: InputDecoration(
+                                labelText: t.mobile,
                                 prefixIcon: Icon(Icons.phone_outlined),
                               ),
                               keyboardType: TextInputType.phone,
                               textInputAction: TextInputAction.next,
                               validator: (v) =>
-                                  (v == null || v.isEmpty) ? 'Required' : null,
+                                  (v == null || v.isEmpty) ? t.required : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _emailCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
+                              decoration: InputDecoration(
+                                labelText: t.email,
                                 prefixIcon: Icon(Icons.email_outlined),
                               ),
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               validator: (v) =>
-                                  (v == null || v.isEmpty) ? 'Required' : null,
+                                  (v == null || v.isEmpty) ? t.required : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _passwordCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Password',
+                              decoration: InputDecoration(
+                                labelText: t.password,
                                 prefixIcon: Icon(Icons.lock_outline),
                               ),
                               obscureText: true,
                               textInputAction: TextInputAction.next,
                               validator: (v) => (v != null && v.length >= 6)
                                   ? null
-                                  : 'Min 6 characters',
+                                  : t.min6Chars,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _confirmPasswordCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Confirm password',
+                              decoration: InputDecoration(
+                                labelText: t.confirmPassword,
                                 prefixIcon: Icon(Icons.lock_outline),
                               ),
                               obscureText: true,
                               textInputAction: TextInputAction.done,
                               validator: (v) => v == _passwordCtrl.text
                                   ? null
-                                  : 'Passwords do not match',
+                                  : t.passwordsNoMatch,
                             ),
                             const SizedBox(height: 14),
                             CheckboxListTile(
@@ -382,7 +388,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               controlAffinity: ListTileControlAffinity.leading,
                               contentPadding: EdgeInsets.zero,
                               title: Text(
-                                'I accept the Terms of Use (CGU)',
+                                t.acceptCgu,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,
@@ -396,7 +402,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               controlAffinity: ListTileControlAffinity.leading,
                               contentPadding: EdgeInsets.zero,
                               title: Text(
-                                'I accept the Terms of Service (CGS)',
+                                t.acceptCgs,
                                 style: GoogleFonts.montserrat(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,
@@ -416,7 +422,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Create Account'),
+                                  : Text(t.createAccount),
                             ),
                           ],
                         ),
@@ -427,14 +433,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       onPressed: () => context.pop(),
                       child: Text.rich(
                         TextSpan(
-                          text: 'Already have an account? ',
+                          text: t.alreadyHaveAccount,
                           style: GoogleFonts.montserrat(
                             color: AppColors.textMuted,
                             fontSize: 14,
                           ),
                           children: [
                             TextSpan(
-                              text: 'Log In',
+                              text: t.logIn,
                               style: GoogleFonts.montserrat(
                                 color: AppColors.rosePink,
                                 fontWeight: FontWeight.w600,

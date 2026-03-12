@@ -7,6 +7,8 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 
 /// Bottom-navigation shell that wraps most authenticated screens.
 /// Shows different tabs based on user role (customer vs professional).
@@ -16,37 +18,47 @@ class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.child});
 
   // Customer tabs
-  static const _customerTabs = [
-    (icon: Icons.explore_outlined, activeIcon: Icons.explore, label: 'Explore'),
+  static List<({IconData icon, IconData activeIcon, String label})>
+  _buildCustomerTabs(AppTranslations t) => [
+    (
+      icon: Icons.explore_outlined,
+      activeIcon: Icons.explore,
+      label: t.tabExplore,
+    ),
     (
       icon: Icons.chat_bubble_outline,
       activeIcon: Icons.chat_bubble,
-      label: 'Chat',
+      label: t.tabChat,
     ),
-    (icon: Icons.history_outlined, activeIcon: Icons.history, label: 'History'),
-    (icon: Icons.star_outline, activeIcon: Icons.star, label: 'Reviews'),
-    (icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+    (
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history,
+      label: t.tabHistory,
+    ),
+    (icon: Icons.star_outline, activeIcon: Icons.star, label: t.tabReviews),
+    (icon: Icons.person_outline, activeIcon: Icons.person, label: t.tabProfile),
   ];
 
   // Professional tabs
-  static const _professionalTabs = [
+  static List<({IconData icon, IconData activeIcon, String label})>
+  _buildProfessionalTabs(AppTranslations t) => [
     (
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard,
-      label: 'Home',
+      label: t.tabHome,
     ),
     (
       icon: Icons.calendar_today_outlined,
       activeIcon: Icons.calendar_today,
-      label: 'Slots',
+      label: t.tabSlots,
     ),
     (
       icon: Icons.chat_bubble_outline,
       activeIcon: Icons.chat_bubble,
-      label: 'Chat',
+      label: t.tabChat,
     ),
-    (icon: Icons.people_outline, activeIcon: Icons.people, label: 'Clients'),
-    (icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+    (icon: Icons.people_outline, activeIcon: Icons.people, label: t.tabClients),
+    (icon: Icons.person_outline, activeIcon: Icons.person, label: t.tabProfile),
   ];
 
   int _currentIndexCustomer(BuildContext context) {
@@ -104,7 +116,10 @@ class HomeShell extends ConsumerWidget {
     final user = ref.watch(authStateProvider).valueOrNull;
     final isProfessional = user?.isProfessional ?? false;
 
-    final tabs = isProfessional ? _professionalTabs : _customerTabs;
+    final tr = ref.watch(translationsProvider);
+    final tabs = isProfessional
+        ? _buildProfessionalTabs(tr)
+        : _buildCustomerTabs(tr);
     final currentIdx = isProfessional
         ? _currentIndexProfessional(context)
         : _currentIndexCustomer(context);
@@ -172,6 +187,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
+    final t = ref.watch(translationsProvider);
     final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final email = user?.email ?? '';
     final phone = user?.phone ?? '';
@@ -229,7 +245,7 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
                     // Name
                     Text(
-                      name.isEmpty ? 'Guest User' : name,
+                      name.isEmpty ? t.guestUser : name,
                       style: GoogleFonts.jost(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -271,7 +287,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: _StatCard(
                           icon: Icons.history,
                           value: '--',
-                          label: 'Sessions',
+                          label: t.sessionsLabel,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -279,7 +295,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: _StatCard(
                           icon: Icons.access_time,
                           value: '--',
-                          label: 'Total Time',
+                          label: t.totalTime,
                         ),
                       ),
                     ],
@@ -290,7 +306,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: _StatCard(
                           icon: Icons.history,
                           value: '0',
-                          label: 'Sessions',
+                          label: t.sessionsLabel,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -298,7 +314,7 @@ class ProfileScreen extends ConsumerWidget {
                         child: _StatCard(
                           icon: Icons.access_time,
                           value: '0h',
-                          label: 'Total Time',
+                          label: t.totalTime,
                         ),
                       ),
                     ],
@@ -325,7 +341,7 @@ class ProfileScreen extends ConsumerWidget {
                             child: _StatCard(
                               icon: Icons.history,
                               value: sessionCount.toString(),
-                              label: 'Sessions',
+                              label: t.sessionsLabel,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -333,7 +349,7 @@ class ProfileScreen extends ConsumerWidget {
                             child: _StatCard(
                               icon: Icons.access_time,
                               value: '${totalHours}h',
-                              label: 'Total Time',
+                              label: t.totalTime,
                             ),
                           ),
                         ],
@@ -344,7 +360,7 @@ class ProfileScreen extends ConsumerWidget {
                             child: _StatCard(
                               icon: Icons.history,
                               value: sessionCount.toString(),
-                              label: 'Sessions',
+                              label: t.sessionsLabel,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -352,7 +368,7 @@ class ProfileScreen extends ConsumerWidget {
                             child: _StatCard(
                               icon: Icons.access_time,
                               value: '${totalHours}h',
-                              label: 'Total Time',
+                              label: t.totalTime,
                             ),
                           ),
                         ],
@@ -378,7 +394,7 @@ class ProfileScreen extends ConsumerWidget {
                               child: _StatCard(
                                 icon: Icons.history,
                                 value: sessionCount.toString(),
-                                label: 'Sessions',
+                                label: t.sessionsLabel,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -388,7 +404,7 @@ class ProfileScreen extends ConsumerWidget {
                                 value: avgRating > 0
                                     ? avgRating.toStringAsFixed(1)
                                     : 'N/A',
-                                label: 'Rating',
+                                label: t.rating,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -396,7 +412,7 @@ class ProfileScreen extends ConsumerWidget {
                               child: _StatCard(
                                 icon: Icons.access_time,
                                 value: '${totalHours}h',
-                                label: 'Total Time',
+                                label: t.totalTime,
                               ),
                             ),
                           ],
@@ -412,7 +428,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
                 child: Text(
-                  'Settings',
+                  t.settings,
                   style: GoogleFonts.jost(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -428,13 +444,13 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     _ProfileTile(
                       icon: Icons.person_outline,
-                      title: 'Edit Profile',
-                      subtitle: 'Update your information',
+                      title: t.editProfile,
+                      subtitle: t.updateInfo,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Edit Profile Coming Soon',
+                              t.editProfileComingSoon,
                               style: GoogleFonts.montserrat(fontSize: 14),
                             ),
                             backgroundColor: AppColors.mediumPurple,
@@ -446,13 +462,13 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.notifications_outlined,
-                      title: 'Notifications',
-                      subtitle: 'Manage preferences',
+                      title: t.notifications,
+                      subtitle: t.managePreferences,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Notification Settings Coming Soon',
+                              t.notificationSettingsComingSoon,
                               style: GoogleFonts.montserrat(fontSize: 14),
                             ),
                             backgroundColor: AppColors.mediumPurple,
@@ -464,8 +480,8 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.payment_outlined,
-                      title: 'Payment Methods',
-                      subtitle: 'Cards and billing',
+                      title: t.paymentMethods,
+                      subtitle: t.cardsBilling,
                       onTap: () => context.push('/pricing'),
                     ),
                   ],
@@ -477,7 +493,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
                 child: Text(
-                  'Support',
+                  t.support,
                   style: GoogleFonts.jost(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -493,12 +509,12 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     _ProfileTile(
                       icon: Icons.help_outline,
-                      title: 'Help Center',
-                      subtitle: 'FAQs and guides',
+                      title: t.helpCenter,
+                      subtitle: t.faqsGuides,
                       onTap: () {
                         _showAboutDialog(
                           context,
-                          title: 'Help Center',
+                          title: t.helpCenter,
                           content:
                               'Frequently asked questions and guides will be available soon. '
                               'For immediate support, please contact our team.',
@@ -508,12 +524,12 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy Policy',
-                      subtitle: 'Read our terms',
+                      title: t.privacyPolicy,
+                      subtitle: t.readOurTerms,
                       onTap: () {
                         _showAboutDialog(
                           context,
-                          title: 'Privacy Policy',
+                          title: t.privacyPolicy,
                           content:
                               'Our privacy policy details how we collect, use, and protect your data. '
                               'Full policy will be available in the next update.',
@@ -523,12 +539,12 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.info_outline,
-                      title: 'About Voyanz',
-                      subtitle: 'Version 1.0.0',
+                      title: t.aboutVoyanz,
+                      subtitle: t.version100,
                       onTap: () {
                         _showAboutDialog(
                           context,
-                          title: 'About Voyanz',
+                          title: t.aboutVoyanz,
                           content:
                               'Voyanz - Your trusted platform for professional consultations.\n\n'
                               'Version: 1.0.0\n'
@@ -583,7 +599,7 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Log Out',
+                              t.logout,
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -635,9 +651,13 @@ void _showAboutDialog(
   required String title,
   required String content,
 }) {
+  final t = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(translationsProvider);
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (ctx) => AlertDialog(
       backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
       title: Text(
         title,
@@ -657,9 +677,9 @@ void _showAboutDialog(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(ctx),
           child: Text(
-            'Close',
+            t.close,
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w600,
