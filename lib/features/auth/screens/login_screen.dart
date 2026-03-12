@@ -69,9 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         context.go('/home');
       }
       if (next.hasError) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(next.error.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.loginFailed(next.error.toString()))),
+        );
       }
     });
 

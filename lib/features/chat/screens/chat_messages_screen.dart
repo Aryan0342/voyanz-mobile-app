@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
@@ -40,7 +41,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(
+              ref.read(translationsProvider).sendMessageFailed(e.toString()),
+            ),
             backgroundColor: AppColors.error,
           ),
         );

@@ -57,6 +57,11 @@ class AppTranslations {
   String get accountCreated => _fr
       ? 'Compte créé ! Veuillez vous connecter.'
       : 'Account created! Please log in.';
+  String createAccountFailed(String err) => _fr
+      ? 'Échec de la création du compte : $err'
+      : 'Failed to create account: $err';
+  String loginFailed(String err) =>
+      _fr ? 'Échec de la connexion : $err' : 'Login failed: $err';
   String get alreadyHaveAccount =>
       _fr ? 'Vous avez déjà un compte ? ' : 'Already have an account? ';
 
@@ -291,6 +296,9 @@ class AppTranslations {
       : 'Start a session with a professional to chat.';
   String get typeMessage => _fr ? 'Écrire un message...' : 'Type a message...';
   String get send => _fr ? 'Envoyer' : 'Send';
+  String sendMessageFailed(String err) => _fr
+      ? 'Échec de l\'envoi du message : $err'
+      : 'Failed to send message: $err';
 
   // ── Pricing ──────────────────────────────────────────────────────────────────
   String get sessionPricing => _fr ? 'Tarifs des sessions' : 'Session Pricing';

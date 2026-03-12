@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -99,7 +100,9 @@ class _ProfessionalDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            nextValue ? 'Added to favorites ❤️' : 'Removed from favorites',
+            nextValue
+                ? ref.read(translationsProvider).addedFavorites
+                : ref.read(translationsProvider).removedFavorites,
             style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
           ),
           backgroundColor: nextValue
@@ -124,7 +127,7 @@ class _ProfessionalDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Could not update favorite. Please try again.',
+            ref.read(translationsProvider).couldNotUpdateFavorite,
             style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
           ),
           backgroundColor: AppColors.error,
@@ -214,11 +217,12 @@ class _ProfessionalDetailScreenState
   }
 
   void _startSessionType(BuildContext context, dynamic pro, String type) {
+    final t = ref.read(translationsProvider);
     Navigator.pop(context); // Close dialog
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Starting $type session with ${pro.firstName ?? 'professional'}...',
+          t.startingSession(type, pro.firstName ?? 'professional'),
           style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.online,

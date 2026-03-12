@@ -133,9 +133,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ref.read(translationsProvider).createAccountFailed(e.toString()),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
