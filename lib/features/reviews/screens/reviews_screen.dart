@@ -54,7 +54,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Error: ${e.toString()}',
+                    t.errorMessage(e.toString()),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textMuted,
@@ -422,10 +422,13 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = ProviderScope.containerOf(context, listen: false).read(
+      translationsProvider,
+    );
     final rating = double.tryParse(review['re_rating']?.toString() ?? '') ?? 0;
     final comment = review['re_comment']?.toString() ?? '';
     final date = review['re_date']?.toString() ?? '';
-    final reviewerName = review['reviewer_name']?.toString() ?? 'Anonymous';
+    final reviewerName = review['reviewer_name']?.toString() ?? t.anonymous;
 
     return GlassCard(
       padding: const EdgeInsets.all(18),

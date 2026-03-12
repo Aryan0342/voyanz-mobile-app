@@ -515,9 +515,7 @@ class ProfileScreen extends ConsumerWidget {
                         _showAboutDialog(
                           context,
                           title: t.helpCenter,
-                          content:
-                              'Frequently asked questions and guides will be available soon. '
-                              'For immediate support, please contact our team.',
+                          content: t.helpCenterContent,
                         );
                       },
                     ),
@@ -530,9 +528,7 @@ class ProfileScreen extends ConsumerWidget {
                         _showAboutDialog(
                           context,
                           title: t.privacyPolicy,
-                          content:
-                              'Our privacy policy details how we collect, use, and protect your data. '
-                              'Full policy will be available in the next update.',
+                          content: t.privacyPolicyContent,
                         );
                       },
                     ),
@@ -545,10 +541,7 @@ class ProfileScreen extends ConsumerWidget {
                         _showAboutDialog(
                           context,
                           title: t.aboutVoyanz,
-                          content:
-                              'Voyanz - Your trusted platform for professional consultations.\n\n'
-                              'Version: 1.0.0\n'
-                              'Built with Flutter & ❤️',
+                          content: t.aboutVoyanzContent,
                         );
                       },
                     ),

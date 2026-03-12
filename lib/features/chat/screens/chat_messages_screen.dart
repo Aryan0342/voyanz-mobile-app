@@ -56,6 +56,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.chgrId));
+    final t = ref.watch(translationsProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -79,7 +80,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Conversation',
+                    t.conversation,
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -87,7 +88,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                     ),
                   ),
                   Text(
-                    'Active now',
+                    t.activeNow,
                     style: GoogleFonts.montserrat(
                       fontSize: 11,
                       color: AppColors.success,
@@ -126,7 +127,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Failed to load messages',
+                        t.failedLoadMessages,
                         style: GoogleFonts.montserrat(
                           color: AppColors.textSecondary,
                         ),
@@ -155,7 +156,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'No messages yet',
+                            t.noMessagesYet,
                             style: GoogleFonts.jost(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -164,7 +165,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Start the conversation!',
+                            t.startConversation,
                             style: GoogleFonts.montserrat(
                               color: AppColors.textMuted,
                               fontSize: 14,
@@ -229,7 +230,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                             fontSize: 15,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Type your message...',
+                            hintText: t.typeMessage,
                             hintStyle: GoogleFonts.montserrat(
                               color: AppColors.textMuted,
                             ),
@@ -288,14 +289,15 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class _MessageBubble extends ConsumerWidget {
   final dynamic message;
   final bool isMe;
 
   const _MessageBubble({required this.message, required this.isMe});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -322,7 +324,7 @@ class _MessageBubble extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 4, bottom: 6),
                   child: Text(
-                    message.senderName ?? 'Unknown',
+                    message.senderName ?? t.unknown,
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

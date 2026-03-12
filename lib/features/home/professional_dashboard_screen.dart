@@ -15,14 +15,13 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
-    final name = _displayName(user);
-
     // Fetch professional history (sessions)
     final historyAsync = ref.watch(professionalHistoryProvider);
 
     // Fetch professional reviews
     final reviewsAsync = ref.watch(professionalReviewsProvider);
     final t = ref.watch(translationsProvider);
+    final name = _displayName(user, professionalFallback: t.professional);
 
     return GradientScaffold(
       appBar: AppBar(
@@ -211,16 +210,15 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, idx) {
                     final session = validItems[idx];
-                    final clientName = _clientName(session);
-                    final sessionType =
-                        (session['se_type'] ?? session['session_type'])
-                            ?.toString() ??
-                        'Session';
+                    final clientName = _clientName(session, unknownFallback: t.unknown);
+                    final rawType = (session['se_type'] ?? session['session_type'])?.toString() ?? '';
+                    final sessionType = _localizedDashboardType(rawType, t);
+                    final rawStatus = session['se_status']?.toString() ?? '';
+                    final localizedStatus = _localizedDashboardStatus(rawStatus, t);
                     final sessionDate =
                         (session['se_date'] ?? session['session_date'])
                             ?.toString() ??
                         '';
-                    final status = session['se_status']?.toString() ?? '';
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -277,22 +275,22 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(6),
-                                    color: status.toLowerCase() == 'completed'
+                                    color: rawStatus.toLowerCase() == 'completed'
                                         ? Colors.green.withValues(alpha: 0.2)
-                                        : status.toLowerCase() == 'cancelled'
+                                        : rawStatus.toLowerCase() == 'cancelled'
                                         ? Colors.red.withValues(alpha: 0.2)
                                         : AppColors.rosePink.withValues(
                                             alpha: 0.2,
                                           ),
                                   ),
                                   child: Text(
-                                    status,
+                                    localizedStatus,
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: status.toLowerCase() == 'completed'
+                                      color: rawStatus.toLowerCase() == 'completed'
                                           ? Colors.green
-                                          : status.toLowerCase() == 'cancelled'
+                                          : rawStatus.toLowerCase() == 'cancelled'
                                           ? Colors.red
                                           : AppColors.rosePink,
                                     ),
@@ -367,26 +365,44 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
   }
 }
 
-String _displayName(dynamic user) {
-  if (user == null) return 'Professional';
+String _displayName(dynamic user, {String professionalFallback = 'Professional'}) {
+  if (user == null) return professionalFallback;
   final full = '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim();
   if (full.isNotEmpty) return full;
   final email = (user.email ?? '').toString();
   if (email.contains('@')) return email.split('@').first;
-  return 'Professional';
+  return professionalFallback;
 }
 
 List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
   return items.whereType<Map<String, dynamic>>().toList();
 }
 
-String _clientName(Map<String, dynamic> session) {
+String _clientName(Map<String, dynamic> session, {String unknownFallback = 'Unknown'}) {
   return (session['co_fullname'] ??
               session['co_display_name'] ??
               session['customer_name'] ??
               session['client_name'])
           ?.toString() ??
-      'Unknown';
+      unknownFallback;
+}
+
+String _localizedDashboardType(String type, dynamic t) {
+  switch (type.toLowerCase()) {
+    case 'phone': return t.phoneCall;
+    case 'video': return t.videoCall;
+    case 'chat': return t.textChat;
+    default: return type.isEmpty ? t.session : type;
+  }
+}
+
+String _localizedDashboardStatus(String status, dynamic t) {
+  switch (status.toLowerCase()) {
+    case 'completed': return t.completed;
+    case 'cancelled': return t.cancelled;
+    case 'pending': return t.pending;
+    default: return status;
+  }
 }
 
 class _StatCard extends StatelessWidget {

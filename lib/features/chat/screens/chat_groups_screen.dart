@@ -185,14 +185,15 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
   }
 }
 
-class _ConversationCard extends StatelessWidget {
+class _ConversationCard extends ConsumerWidget {
   final dynamic group;
   final VoidCallback onTap;
 
   const _ConversationCard({required this.group, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return GestureDetector(
       onTap: onTap,
       child: GlassCard(
@@ -239,7 +240,7 @@ class _ConversationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    group.otherUserName ?? group.name ?? 'Chat',
+                    group.otherUserName ?? group.name ?? t.tabChat,
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

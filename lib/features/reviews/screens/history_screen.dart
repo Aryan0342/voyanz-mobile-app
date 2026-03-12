@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -20,6 +21,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     final historyAsync = ref.watch(
       widget.isProfessional
           ? professionalHistoryProvider
@@ -44,7 +46,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Failed to load history',
+                    t.failedLoadHistory,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textSecondary,
                       fontSize: 16,
@@ -52,7 +54,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Error: ${e.toString()}',
+                    t.errorMessage(e.toString()),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textMuted,
@@ -69,7 +71,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       );
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(t.retry),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.rosePink,
                       foregroundColor: Colors.white,
@@ -124,7 +126,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Session History',
+                            t.sessionHistory,
                             style: GoogleFonts.jost(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -133,7 +135,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Your past consultations',
+                            t.pastConsultations,
                             style: GoogleFonts.montserrat(
                               fontSize: 14,
                               color: AppColors.textMuted,
@@ -152,28 +154,28 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         children: [
                           _FilterChip(
-                            label: 'All',
+                            label: t.all,
                             isSelected: _selectedFilter == 'All',
                             onTap: () =>
                                 setState(() => _selectedFilter = 'All'),
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
-                            label: 'Completed',
+                            label: t.completed,
                             isSelected: _selectedFilter == 'Completed',
                             onTap: () =>
                                 setState(() => _selectedFilter = 'Completed'),
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
-                            label: 'Cancelled',
+                            label: t.cancelled,
                             isSelected: _selectedFilter == 'Cancelled',
                             onTap: () =>
                                 setState(() => _selectedFilter = 'Cancelled'),
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
-                            label: 'Pending',
+                            label: t.pending,
                             isSelected: _selectedFilter == 'Pending',
                             onTap: () =>
                                 setState(() => _selectedFilter = 'Pending'),
@@ -197,7 +199,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'No sessions found',
+                              t.noSessionsFound,
                               style: GoogleFonts.montserrat(
                                 color: AppColors.textMuted,
                                 fontSize: 15,
@@ -273,13 +275,14 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _SessionCard extends StatelessWidget {
+class _SessionCard extends ConsumerWidget {
   final Map<String, dynamic> item;
 
   const _SessionCard({required this.item});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     final type = item['se_type']?.toString() ?? 'Session';
     final date = item['se_date']?.toString() ?? '';
     final status = item['se_status']?.toString() ?? '';
@@ -315,7 +318,7 @@ class _SessionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      type,
+                      _localizedSessionType(type, t),
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -357,7 +360,7 @@ class _SessionCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  status,
+                  _localizedStatus(status, t),
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -428,9 +431,10 @@ class _SessionCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -446,7 +450,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Sessions Yet',
+            t.noSessionsYetTitle,
             style: GoogleFonts.jost(
               fontSize: 22,
               fontWeight: FontWeight.w600,
@@ -457,7 +461,7 @@ class _EmptyState extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Your consultation history will\nappear here',
+              t.consultationHistoryWillAppear,
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 14,
@@ -469,5 +473,36 @@ class _EmptyState extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+String _localizedStatus(String status, dynamic t) {
+  switch (status.toLowerCase()) {
+    case 'completed':
+      return t.completed;
+    case 'cancelled':
+      return t.cancelled;
+    case 'pending':
+      return t.pending;
+    default:
+      return status;
+  }
+}
+
+String _localizedSessionType(String type, dynamic t) {
+  switch (type.toLowerCase()) {
+    case 'phone':
+    case 'phone call':
+      return t.phoneCall;
+    case 'video':
+    case 'video call':
+      return t.videoCall;
+    case 'chat':
+    case 'text chat':
+      return t.textChat;
+    case 'session':
+      return t.consultation;
+    default:
+      return type;
   }
 }

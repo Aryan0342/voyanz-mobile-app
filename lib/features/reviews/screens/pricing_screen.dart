@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
@@ -26,6 +27,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     // If coId is provided, show professional pricing; otherwise show customer pricing
     if (widget.coId != null) {
       final professionalAsync = ref.watch(
@@ -36,7 +38,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Session Pricing',
+            t.sessionPricing,
             style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
           ),
         ),
@@ -46,7 +48,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           ),
           error: (e, _) => Center(
             child: Text(
-              'Error: $e',
+              t.errorMessage('$e'),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -60,7 +62,11 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               }
             }
 
-            return _buildSessionPricingList(professional, fromList: fromList);
+            return _buildSessionPricingList(
+              professional,
+              fromList: fromList,
+              t: t,
+            );
           },
         ),
       );
@@ -71,7 +77,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Pricing',
+            t.pricing,
             style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
           ),
         ),
@@ -81,7 +87,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           ),
           error: (e, _) => Center(
             child: Text(
-              'Error: $e',
+              t.errorMessage('$e'),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -98,7 +104,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No pricing information',
+                      t.noPricingInfo,
                       style: GoogleFonts.montserrat(
                         color: AppColors.textMuted,
                         fontSize: 16,
@@ -129,6 +135,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   Widget _buildSessionPricingList(
     dynamic professional, {
     Professional? fromList,
+    required dynamic t,
   }) {
     final pricing = <String, String>{};
     final fallback =
@@ -159,26 +166,26 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         (fromList?.supportsChat ?? false);
 
     if (phonePrice != null) {
-      pricing['Phone Call'] = formatPrice(phonePrice);
+      pricing[t.phoneCall] = formatPrice(phonePrice);
     } else if (supportsPhone && fallback != null) {
-      pricing['Phone Call'] = formatPrice(fallback);
+      pricing[t.phoneCall] = formatPrice(fallback);
     }
 
     if (videoPrice != null) {
-      pricing['Video Call'] = formatPrice(videoPrice);
+      pricing[t.videoCall] = formatPrice(videoPrice);
     } else if (supportsVideo && fallback != null) {
-      pricing['Video Call'] = formatPrice(fallback);
+      pricing[t.videoCall] = formatPrice(fallback);
     }
 
     if (chatPrice != null) {
-      pricing['Text Chat'] = formatPrice(chatPrice);
+      pricing[t.textChat] = formatPrice(chatPrice);
     } else if (supportsChat && fallback != null) {
-      pricing['Text Chat'] = formatPrice(fallback);
+      pricing[t.textChat] = formatPrice(fallback);
     }
 
     // Some profiles only provide one generic price without session flags.
     if (pricing.isEmpty && fallback != null) {
-      pricing['Consultation'] = formatPrice(fallback);
+      pricing[t.consultation] = formatPrice(fallback);
     }
 
     if (pricing.isEmpty) {
@@ -193,7 +200,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No pricing information available',
+              t.noPricingAvailable,
               style: GoogleFonts.montserrat(
                 color: AppColors.textMuted,
                 fontSize: 16,

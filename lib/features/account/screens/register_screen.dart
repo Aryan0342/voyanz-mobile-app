@@ -35,16 +35,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
 
-  static const _countries = [
-    'France',
-    'Belgium',
-    'Canada',
-    'Switzerland',
-    'United Kingdom',
-    'United States',
-    'Other',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -320,7 +310,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 labelText: t.country,
                                 prefixIcon: Icon(Icons.flag_outlined),
                               ),
-                              items: _countries
+                              items: t.countryList
                                   .map(
                                     (c) => DropdownMenuItem<String>(
                                       value: c,

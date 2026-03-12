@@ -147,6 +147,7 @@ class _ProfessionalDetailScreenState
   }
 
   void _startSession(BuildContext context, dynamic pro) {
+    final t = ref.read(translationsProvider);
     // For now, navigate to pricing/booking since we need to create a session first
     // In production, this would create a session and get a session ID
     showDialog(
@@ -155,7 +156,7 @@ class _ProfessionalDetailScreenState
         backgroundColor: AppColors.surfaceCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Start Session',
+          t.startSession,
           style: GoogleFonts.jost(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -167,7 +168,7 @@ class _ProfessionalDetailScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Choose session type:',
+              t.chooseSessionType,
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -178,7 +179,7 @@ class _ProfessionalDetailScreenState
             if (pro.supportsPhone) ...[
               _SessionTypeOption(
                 icon: Icons.phone,
-                label: 'Phone Call',
+                label: t.phoneCall,
                 price: pro.pricePerMinute ?? 0,
                 onTap: () => _startSessionType(context, pro, 'phone'),
               ),
@@ -187,7 +188,7 @@ class _ProfessionalDetailScreenState
             if (pro.supportsVideo) ...[
               _SessionTypeOption(
                 icon: Icons.videocam,
-                label: 'Video Call',
+                label: t.videoCall,
                 price: pro.pricePerMinute ?? 0,
                 onTap: () => _startSessionType(context, pro, 'video'),
               ),
@@ -196,7 +197,7 @@ class _ProfessionalDetailScreenState
             if (pro.supportsChat) ...[
               _SessionTypeOption(
                 icon: Icons.chat_bubble_outline,
-                label: 'Text Chat',
+                label: t.textChat,
                 price: (pro.pricePerMinute ?? 0) * 0.8,
                 onTap: () => _startSessionType(context, pro, 'chat'),
               ),
@@ -207,7 +208,7 @@ class _ProfessionalDetailScreenState
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Cancel',
+              t.cancel,
               style: GoogleFonts.montserrat(color: AppColors.textMuted),
             ),
           ),
@@ -236,6 +237,7 @@ class _ProfessionalDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     final detailAsync = ref.watch(professionalDetailProvider(widget.coId));
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
     final isMarkedFavorite = favoriteIds.contains(widget.coId) || _isFavorite;
@@ -302,7 +304,7 @@ class _ProfessionalDetailScreenState
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Unable to load profile',
+                  t.unableLoadProfile,
                   style: GoogleFonts.montserrat(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -311,7 +313,7 @@ class _ProfessionalDetailScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Error: $e',
+                  t.errorMessage('$e'),
                   style: const TextStyle(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
@@ -459,7 +461,7 @@ class _ProfessionalDetailScreenState
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              pro.isOnline == true ? 'Online' : 'Offline',
+                              pro.isOnline == true ? t.online : t.offline,
                               style: GoogleFonts.montserrat(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -508,7 +510,7 @@ class _ProfessionalDetailScreenState
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'VERIFIED PROFILE',
+                                  t.verifiedProfile,
                                   style: GoogleFonts.montserrat(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
@@ -598,8 +600,8 @@ class _ProfessionalDetailScreenState
                             child: Text(
                               pro.availabilityText ??
                                   (pro.isAvailableNow
-                                      ? 'Available now'
-                                      : 'No availability at the moment'),
+                                      ? t.availableNow
+                                      : t.noAvailabilityAtMoment),
                               style: GoogleFonts.montserrat(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -619,7 +621,7 @@ class _ProfessionalDetailScreenState
                           child: _ActionButton(
                             onPressed: () => _bookSession(context, pro),
                             icon: Icons.calendar_today_outlined,
-                            label: 'Book Session',
+                            label: t.bookSession,
                             isPrimary: true,
                           ),
                         ),
@@ -650,7 +652,7 @@ class _ProfessionalDetailScreenState
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Available Services',
+                                t.availableServices,
                                 style: GoogleFonts.jost(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -665,17 +667,17 @@ class _ProfessionalDetailScreenState
                             children: [
                               _ServiceChip(
                                 icon: Icons.phone,
-                                label: 'Phone',
+                                label: t.phone,
                                 isAvailable: pro.supportsPhone,
                               ),
                               _ServiceChip(
                                 icon: Icons.videocam,
-                                label: 'Video',
+                                label: t.video,
                                 isAvailable: pro.supportsVideo,
                               ),
                               _ServiceChip(
                                 icon: Icons.chat_bubble_outline,
-                                label: 'Chat',
+                                label: t.tabChat,
                                 isAvailable: pro.supportsChat,
                               ),
                             ],
@@ -710,7 +712,7 @@ class _ProfessionalDetailScreenState
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                  'About',
+                                  t.about,
                                   style: GoogleFonts.jost(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
@@ -744,7 +746,7 @@ class _ProfessionalDetailScreenState
                             if (pro.pricePerMinute != null) ...[
                               _DetailRow(
                                 icon: Icons.payments_outlined,
-                                label: 'Price per minute',
+                                label: t.pricePerMinute,
                                 value:
                                     '€${pro.pricePerMinute!.toStringAsFixed(2)}',
                                 iconColor: AppColors.online,
@@ -755,7 +757,7 @@ class _ProfessionalDetailScreenState
                                 const Divider(height: 28),
                               _DetailRow(
                                 icon: Icons.phone_outlined,
-                                label: 'Phone',
+                                label: t.phone,
                                 value: pro.phone!,
                                 iconColor: AppColors.mediumPurple,
                               ),
@@ -766,7 +768,7 @@ class _ProfessionalDetailScreenState
                                 const Divider(height: 28),
                               _DetailRow(
                                 icon: Icons.email_outlined,
-                                label: 'Email',
+                                label: t.email,
                                 value: pro.email!,
                                 iconColor: AppColors.rosePink,
                               ),
@@ -791,7 +793,7 @@ class _ProfessionalDetailScreenState
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              'Start Session Now',
+                              t.startSessionNow,
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

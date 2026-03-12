@@ -45,6 +45,10 @@ class AppTranslations {
       _fr ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match';
   String get min6Chars => _fr ? '6 caractères minimum' : 'Min 6 characters';
   String get required => _fr ? 'Requis' : 'Required';
+  List<String> get countryList => _fr
+      ? ['France', 'Belgique', 'Canada', 'Suisse', 'Royaume-Uni', 'États-Unis', 'Autre']
+      : ['France', 'Belgium', 'Canada', 'Switzerland', 'United Kingdom', 'United States', 'Other'];
+
   String get acceptCgu => _fr
       ? "J'accepte les Conditions Générales d'Utilisation (CGU)"
       : 'I accept the Terms of Use (CGU)';
@@ -133,6 +137,7 @@ class AppTranslations {
       : 'Search advisor or specialty';
   String get all => _fr ? 'Tous' : 'All';
   String get online => _fr ? 'En ligne' : 'Online';
+  String get offline => _fr ? 'Hors ligne' : 'Offline';
   String get recommended => _fr ? 'Recommandé' : 'Recommended';
   String get filters => _fr ? 'Filtres' : 'Filters';
   String get reset => _fr ? 'Réinitialiser' : 'Reset';
@@ -193,6 +198,18 @@ class AppTranslations {
   String startingSession(String type, String name) => _fr
       ? 'Démarrage session $type avec $name...'
       : 'Starting $type session with $name...';
+  String get availableNow => _fr ? 'Disponible maintenant' : 'Available now';
+  String get noAvailabilityAtMoment =>
+      _fr ? 'Aucune disponibilité pour le moment' : 'No availability at the moment';
+  String get bookSession => _fr ? 'Réserver une session' : 'Book Session';
+  String get availableServices =>
+      _fr ? 'Services disponibles' : 'Available Services';
+  String get about => _fr ? 'À propos' : 'About';
+  String get pricePerMinute => _fr ? 'Prix par minute' : 'Price per minute';
+  String get startSessionNow =>
+      _fr ? 'Démarrer la session' : 'Start Session Now';
+  String errorMessage(String err) => _fr ? 'Erreur : $err' : 'Error: $err';
+  String get verifiedProfile => _fr ? 'PROFIL VÉRIFIÉ' : 'VERIFIED PROFILE';
 
   // ── Availability / Slots ────────────────────────────────────────────────────
   String get manageSlots => _fr ? 'Gérer les créneaux' : 'Manage Slots';
@@ -279,6 +296,11 @@ class AppTranslations {
   String get noHistoryYet => _fr
       ? 'Vos sessions passées apparaîtront ici.'
       : 'Your past sessions will appear here.';
+  String get noSessionsYetTitle =>
+      _fr ? 'Aucune session pour le moment' : 'No Sessions Yet';
+  String get consultationHistoryWillAppear => _fr
+      ? 'Votre historique de consultation\napparaîtra ici'
+      : 'Your consultation history will\nappear here';
 
   // ── Chat ─────────────────────────────────────────────────────────────────────
   String get messages => _fr ? 'Messages' : 'Messages';
@@ -299,6 +321,16 @@ class AppTranslations {
   String sendMessageFailed(String err) => _fr
       ? 'Échec de l\'envoi du message : $err'
       : 'Failed to send message: $err';
+  String get conversation => _fr ? 'Conversation' : 'Conversation';
+  String get activeNow => _fr ? 'Actif maintenant' : 'Active now';
+  String get failedLoadMessages =>
+      _fr ? 'Impossible de charger les messages' : 'Failed to load messages';
+  String get noMessagesYet =>
+      _fr ? 'Aucun message pour le moment' : 'No messages yet';
+  String get startConversation =>
+      _fr ? 'Commencez la conversation !' : 'Start the conversation!';
+  String get unknown => _fr ? 'Inconnu' : 'Unknown';
+  String get session => _fr ? 'Session' : 'Session';
 
   // ── Pricing ──────────────────────────────────────────────────────────────────
   String get sessionPricing => _fr ? 'Tarifs des sessions' : 'Session Pricing';
@@ -323,4 +355,13 @@ class AppTranslations {
   String get version100 => _fr ? 'Version 1.0.0' : 'Version 1.0.0';
   String get close => _fr ? 'Fermer' : 'Close';
   String get versionLabel => _fr ? 'Version' : 'Version';
+  String get helpCenterContent => _fr
+      ? 'Les questions fréquentes et les guides seront bientôt disponibles. Pour une assistance immédiate, veuillez contacter notre équipe.'
+      : 'Frequently asked questions and guides will be available soon. For immediate support, please contact our team.';
+  String get privacyPolicyContent => _fr
+      ? 'Notre politique de confidentialité détaille comment nous collectons, utilisons et protégeons vos données. La politique complète sera disponible dans la prochaine mise à jour.'
+      : 'Our privacy policy details how we collect, use, and protect your data. Full policy will be available in the next update.';
+  String get aboutVoyanzContent => _fr
+      ? 'Voyanz - Votre plateforme de confiance pour les consultations professionnelles.\n\nVersion : 1.0.0\nConçu avec Flutter & ❤️'
+      : 'Voyanz - Your trusted platform for professional consultations.\n\nVersion: 1.0.0\nBuilt with Flutter & ❤️';
 }

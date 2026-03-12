@@ -651,7 +651,13 @@ class _FilterPanel extends ConsumerWidget {
             children: ['All', 'Online', 'Recommended']
                 .map(
                   (value) => ChoiceChip(
-                    label: Text(value),
+                    label: Text(
+                      value == 'All'
+                          ? t.all
+                          : value == 'Online'
+                          ? t.online
+                          : t.recommended,
+                    ),
                     selected: selectedType == value,
                     onSelected: (_) => onTypeChanged(value),
                   ),
@@ -673,7 +679,15 @@ class _FilterPanel extends ConsumerWidget {
                   ),
                 ...selectedSessionTypes.map(
                   (s) => InputChip(
-                    label: Text(s),
+                    label: Text(
+                      s == 'Chat'
+                          ? t.textChat
+                          : s == 'Phone'
+                          ? t.phoneCall
+                          : s == 'Video'
+                          ? t.videoCall
+                          : s,
+                    ),
                     onDeleted: () => onToggleSessionType(s),
                   ),
                 ),
