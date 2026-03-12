@@ -46,8 +46,24 @@ class AppTranslations {
   String get min6Chars => _fr ? '6 caractères minimum' : 'Min 6 characters';
   String get required => _fr ? 'Requis' : 'Required';
   List<String> get countryList => _fr
-      ? ['France', 'Belgique', 'Canada', 'Suisse', 'Royaume-Uni', 'États-Unis', 'Autre']
-      : ['France', 'Belgium', 'Canada', 'Switzerland', 'United Kingdom', 'United States', 'Other'];
+      ? [
+          'France',
+          'Belgique',
+          'Canada',
+          'Suisse',
+          'Royaume-Uni',
+          'États-Unis',
+          'Autre',
+        ]
+      : [
+          'France',
+          'Belgium',
+          'Canada',
+          'Switzerland',
+          'United Kingdom',
+          'United States',
+          'Other',
+        ];
 
   String get acceptCgu => _fr
       ? "J'accepte les Conditions Générales d'Utilisation (CGU)"
@@ -199,8 +215,9 @@ class AppTranslations {
       ? 'Démarrage session $type avec $name...'
       : 'Starting $type session with $name...';
   String get availableNow => _fr ? 'Disponible maintenant' : 'Available now';
-  String get noAvailabilityAtMoment =>
-      _fr ? 'Aucune disponibilité pour le moment' : 'No availability at the moment';
+  String get noAvailabilityAtMoment => _fr
+      ? 'Aucune disponibilité pour le moment'
+      : 'No availability at the moment';
   String get bookSession => _fr ? 'Réserver une session' : 'Book Session';
   String get availableServices =>
       _fr ? 'Services disponibles' : 'Available Services';

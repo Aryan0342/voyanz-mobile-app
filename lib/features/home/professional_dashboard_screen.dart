@@ -210,11 +210,20 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, idx) {
                     final session = validItems[idx];
-                    final clientName = _clientName(session, unknownFallback: t.unknown);
-                    final rawType = (session['se_type'] ?? session['session_type'])?.toString() ?? '';
+                    final clientName = _clientName(
+                      session,
+                      unknownFallback: t.unknown,
+                    );
+                    final rawType =
+                        (session['se_type'] ?? session['session_type'])
+                            ?.toString() ??
+                        '';
                     final sessionType = _localizedDashboardType(rawType, t);
                     final rawStatus = session['se_status']?.toString() ?? '';
-                    final localizedStatus = _localizedDashboardStatus(rawStatus, t);
+                    final localizedStatus = _localizedDashboardStatus(
+                      rawStatus,
+                      t,
+                    );
                     final sessionDate =
                         (session['se_date'] ?? session['session_date'])
                             ?.toString() ??
@@ -275,7 +284,8 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(6),
-                                    color: rawStatus.toLowerCase() == 'completed'
+                                    color:
+                                        rawStatus.toLowerCase() == 'completed'
                                         ? Colors.green.withValues(alpha: 0.2)
                                         : rawStatus.toLowerCase() == 'cancelled'
                                         ? Colors.red.withValues(alpha: 0.2)
@@ -288,9 +298,11 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: rawStatus.toLowerCase() == 'completed'
+                                      color:
+                                          rawStatus.toLowerCase() == 'completed'
                                           ? Colors.green
-                                          : rawStatus.toLowerCase() == 'cancelled'
+                                          : rawStatus.toLowerCase() ==
+                                                'cancelled'
                                           ? Colors.red
                                           : AppColors.rosePink,
                                     ),
@@ -365,7 +377,10 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
   }
 }
 
-String _displayName(dynamic user, {String professionalFallback = 'Professional'}) {
+String _displayName(
+  dynamic user, {
+  String professionalFallback = 'Professional',
+}) {
   if (user == null) return professionalFallback;
   final full = '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim();
   if (full.isNotEmpty) return full;
@@ -378,7 +393,10 @@ List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
   return items.whereType<Map<String, dynamic>>().toList();
 }
 
-String _clientName(Map<String, dynamic> session, {String unknownFallback = 'Unknown'}) {
+String _clientName(
+  Map<String, dynamic> session, {
+  String unknownFallback = 'Unknown',
+}) {
   return (session['co_fullname'] ??
               session['co_display_name'] ??
               session['customer_name'] ??
@@ -389,19 +407,27 @@ String _clientName(Map<String, dynamic> session, {String unknownFallback = 'Unkn
 
 String _localizedDashboardType(String type, dynamic t) {
   switch (type.toLowerCase()) {
-    case 'phone': return t.phoneCall;
-    case 'video': return t.videoCall;
-    case 'chat': return t.textChat;
-    default: return type.isEmpty ? t.session : type;
+    case 'phone':
+      return t.phoneCall;
+    case 'video':
+      return t.videoCall;
+    case 'chat':
+      return t.textChat;
+    default:
+      return type.isEmpty ? t.session : type;
   }
 }
 
 String _localizedDashboardStatus(String status, dynamic t) {
   switch (status.toLowerCase()) {
-    case 'completed': return t.completed;
-    case 'cancelled': return t.cancelled;
-    case 'pending': return t.pending;
-    default: return status;
+    case 'completed':
+      return t.completed;
+    case 'cancelled':
+      return t.cancelled;
+    case 'pending':
+      return t.pending;
+    default:
+      return status;
   }
 }
 
