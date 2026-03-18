@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/features/appointments/providers/appointments_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
@@ -18,6 +19,115 @@ class PricingScreen extends ConsumerStatefulWidget {
 
 class _PricingScreenState extends ConsumerState<PricingScreen> {
   String? _selectedPricingKey;
+  final _promoCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _promoCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _applyPromoCode() async {
+    final t = ref.read(translationsProvider);
+    final code = _promoCtrl.text.trim();
+    if (code.isEmpty) return;
+
+    try {
+      final result = await ref
+          .read(reviewsHistoryRepositoryProvider)
+          .checkPromoCode(code);
+      final valid = result['valid'] == true || result['isValid'] == true;
+      final discount =
+          result['discount']?.toString() ??
+          result['percent']?.toString() ??
+          '0';
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            valid ? t.promoApplied(code, discount) : t.promoInvalid,
+          ),
+          backgroundColor: valid ? AppColors.online : AppColors.error,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.promoCheckFailed(e.toString())),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _registerAppointment() async {
+    final t = ref.read(translationsProvider);
+    final apIdCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final shouldSubmit = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        title: Text(
+          t.registerAppointment,
+          style: GoogleFonts.jost(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: apIdCtrl,
+            decoration: InputDecoration(labelText: t.appointmentId),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? t.required : null,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(ctx).pop(true);
+              }
+            },
+            child: Text(t.registerAppointment),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSubmit != true) return;
+
+    try {
+      await ref
+          .read(appointmentsRepositoryProvider)
+          .register(apIdCtrl.text.trim());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.appointmentRegistered),
+          backgroundColor: AppColors.online,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.appointmentRegistrationFailed(e.toString())),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
 
   void _selectPricing(String key) {
     setState(() {
@@ -62,10 +172,27 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               }
             }
 
-            return _buildSessionPricingList(
-              professional,
-              fromList: fromList,
-              t: t,
+            return Column(
+              children: [
+                Expanded(
+                  child: _buildSessionPricingList(
+                    professional,
+                    fromList: fromList,
+                    t: t,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _registerAppointment,
+                      icon: const Icon(Icons.event_available),
+                      label: Text(t.registerAppointment),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -115,16 +242,43 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
               );
             }
             final entries = pricing.entries.toList();
-            return ListView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              itemCount: entries.length,
-              itemBuilder: (_, i) {
-                final entry = entries[i];
-                return _buildPricingTile(
-                  title: entry.key,
-                  value: entry.value.toString(),
-                );
-              },
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _promoCtrl,
+                          decoration: InputDecoration(
+                            labelText: t.promoCode,
+                            prefixIcon: const Icon(Icons.local_offer_outlined),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      FilledButton(
+                        onPressed: _applyPromoCode,
+                        child: Text(t.applyPromo),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    itemCount: entries.length,
+                    itemBuilder: (_, i) {
+                      final entry = entries[i];
+                      return _buildPricingTile(
+                        title: entry.key,
+                        value: entry.value.toString(),
+                      );
+                    },
+                  ),
+                ),
+              ],
             );
           },
         ),

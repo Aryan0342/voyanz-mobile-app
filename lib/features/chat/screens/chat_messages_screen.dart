@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
+
+String _resolveMediaUrl(String raw) {
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  final normalized = raw.startsWith('/') ? raw : '/$raw';
+  return '${EnvConfig.current.baseUrl}$normalized';
+}
 
 class ChatMessagesScreen extends ConsumerStatefulWidget {
   final String chgrId;
@@ -298,6 +305,23 @@ class _MessageBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
+    final hasImage =
+        (message.imageUrl != null &&
+            message.imageUrl.toString().trim().isNotEmpty) ||
+        (message.chmeId != null && message.chmeId.toString().trim().isNotEmpty);
+    String? imageUrl;
+    if (hasImage) {
+      final raw = message.imageUrl?.toString().trim();
+      if (raw != null && raw.isNotEmpty) {
+        imageUrl = _resolveMediaUrl(raw);
+      } else {
+        final endpoint = ref
+            .read(chatRepositoryProvider)
+            .getImageUrl(message.chmeId.toString());
+        imageUrl = _resolveMediaUrl(endpoint);
+      }
+    }
+
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -363,13 +387,47 @@ class _MessageBubble extends ConsumerWidget {
                         ]
                       : [],
                 ),
-                child: Text(
-                  message.content ?? '',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 15,
-                    color: isMe ? Colors.white : AppColors.textPrimary,
-                    height: 1.4,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (imageUrl != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          width: 220,
+                          height: 160,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 220,
+                            height: 120,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.deepIndigo.withValues(
+                                alpha: 0.25,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if ((message.content ?? '').toString().trim().isNotEmpty)
+                        const SizedBox(height: 10),
+                    ],
+                    if ((message.content ?? '').toString().trim().isNotEmpty)
+                      Text(
+                        message.content ?? '',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 15,
+                          color: isMe ? Colors.white : AppColors.textPrimary,
+                          height: 1.4,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
@@ -183,6 +184,124 @@ class HomeShell extends ConsumerWidget {
 /// Profile / Account screen.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _showEditProfileDialog(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic user,
+  ) async {
+    final t = ref.read(translationsProvider);
+    final firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
+    final lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
+    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final descCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        title: Text(
+          t.editProfile,
+          style: GoogleFonts.jost(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: firstNameCtrl,
+                  decoration: InputDecoration(labelText: t.firstName),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? t.required : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: lastNameCtrl,
+                  decoration: InputDecoration(labelText: t.lastName),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(labelText: t.mobile),
+                  keyboardType: TextInputType.phone,
+                ),
+                if (user?.isProfessional == true) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: descCtrl,
+                    decoration: InputDecoration(
+                      labelText: t.descriptionOptional,
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(ctx).pop(true);
+              }
+            },
+            child: Text(t.saveChanges),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave != true ||
+        user?.coId == null ||
+        user.coId.toString().isEmpty) {
+      return;
+    }
+
+    try {
+      await ref.read(accountRepositoryProvider).updateAccount(user.coId, {
+        'co_first_name': firstNameCtrl.text.trim(),
+        'co_last_name': lastNameCtrl.text.trim(),
+        'co_mobile': phoneCtrl.text.trim(),
+      });
+
+      if (user.isProfessional == true && descCtrl.text.trim().isNotEmpty) {
+        await ref.read(accountRepositoryProvider).updateProDescription(
+          user.coId,
+          {'co_description': descCtrl.text.trim()},
+        );
+      }
+
+      await ref.read(authStateProvider.notifier).fetchUser();
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.profileUpdated),
+          backgroundColor: AppColors.online,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.profileUpdateFailed(e.toString())),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -446,18 +565,7 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.person_outline,
                       title: t.editProfile,
                       subtitle: t.updateInfo,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              t.editProfileComingSoon,
-                              style: GoogleFonts.montserrat(fontSize: 14),
-                            ),
-                            backgroundColor: AppColors.mediumPurple,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
+                      onTap: () => _showEditProfileDialog(context, ref, user),
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(

@@ -120,6 +120,15 @@ class AppTranslations {
   String get editProfileComingSoon => _fr
       ? 'Modification du profil bientôt disponible'
       : 'Edit Profile Coming Soon';
+  String get descriptionOptional =>
+      _fr ? 'Description (optionnel)' : 'Description (optional)';
+  String get saveChanges =>
+      _fr ? 'Enregistrer les modifications' : 'Save Changes';
+  String get profileUpdated =>
+      _fr ? 'Profil mis à jour avec succès' : 'Profile updated successfully';
+  String profileUpdateFailed(String err) => _fr
+      ? 'Échec de la mise à jour du profil : $err'
+      : 'Failed to update profile: $err';
   String get notifications => _fr ? 'Notifications' : 'Notifications';
   String get managePreferences =>
       _fr ? 'Gérer les préférences' : 'Manage preferences';
@@ -287,6 +296,21 @@ class AppTranslations {
   String get beFirstToReview => _fr
       ? 'Soyez le premier à laisser un avis !'
       : 'Be the first to leave a review!';
+  String get writeReview => _fr ? 'Écrire un avis' : 'Write a review';
+  String get submitReview => _fr ? 'Soumettre un avis' : 'Submit review';
+  String get yourRating => _fr ? 'Votre note' : 'Your rating';
+  String get yourComment => _fr ? 'Votre commentaire' : 'Your comment';
+  String get reviewTargetCoidHint =>
+      _fr ? 'ID du professionnel (optionnel)' : 'Professional ID (optional)';
+  String get reviewSessionIdHint =>
+      _fr ? 'ID de session (optionnel)' : 'Session ID (optional)';
+  String get ratingRequired =>
+      _fr ? 'La note est requise' : 'Rating is required';
+  String get reviewSubmitted =>
+      _fr ? 'Avis soumis avec succès' : 'Review submitted successfully';
+  String reviewSubmitFailed(String err) => _fr
+      ? 'Échec de l\'envoi de l\'avis : $err'
+      : 'Failed to submit review: $err';
   String nReviews(int count) => _fr ? '$count avis' : '$count reviews';
   String get reviewsFromClientsWillAppear => _fr
       ? 'Les avis de vos clients\napparaîtront ici'
@@ -358,6 +382,24 @@ class AppTranslations {
       ? 'Aucune information tarifaire disponible'
       : 'No pricing information available';
   String get consultation => _fr ? 'Consultation' : 'Consultation';
+  String get promoCode => _fr ? 'Code promo' : 'Promo code';
+  String get applyPromo => _fr ? 'Appliquer' : 'Apply';
+  String promoApplied(String code, String discount) => _fr
+      ? 'Code $code appliqué : $discount%'
+      : 'Code $code applied: $discount%';
+  String get promoInvalid => _fr ? 'Code promo invalide' : 'Invalid promo code';
+  String promoCheckFailed(String err) => _fr
+      ? 'Échec de la vérification du code promo : $err'
+      : 'Failed to check promo code: $err';
+  String get registerAppointment =>
+      _fr ? 'S\'inscrire à un créneau' : 'Register for appointment';
+  String get appointmentId => _fr ? 'ID de créneau' : 'Appointment ID';
+  String get appointmentRegistered => _fr
+      ? 'Inscription au créneau réussie'
+      : 'Appointment registration successful';
+  String appointmentRegistrationFailed(String err) => _fr
+      ? 'Échec de l\'inscription au créneau : $err'
+      : 'Appointment registration failed: $err';
 
   // ── Language selector ────────────────────────────────────────────────────────
   String get selectLanguage => _fr ? 'Choisir la langue' : 'Select Language';

@@ -19,6 +19,133 @@ class ReviewsScreen extends ConsumerStatefulWidget {
 class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
   String _selectedFilter = 'All';
 
+  Future<void> _submitReview() async {
+    final t = ref.read(translationsProvider);
+    double rating = 5;
+    final commentCtrl = TextEditingController();
+    final targetCoIdCtrl = TextEditingController();
+    final sessionIdCtrl = TextEditingController();
+
+    final shouldSubmit = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surfaceCard,
+          title: Text(
+            t.writeReview,
+            style: GoogleFonts.jost(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      t.yourRating,
+                      style: GoogleFonts.montserrat(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    DropdownButton<double>(
+                      value: rating,
+                      items: [5, 4, 3, 2, 1]
+                          .map(
+                            (v) => DropdownMenuItem<double>(
+                              value: v.toDouble(),
+                              child: Text('$v ⭐'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          setDialogState(() => rating = v);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: commentCtrl,
+                  maxLines: 4,
+                  decoration: InputDecoration(labelText: t.yourComment),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: targetCoIdCtrl,
+                  decoration: InputDecoration(
+                    labelText: t.reviewTargetCoidHint,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: sessionIdCtrl,
+                  decoration: InputDecoration(labelText: t.reviewSessionIdHint),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(t.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(t.submitReview),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (shouldSubmit != true) return;
+
+    try {
+      final body = <String, dynamic>{
+        're_rating': rating,
+        're_comment': commentCtrl.text.trim(),
+        if (targetCoIdCtrl.text.trim().isNotEmpty) ...{
+          'co_id': targetCoIdCtrl.text.trim(),
+          'co_target_id': targetCoIdCtrl.text.trim(),
+        },
+        if (sessionIdCtrl.text.trim().isNotEmpty) ...{
+          'se_id': sessionIdCtrl.text.trim(),
+        },
+      };
+
+      await ref.read(reviewsHistoryRepositoryProvider).postReview(body);
+      ref.invalidate(
+        widget.isProfessional
+            ? professionalReviewsProvider
+            : customerReviewsProvider,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.reviewSubmitted),
+          backgroundColor: AppColors.online,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.reviewSubmitFailed(e.toString())),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
@@ -29,6 +156,13 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     );
 
     return GradientScaffold(
+      floatingActionButton: widget.isProfessional
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _submitReview,
+              icon: const Icon(Icons.rate_review_outlined),
+              label: Text(t.writeReview),
+            ),
       body: SafeArea(
         child: reviewsAsync.when(
           loading: () => const Center(
