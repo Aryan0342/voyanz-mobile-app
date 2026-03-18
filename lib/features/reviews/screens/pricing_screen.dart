@@ -74,23 +74,32 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
 
     try {
-      final history = await ref.read(reviewsHistoryRepositoryProvider).getCustomerHistory();
+      final history = await ref
+          .read(reviewsHistoryRepositoryProvider)
+          .getCustomerHistory();
       for (final row in history) {
         if (row is! Map<String, dynamic>) continue;
         final apId =
             row['ap_id']?.toString() ??
             row['appointment_id']?.toString() ??
             row['apId']?.toString();
-        final date = row['se_date']?.toString() ?? row['date']?.toString() ?? '';
-        final name = row['co_fullname']?.toString() ?? row['co_name']?.toString() ?? '';
+        final date =
+            row['se_date']?.toString() ?? row['date']?.toString() ?? '';
+        final name =
+            row['co_fullname']?.toString() ?? row['co_name']?.toString() ?? '';
         if (apId != null && apId.trim().isNotEmpty) {
-          addCandidate(apId.trim(), '$name ${date.isNotEmpty ? '- $date' : ''}'.trim());
+          addCandidate(
+            apId.trim(),
+            '$name ${date.isNotEmpty ? '- $date' : ''}'.trim(),
+          );
         }
       }
     } catch (_) {}
 
     try {
-      final dispo = await ref.read(professionalsRepositoryProvider).getDisponibilities();
+      final dispo = await ref
+          .read(professionalsRepositoryProvider)
+          .getDisponibilities();
       for (final row in dispo) {
         if (row is! Map<String, dynamic>) continue;
         final apId =
@@ -100,12 +109,16 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
             row['di_id']?.toString();
         if (apId == null || apId.trim().isEmpty) continue;
         final day = row['day']?.toString() ?? row['di_day']?.toString() ?? '';
-        final hourFrom = row['di_hour_from']?.toString() ?? row['time']?.toString() ?? '';
+        final hourFrom =
+            row['di_hour_from']?.toString() ?? row['time']?.toString() ?? '';
         final hourTo = row['di_hour_to']?.toString() ?? '';
         final slotLabel = (hourFrom.isNotEmpty && hourTo.isNotEmpty)
             ? '$hourFrom-$hourTo'
             : hourFrom;
-        addCandidate(apId.trim(), '${day.isNotEmpty ? '$day ' : ''}${slotLabel.trim()}'.trim());
+        addCandidate(
+          apId.trim(),
+          '${day.isNotEmpty ? '$day ' : ''}${slotLabel.trim()}'.trim(),
+        );
       }
     } catch (_) {}
 
@@ -177,15 +190,20 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                         final item = filtered[i];
                         final selected = selectedApId == item.id;
                         return ListTile(
-                          onTap: () => setDialogState(() => selectedApId = item.id),
+                          onTap: () =>
+                              setDialogState(() => selectedApId = item.id),
                           leading: Icon(
                             selected
                                 ? Icons.radio_button_checked
                                 : Icons.radio_button_unchecked,
-                            color: selected ? AppColors.rosePink : AppColors.textMuted,
+                            color: selected
+                                ? AppColors.rosePink
+                                : AppColors.textMuted,
                           ),
                           title: Text(item.id),
-                          subtitle: item.label.isEmpty ? null : Text(item.label),
+                          subtitle: item.label.isEmpty
+                              ? null
+                              : Text(item.label),
                         );
                       },
                     ),

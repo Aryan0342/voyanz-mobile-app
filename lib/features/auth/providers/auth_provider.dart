@@ -17,9 +17,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Holds current authenticated user; null when logged out.
-final authStateProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
-  return AuthNotifier(ref, ref.watch(authRepositoryProvider));
-});
+final authStateProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+      return AuthNotifier(ref, ref.watch(authRepositoryProvider));
+    });
 
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   final Ref _ref;

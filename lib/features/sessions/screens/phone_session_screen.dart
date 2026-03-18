@@ -92,7 +92,11 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                     shape: BoxShape.circle,
                     gradient: AppGradients.accent,
                   ),
-                  child: const Icon(Icons.phone_in_talk, color: Colors.white, size: 52),
+                  child: const Icon(
+                    Icons.phone_in_talk,
+                    color: Colors.white,
+                    size: 52,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(

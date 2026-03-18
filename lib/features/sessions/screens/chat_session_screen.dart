@@ -43,7 +43,11 @@ class ChatSessionScreen extends ConsumerWidget {
                     shape: BoxShape.circle,
                     gradient: AppGradients.accent,
                   ),
-                  child: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 52),
+                  child: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white,
+                    size: 52,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(

@@ -8,18 +8,29 @@ import 'package:voyanz/features/auth/models/user.dart';
 class _FakeAuthDataSource extends AuthDataSource {
   _FakeAuthDataSource()
     : _loginResponse = LoginResponse(
-        user: const User(coId: 'login-user', role: 'customer', email: 'login@example.com'),
+        user: const User(
+          coId: 'login-user',
+          role: 'customer',
+          email: 'login@example.com',
+        ),
         accessToken: 'access-123',
         refreshToken: 'refresh-123',
       ),
-      _userInfo = const User(coId: 'info-user', role: 'professional', email: 'info@example.com'),
+      _userInfo = const User(
+        coId: 'info-user',
+        role: 'professional',
+        email: 'info@example.com',
+      ),
       super(Dio());
 
   final LoginResponse _loginResponse;
   final User _userInfo;
 
   @override
-  Future<LoginResponse> login({required String email, required String password}) async {
+  Future<LoginResponse> login({
+    required String email,
+    required String password,
+  }) async {
     return _loginResponse;
   }
 
@@ -40,7 +51,10 @@ class _FakeTokenStorage extends TokenStorage {
   Future<String?> get refreshToken async => _refresh;
 
   @override
-  Future<void> saveTokens({required String accessToken, String? refreshToken}) async {
+  Future<void> saveTokens({
+    required String accessToken,
+    String? refreshToken,
+  }) async {
     _access = accessToken;
     _refresh = refreshToken;
   }
@@ -53,17 +67,20 @@ class _FakeTokenStorage extends TokenStorage {
 }
 
 void main() {
-  test('login stores tokens and returns canonical user infos payload', () async {
-    final ds = _FakeAuthDataSource();
-    final storage = _FakeTokenStorage();
-    final repo = AuthRepository(ds, storage);
+  test(
+    'login stores tokens and returns canonical user infos payload',
+    () async {
+      final ds = _FakeAuthDataSource();
+      final storage = _FakeTokenStorage();
+      final repo = AuthRepository(ds, storage);
 
-    final response = await repo.login(email: 'u@x.com', password: 'secret');
+      final response = await repo.login(email: 'u@x.com', password: 'secret');
 
-    expect(response.accessToken, 'access-123');
-    expect(await storage.accessToken, 'access-123');
-    expect(await storage.refreshToken, 'refresh-123');
-    expect(response.user.coId, 'info-user');
-    expect(response.user.role, 'professional');
-  });
+      expect(response.accessToken, 'access-123');
+      expect(await storage.accessToken, 'access-123');
+      expect(await storage.refreshToken, 'refresh-123');
+      expect(response.user.coId, 'info-user');
+      expect(response.user.role, 'professional');
+    },
+  );
 }

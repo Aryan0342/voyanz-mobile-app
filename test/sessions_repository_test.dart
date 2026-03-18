@@ -13,7 +13,11 @@ class _FakeSessionsDataSource extends SessionsDataSource {
   String? lastHeartbeatSeId;
 
   @override
-  Future<String> createSessionCall({required String typeCall, required String coId, String? apId}) async {
+  Future<String> createSessionCall({
+    required String typeCall,
+    required String coId,
+    String? apId,
+  }) async {
     lastType = typeCall;
     lastCoId = coId;
     lastApId = apId;
@@ -21,7 +25,10 @@ class _FakeSessionsDataSource extends SessionsDataSource {
   }
 
   @override
-  Future<VideoToken> getVideoAccessToken({required String seId, required String coId}) async {
+  Future<VideoToken> getVideoAccessToken({
+    required String seId,
+    required String coId,
+  }) async {
     return const VideoToken(
       token: 'tok-1',
       room: 'room-1',
@@ -38,20 +45,27 @@ class _FakeSessionsDataSource extends SessionsDataSource {
 }
 
 void main() {
-  test('create session + video token + heartbeat critical session flows', () async {
-    final ds = _FakeSessionsDataSource();
-    final repo = SessionsRepository(ds);
+  test(
+    'create session + video token + heartbeat critical session flows',
+    () async {
+      final ds = _FakeSessionsDataSource();
+      final repo = SessionsRepository(ds);
 
-    final seId = await repo.createSessionCall(typeCall: 'video', coId: 'co-1', apId: 'ap-7');
-    final token = await repo.getVideoToken(seId: seId, coId: 'co-1');
-    await repo.sendHeartbeat(seId);
+      final seId = await repo.createSessionCall(
+        typeCall: 'video',
+        coId: 'co-1',
+        apId: 'ap-7',
+      );
+      final token = await repo.getVideoToken(seId: seId, coId: 'co-1');
+      await repo.sendHeartbeat(seId);
 
-    expect(seId, 'se-999');
-    expect(ds.lastType, 'video');
-    expect(ds.lastCoId, 'co-1');
-    expect(ds.lastApId, 'ap-7');
-    expect(token.room, 'room-1');
-    expect(token.provider, 'agora');
-    expect(ds.lastHeartbeatSeId, 'se-999');
-  });
+      expect(seId, 'se-999');
+      expect(ds.lastType, 'video');
+      expect(ds.lastCoId, 'co-1');
+      expect(ds.lastApId, 'ap-7');
+      expect(token.room, 'room-1');
+      expect(token.provider, 'agora');
+      expect(ds.lastHeartbeatSeId, 'se-999');
+    },
+  );
 }

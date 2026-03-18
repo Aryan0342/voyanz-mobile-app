@@ -70,7 +70,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final authState = ref.watch(authStateProvider);
     final t = ref.watch(translationsProvider);
     final agency = ref.watch(agencyProvider);
-    final brandPrimary = _parseHexColor(agency?.primaryColor, AppColors.rosePink);
+    final brandPrimary = _parseHexColor(
+      agency?.primaryColor,
+      AppColors.rosePink,
+    );
     final agencyName = agency?.name?.trim();
     final logo = agency?.logo?.trim();
 
