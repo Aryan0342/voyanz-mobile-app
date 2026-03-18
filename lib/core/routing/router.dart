@@ -8,6 +8,8 @@ import 'package:voyanz/features/professionals/screens/professionals_list_screen.
 import 'package:voyanz/features/professionals/screens/professional_detail_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_availability_screen.dart';
 import 'package:voyanz/features/sessions/screens/video_call_screen.dart';
+import 'package:voyanz/features/sessions/screens/phone_session_screen.dart';
+import 'package:voyanz/features/sessions/screens/chat_session_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_groups_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_messages_screen.dart';
 import 'package:voyanz/features/reviews/screens/history_screen.dart';
@@ -99,6 +101,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/video/:seId/:coId',
         builder: (context, state) => VideoCallScreen(
+          seId: state.pathParameters['seId']!,
+          coId: state.pathParameters['coId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/session/phone/:seId/:coId',
+        builder: (context, state) => PhoneSessionScreen(
+          seId: state.pathParameters['seId']!,
+          coId: state.pathParameters['coId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/session/chat/:seId/:coId',
+        builder: (context, state) => ChatSessionScreen(
           seId: state.pathParameters['seId']!,
           coId: state.pathParameters['coId']!,
         ),

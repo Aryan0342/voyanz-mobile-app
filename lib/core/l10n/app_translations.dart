@@ -403,6 +403,21 @@ class AppTranslations {
   String appointmentRegistrationFailed(String err) => _fr
       ? 'Échec de l\'inscription au créneau : $err'
       : 'Appointment registration failed: $err';
+  String get selectAppointment =>
+      _fr ? 'Sélectionner un créneau' : 'Select appointment';
+  String get searchAppointments =>
+      _fr ? 'Rechercher un créneau...' : 'Search appointments...';
+  String get noAppointmentCandidates => _fr
+      ? 'Aucun créneau disponible pour inscription.'
+      : 'No appointment slots available to register.';
+  String get loadingAppointments =>
+      _fr ? 'Chargement des créneaux...' : 'Loading appointments...';
+  String get phoneSession => _fr ? 'Session téléphonique' : 'Phone Session';
+  String get chatSession => _fr ? 'Session chat' : 'Chat Session';
+  String get sessionReady => _fr ? 'Session prête' : 'Session ready';
+  String get openConversations =>
+      _fr ? 'Ouvrir les conversations' : 'Open conversations';
+  String get endSession => _fr ? 'Terminer la session' : 'End Session';
 
   // ── Language selector ────────────────────────────────────────────────────────
   String get selectLanguage => _fr ? 'Choisir la langue' : 'Select Language';

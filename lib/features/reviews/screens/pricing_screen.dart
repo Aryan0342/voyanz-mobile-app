@@ -62,55 +62,158 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
   }
 
+  Future<List<_AppointmentCandidate>> _loadAppointmentCandidates() async {
+    final candidates = <_AppointmentCandidate>[];
+    final seen = <String>{};
+
+    void addCandidate(String id, String label) {
+      final key = '$id|$label';
+      if (id.isEmpty || seen.contains(key)) return;
+      seen.add(key);
+      candidates.add(_AppointmentCandidate(id: id, label: label));
+    }
+
+    try {
+      final history = await ref.read(reviewsHistoryRepositoryProvider).getCustomerHistory();
+      for (final row in history) {
+        if (row is! Map<String, dynamic>) continue;
+        final apId =
+            row['ap_id']?.toString() ??
+            row['appointment_id']?.toString() ??
+            row['apId']?.toString();
+        final date = row['se_date']?.toString() ?? row['date']?.toString() ?? '';
+        final name = row['co_fullname']?.toString() ?? row['co_name']?.toString() ?? '';
+        if (apId != null && apId.trim().isNotEmpty) {
+          addCandidate(apId.trim(), '$name ${date.isNotEmpty ? '- $date' : ''}'.trim());
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final dispo = await ref.read(professionalsRepositoryProvider).getDisponibilities();
+      for (final row in dispo) {
+        if (row is! Map<String, dynamic>) continue;
+        final apId =
+            row['ap_id']?.toString() ??
+            row['appointment_id']?.toString() ??
+            row['apId']?.toString() ??
+            row['di_id']?.toString();
+        if (apId == null || apId.trim().isEmpty) continue;
+        final day = row['day']?.toString() ?? row['di_day']?.toString() ?? '';
+        final hourFrom = row['di_hour_from']?.toString() ?? row['time']?.toString() ?? '';
+        final hourTo = row['di_hour_to']?.toString() ?? '';
+        final slotLabel = (hourFrom.isNotEmpty && hourTo.isNotEmpty)
+            ? '$hourFrom-$hourTo'
+            : hourFrom;
+        addCandidate(apId.trim(), '${day.isNotEmpty ? '$day ' : ''}${slotLabel.trim()}'.trim());
+      }
+    } catch (_) {}
+
+    return candidates;
+  }
+
   Future<void> _registerAppointment() async {
     final t = ref.read(translationsProvider);
-    final apIdCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+    final candidates = await _loadAppointmentCandidates();
+
+    if (!mounted) return;
+    if (candidates.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.noAppointmentCandidates),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final searchCtrl = TextEditingController();
+    String? selectedApId;
 
     final shouldSubmit = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceCard,
-        title: Text(
-          t.registerAppointment,
-          style: GoogleFonts.jost(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: apIdCtrl,
-            decoration: InputDecoration(labelText: t.appointmentId),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? t.required : null,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(ctx).pop(true);
-              }
-            },
-            child: Text(t.registerAppointment),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final q = searchCtrl.text.trim().toLowerCase();
+          final filtered = q.isEmpty
+              ? candidates
+              : candidates
+                    .where(
+                      (c) =>
+                          c.id.toLowerCase().contains(q) ||
+                          c.label.toLowerCase().contains(q),
+                    )
+                    .toList();
+
+          return AlertDialog(
+            backgroundColor: AppColors.surfaceCard,
+            title: Text(
+              t.selectAppointment,
+              style: GoogleFonts.jost(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: searchCtrl,
+                    decoration: InputDecoration(
+                      labelText: t.searchAppointments,
+                      prefixIcon: const Icon(Icons.search),
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 280,
+                    child: ListView.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final item = filtered[i];
+                        final selected = selectedApId == item.id;
+                        return ListTile(
+                          onTap: () => setDialogState(() => selectedApId = item.id),
+                          leading: Icon(
+                            selected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: selected ? AppColors.rosePink : AppColors.textMuted,
+                          ),
+                          title: Text(item.id),
+                          subtitle: item.label.isEmpty ? null : Text(item.label),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(t.cancel),
+              ),
+              FilledButton(
+                onPressed: selectedApId == null
+                    ? null
+                    : () => Navigator.of(ctx).pop(true),
+                child: Text(t.registerAppointment),
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    if (shouldSubmit != true) return;
+    if (shouldSubmit != true || selectedApId == null) return;
 
     try {
-      await ref
-          .read(appointmentsRepositoryProvider)
-          .register(apIdCtrl.text.trim());
+      await ref.read(appointmentsRepositoryProvider).register(selectedApId!);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -438,4 +541,11 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       ),
     );
   }
+}
+
+class _AppointmentCandidate {
+  final String id;
+  final String label;
+
+  const _AppointmentCandidate({required this.id, required this.label});
 }

@@ -55,10 +55,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         .login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
   }
 
+  Color _parseHexColor(String? value, Color fallback) {
+    if (value == null || value.trim().isEmpty) return fallback;
+    final cleaned = value.trim().replaceAll('#', '');
+    if (cleaned.length != 6 && cleaned.length != 8) return fallback;
+    final hex = cleaned.length == 6 ? 'FF$cleaned' : cleaned;
+    final colorValue = int.tryParse(hex, radix: 16);
+    if (colorValue == null) return fallback;
+    return Color(colorValue);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final t = ref.watch(translationsProvider);
+    final agency = ref.watch(agencyProvider);
+    final brandPrimary = _parseHexColor(agency?.primaryColor, AppColors.rosePink);
+    final agencyName = agency?.name?.trim();
+    final logo = agency?.logo?.trim();
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
@@ -94,25 +108,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.rosePink.withValues(alpha: 0.15),
+                              color: brandPrimary.withValues(alpha: 0.2),
                               blurRadius: 32,
                               offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: Image.asset(
-                          'assets/images/voyanz-logo.png',
-                          width: 100,
-                          fit: BoxFit.contain,
-                        ),
+                        child: (logo != null && logo.isNotEmpty)
+                            ? Image.network(
+                                logo,
+                                width: 100,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Image.asset(
+                                  'assets/images/voyanz-logo.png',
+                                  width: 100,
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            : Image.asset(
+                                'assets/images/voyanz-logo.png',
+                                width: 100,
+                                fit: BoxFit.contain,
+                              ),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Voyanz',
+                        (agencyName != null && agencyName.isNotEmpty)
+                            ? agencyName
+                            : 'Voyanz',
                         style: GoogleFonts.jost(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: brandPrimary,
                           letterSpacing: 1,
                         ),
                       ),

@@ -306,6 +306,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
+    final agency = ref.watch(agencyProvider);
     final t = ref.watch(translationsProvider);
     final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final email = user?.email ?? '';
@@ -633,10 +634,13 @@ class ProfileScreen extends ConsumerWidget {
                       title: t.privacyPolicy,
                       subtitle: t.readOurTerms,
                       onTap: () {
+                        final termsUrl = agency?.termsUrl?.trim();
                         _showAboutDialog(
                           context,
                           title: t.privacyPolicy,
-                          content: t.privacyPolicyContent,
+                          content: (termsUrl != null && termsUrl.isNotEmpty)
+                              ? termsUrl
+                              : t.privacyPolicyContent,
                         );
                       },
                     ),
@@ -646,10 +650,13 @@ class ProfileScreen extends ConsumerWidget {
                       title: t.aboutVoyanz,
                       subtitle: t.version100,
                       onTap: () {
+                        final aboutText = agency?.aboutText?.trim();
                         _showAboutDialog(
                           context,
                           title: t.aboutVoyanz,
-                          content: t.aboutVoyanzContent,
+                          content: (aboutText != null && aboutText.isNotEmpty)
+                              ? aboutText
+                              : t.aboutVoyanzContent,
                         );
                       },
                     ),

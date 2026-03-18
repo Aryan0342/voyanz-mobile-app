@@ -249,6 +249,16 @@ class _ProfessionalDetailScreenState
         return;
       }
 
+      if (type == 'phone') {
+        context.push('/session/phone/$seId/${pro.coId}');
+        return;
+      }
+
+      if (type == 'chat') {
+        context.push('/session/chat/$seId/${pro.coId}');
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t.sessionCreated(seId, type)),
