@@ -223,6 +223,9 @@ class AppTranslations {
   String startingSession(String type, String name) => _fr
       ? 'Démarrage session $type avec $name...'
       : 'Starting $type session with $name...';
+  String sessionCreated(String seId, String type) => _fr
+      ? 'Session #$seId créée (${type.toUpperCase()})'
+      : 'Session #$seId created (${type.toUpperCase()})';
   String get availableNow => _fr ? 'Disponible maintenant' : 'Available now';
   String get noAvailabilityAtMoment => _fr
       ? 'Aucune disponibilité pour le moment'

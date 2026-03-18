@@ -30,4 +30,16 @@ class SessionsRepository {
     }
     return _ds.sendHeartbeat(seId);
   }
+
+  Future<String> createSessionCall({
+    required String typeCall,
+    required String coId,
+    String? apId,
+  }) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return 'mock-se-${DateTime.now().millisecondsSinceEpoch}';
+    }
+    return _ds.createSessionCall(typeCall: typeCall, coId: coId, apId: apId);
+  }
 }

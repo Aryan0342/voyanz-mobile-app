@@ -8,6 +8,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 String? _resolveImageUrl(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
@@ -217,7 +218,11 @@ class _ProfessionalDetailScreenState
     );
   }
 
-  void _startSessionType(BuildContext context, dynamic pro, String type) {
+  Future<void> _startSessionType(
+    BuildContext context,
+    dynamic pro,
+    String type,
+  ) async {
     final t = ref.read(translationsProvider);
     Navigator.pop(context); // Close dialog
     ScaffoldMessenger.of(context).showSnackBar(
@@ -231,8 +236,42 @@ class _ProfessionalDetailScreenState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
-    // TODO: In production, would create session on backend and navigate to video screen
-    // context.push('/video/{seId}/${pro.coId}');
+
+    try {
+      final seId = await ref
+          .read(sessionsRepositoryProvider)
+          .createSessionCall(typeCall: type, coId: pro.coId.toString());
+
+      if (!mounted) return;
+
+      if (type == 'video') {
+        context.push('/video/$seId/${pro.coId}');
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.sessionCreated(seId, type)),
+          backgroundColor: AppColors.mediumPurple,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.errorMessage(e.toString())),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   @override

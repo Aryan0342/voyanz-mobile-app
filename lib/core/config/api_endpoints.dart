@@ -34,6 +34,8 @@ class ApiEndpoints {
   static const String postReview = '/web/1.0/review';
 
   // ── Video / Session ────────────────────────────────────────────────────
+  static String createSessionCall(String typeCall, String coId) =>
+      '/web/1.0/call/$typeCall/$coId';
   static String videoAccessToken(String seId, String coId) =>
       '/web/1.0/video/$seId/$coId/accesstoken';
   static String videoHeartbeat(String seId) => '/web/1.0/video/heartbeat/$seId';
