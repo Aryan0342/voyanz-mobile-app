@@ -180,8 +180,9 @@ class _ProfessionalAvailabilityScreenState
 
     return GradientScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: AppColors.surfaceDark,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.25),
         title: Text(
           t.manageSlots,
           style: GoogleFonts.jost(fontWeight: FontWeight.w600),
@@ -339,7 +340,9 @@ class _ProfessionalAvailabilityScreenState
                           borderRadius: BorderRadius.circular(14),
                           color: AppColors.surfaceDark.withValues(alpha: 0.28),
                           border: Border.all(
-                            color: AppColors.borderSubtle.withValues(alpha: 0.30),
+                            color: AppColors.borderSubtle.withValues(
+                              alpha: 0.30,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -352,7 +355,9 @@ class _ProfessionalAvailabilityScreenState
                               ),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
-                                color: AppColors.rosePink.withValues(alpha: 0.20),
+                                color: AppColors.rosePink.withValues(
+                                  alpha: 0.20,
+                                ),
                               ),
                               child: Text(
                                 slot.timeLabel,
@@ -380,15 +385,19 @@ class _ProfessionalAvailabilityScreenState
                                       children: slot.channels
                                           .map(
                                             (channel) => Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 5,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 5,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(999),
-                                                color: AppColors.rosePink.withValues(alpha: 0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                                color: AppColors.rosePink
+                                                    .withValues(alpha: 0.15),
                                                 border: Border.all(
-                                                  color: AppColors.rosePink.withValues(alpha: 0.35),
+                                                  color: AppColors.rosePink
+                                                      .withValues(alpha: 0.35),
                                                 ),
                                               ),
                                               child: Row(
@@ -397,16 +406,20 @@ class _ProfessionalAvailabilityScreenState
                                                   Icon(
                                                     _channelIcon(channel),
                                                     size: 14,
-                                                    color: AppColors.textPrimary,
+                                                    color:
+                                                        AppColors.textPrimary,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
                                                     channel,
-                                                    style: GoogleFonts.montserrat(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: AppColors.textPrimary,
-                                                    ),
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: AppColors
+                                                              .textPrimary,
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -458,7 +471,7 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     final hourTo = item['di_hour_to']?.toString().trim() ?? '';
 
     if (diDays is List && diDays.isNotEmpty) {
-        final timeLabel =
+      final timeLabel =
           (hourFrom.isNotEmpty && hourTo.isNotEmpty && hourFrom != hourTo)
           ? '$hourFrom – $hourTo'
           : hourFrom.isNotEmpty
@@ -523,7 +536,10 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
   });
 
   for (final row in mergedRows) {
-    row.slots.sort((a, b) => _slotSortValue(a.timeLabel).compareTo(_slotSortValue(b.timeLabel)));
+    row.slots.sort(
+      (a, b) =>
+          _slotSortValue(a.timeLabel).compareTo(_slotSortValue(b.timeLabel)),
+    );
   }
 
   return mergedRows;
@@ -534,7 +550,9 @@ _AvailabilitySlot? _parseAvailabilitySlot(dynamic slot) {
 
   if (slot is String) {
     final text = slot.trim();
-    final match = RegExp(r'^\[\s*([^,\]]+)\s*,\s*\[(.*)\]\s*\]$').firstMatch(text);
+    final match = RegExp(
+      r'^\[\s*([^,\]]+)\s*,\s*\[(.*)\]\s*\]$',
+    ).firstMatch(text);
     if (match != null) {
       final time = match.group(1)?.trim() ?? '';
       final methodsRaw = match.group(2)?.trim() ?? '';
@@ -544,7 +562,10 @@ _AvailabilitySlot? _parseAvailabilitySlot(dynamic slot) {
           .where((e) => e.isNotEmpty)
           .toList();
       if (time.isNotEmpty || methods.isNotEmpty) {
-        return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+        return _AvailabilitySlot(
+          timeLabel: time.isNotEmpty ? time : '?',
+          channels: methods,
+        );
       }
     }
     if (text.isEmpty) return null;
@@ -559,7 +580,10 @@ _AvailabilitySlot? _parseAvailabilitySlot(dynamic slot) {
       slot['types'] ?? slot['methods'] ?? slot['channels'],
     );
     if (time.isNotEmpty || methods.isNotEmpty) {
-      return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+      return _AvailabilitySlot(
+        timeLabel: time.isNotEmpty ? time : '?',
+        channels: methods,
+      );
     }
     final fallback = slot.toString().trim();
     if (fallback.isEmpty) return null;
@@ -573,7 +597,10 @@ _AvailabilitySlot? _parseAvailabilitySlot(dynamic slot) {
     final methods = slot.length > 1 ? _readSessionMethods(slot[1]) : <String>[];
 
     if (time.isNotEmpty || methods.isNotEmpty) {
-      return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+      return _AvailabilitySlot(
+        timeLabel: time.isNotEmpty ? time : '?',
+        channels: methods,
+      );
     }
     final fallback = slot
         .map((e) => e?.toString().trim() ?? '')

@@ -211,7 +211,8 @@ class Professional {
     final languages = _readStringList(json, ['co_languages', 'languages']);
 
     final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
-    final availableNow = _readBool(json, ['disponibilityNow']) ?? online ?? false;
+    final availableNow =
+        _readBool(json, ['disponibilityNow']) ?? online ?? false;
 
     return Professional(
       coId: json['co_id']?.toString() ?? '',
@@ -367,7 +368,7 @@ class ProfessionalDetail extends Professional {
       email: json['co_email'] as String?,
       isVerified:
           Professional._readBool(json, ['co_profile_verified_at']) ?? false,
-        isAvailableNow: availableNow,
+      isAvailableNow: availableNow,
       availabilityText: Professional._readString(json, ['disponibilityText']),
       isFavorite:
           Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
