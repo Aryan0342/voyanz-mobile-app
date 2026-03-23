@@ -210,6 +210,9 @@ class Professional {
     ]);
     final languages = _readStringList(json, ['co_languages', 'languages']);
 
+    final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
+    final availableNow = _readBool(json, ['disponibilityNow']) ?? online ?? false;
+
     return Professional(
       coId: json['co_id']?.toString() ?? '',
       firstName: firstName,
@@ -243,7 +246,7 @@ class Professional {
       pricePhonePerMinute: pricePhone,
       priceVideoPerMinute: priceVideo,
       priceChatPerMinute: priceChat,
-      isOnline: _readBool(json, ['co_is_online', 'co_online', 'is_online']),
+      isOnline: online,
       supportsPhone:
           _readBool(json, ['co_use_phone', 'use_phone']) ??
           (pricePhone ?? 0) > 0,
@@ -257,7 +260,7 @@ class Professional {
       isFavorite: _readBool(json, ['co_favorite', 'favorite']) ?? false,
       experienceYears: _readExperienceYears(json),
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
-      isAvailableNow: _readBool(json, ['disponibilityNow']) ?? false,
+      isAvailableNow: availableNow,
       availabilityText: _readString(json, ['disponibilityText']),
     );
   }
@@ -310,6 +313,14 @@ class ProfessionalDetail extends Professional {
       ]),
     );
 
+    final online = Professional._readBool(json, [
+      'co_is_online',
+      'co_online',
+      'is_online',
+    ]);
+    final availableNow =
+        Professional._readBool(json, ['disponibilityNow']) ?? online ?? false;
+
     return ProfessionalDetail(
       coId: json['co_id']?.toString() ?? '',
       firstName: Professional._readString(json, [
@@ -346,11 +357,7 @@ class ProfessionalDetail extends Professional {
       pricePhonePerMinute: pricePhone,
       priceVideoPerMinute: priceVideo,
       priceChatPerMinute: priceChat,
-      isOnline: Professional._readBool(json, [
-        'co_is_online',
-        'co_online',
-        'is_online',
-      ]),
+      isOnline: online,
       description: Professional._readString(json, [
         'co_description',
         'co_presentation',
@@ -360,8 +367,7 @@ class ProfessionalDetail extends Professional {
       email: json['co_email'] as String?,
       isVerified:
           Professional._readBool(json, ['co_profile_verified_at']) ?? false,
-      isAvailableNow:
-          Professional._readBool(json, ['disponibilityNow']) ?? false,
+        isAvailableNow: availableNow,
       availabilityText: Professional._readString(json, ['disponibilityText']),
       isFavorite:
           Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,

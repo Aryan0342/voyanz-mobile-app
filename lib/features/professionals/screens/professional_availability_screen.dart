@@ -284,58 +284,140 @@ class _ProfessionalAvailabilityScreenState
             itemBuilder: (context, index) {
               final row = rows[index];
               return Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: AppColors.surfaceCard.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.surfaceCard.withValues(alpha: 0.90),
+                      AppColors.surfaceCard.withValues(alpha: 0.65),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   border: Border.all(
                     color: AppColors.borderSubtle.withValues(alpha: 0.35),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.surfaceDark.withValues(alpha: 0.18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _localizedDay(row.day, t),
-                      style: GoogleFonts.jost(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.rosePink,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDayTitle(row.day, t),
+                          style: GoogleFonts.jost(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: row.slots
-                          .map(
-                            (slot) => Container(
+                    const SizedBox(height: 12),
+                    ...row.slots.map(
+                      (slot) => Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.surfaceDark.withValues(alpha: 0.28),
+                          border: Border.all(
+                            color: AppColors.borderSubtle.withValues(alpha: 0.30),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: AppColors.rosePink.withValues(
-                                  alpha: 0.17,
-                                ),
-                                border: Border.all(
-                                  color: AppColors.rosePink.withValues(
-                                    alpha: 0.35,
-                                  ),
-                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                color: AppColors.rosePink.withValues(alpha: 0.20),
                               ),
                               child: Text(
-                                slot,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                slot.timeLabel,
+                                style: GoogleFonts.jost(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                          )
-                          .toList(),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: slot.channels.isEmpty
+                                  ? Text(
+                                      'General',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    )
+                                  : Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: slot.channels
+                                          .map(
+                                            (channel) => Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 5,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(999),
+                                                color: AppColors.rosePink.withValues(alpha: 0.15),
+                                                border: Border.all(
+                                                  color: AppColors.rosePink.withValues(alpha: 0.35),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    _channelIcon(channel),
+                                                    size: 14,
+                                                    color: AppColors.textPrimary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    channel,
+                                                    style: GoogleFonts.montserrat(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: AppColors.textPrimary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -352,9 +434,16 @@ class _ProfessionalAvailabilityScreenState
 
 class _AvailabilityRow {
   final String day;
-  final List<String> slots;
+  final List<_AvailabilitySlot> slots;
 
   const _AvailabilityRow({required this.day, required this.slots});
+}
+
+class _AvailabilitySlot {
+  final String timeLabel;
+  final List<String> channels;
+
+  const _AvailabilitySlot({required this.timeLabel, required this.channels});
 }
 
 List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
@@ -369,7 +458,7 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     final hourTo = item['di_hour_to']?.toString().trim() ?? '';
 
     if (diDays is List && diDays.isNotEmpty) {
-      final timeLabel =
+        final timeLabel =
           (hourFrom.isNotEmpty && hourTo.isNotEmpty && hourFrom != hourTo)
           ? '$hourFrom – $hourTo'
           : hourFrom.isNotEmpty
@@ -378,7 +467,14 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
 
       for (final dayRaw in diDays) {
         final day = _toEnglishDay(dayRaw?.toString() ?? '');
-        rows.add(_AvailabilityRow(day: day, slots: [timeLabel]));
+        rows.add(
+          _AvailabilityRow(
+            day: day,
+            slots: [
+              _AvailabilitySlot(timeLabel: timeLabel, channels: const []),
+            ],
+          ),
+        );
       }
       continue;
     }
@@ -392,24 +488,177 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     final rawSlots =
         item['slots'] ?? item['di_slots'] ?? item['times'] ?? item['hours'];
 
-    final slots = <String>[];
+    final slots = <_AvailabilitySlot>[];
     if (rawSlots is List) {
       for (final slot in rawSlots) {
-        final text = slot?.toString().trim() ?? '';
-        if (text.isNotEmpty) slots.add(text);
+        final parsed = _parseAvailabilitySlot(slot);
+        if (parsed != null) slots.add(parsed);
       }
     } else {
       final single =
           (item['slot'] ?? item['time'] ?? item['hour'])?.toString().trim() ??
           '';
-      if (single.isNotEmpty) slots.add(single);
+      if (single.isNotEmpty) {
+        slots.add(_AvailabilitySlot(timeLabel: single, channels: const []));
+      }
     }
 
     if (slots.isNotEmpty) rows.add(_AvailabilityRow(day: day, slots: slots));
   }
 
-  rows.sort((a, b) => a.day.compareTo(b.day));
-  return rows;
+  final grouped = <String, List<_AvailabilitySlot>>{};
+  for (final row in rows) {
+    grouped.putIfAbsent(row.day, () => <_AvailabilitySlot>[]).addAll(row.slots);
+  }
+
+  final mergedRows = grouped.entries
+      .map((e) => _AvailabilityRow(day: e.key, slots: e.value))
+      .toList();
+
+  mergedRows.sort((a, b) {
+    final dateA = DateTime.tryParse(a.day);
+    final dateB = DateTime.tryParse(b.day);
+    if (dateA != null && dateB != null) return dateA.compareTo(dateB);
+    return a.day.compareTo(b.day);
+  });
+
+  for (final row in mergedRows) {
+    row.slots.sort((a, b) => _slotSortValue(a.timeLabel).compareTo(_slotSortValue(b.timeLabel)));
+  }
+
+  return mergedRows;
+}
+
+_AvailabilitySlot? _parseAvailabilitySlot(dynamic slot) {
+  if (slot == null) return null;
+
+  if (slot is String) {
+    final text = slot.trim();
+    final match = RegExp(r'^\[\s*([^,\]]+)\s*,\s*\[(.*)\]\s*\]$').firstMatch(text);
+    if (match != null) {
+      final time = match.group(1)?.trim() ?? '';
+      final methodsRaw = match.group(2)?.trim() ?? '';
+      final methods = methodsRaw
+          .split(',')
+          .map((e) => _normalizeChannelLabel(e))
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (time.isNotEmpty || methods.isNotEmpty) {
+        return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+      }
+    }
+    if (text.isEmpty) return null;
+    return _AvailabilitySlot(timeLabel: text, channels: const []);
+  }
+
+  if (slot is Map) {
+    final time =
+        (slot['time'] ?? slot['hour'] ?? slot['start'])?.toString().trim() ??
+        '';
+    final methods = _readSessionMethods(
+      slot['types'] ?? slot['methods'] ?? slot['channels'],
+    );
+    if (time.isNotEmpty || methods.isNotEmpty) {
+      return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+    }
+    final fallback = slot.toString().trim();
+    if (fallback.isEmpty) return null;
+    return _AvailabilitySlot(timeLabel: fallback, channels: const []);
+  }
+
+  if (slot is List) {
+    if (slot.isEmpty) return null;
+
+    final time = slot.first?.toString().trim() ?? '';
+    final methods = slot.length > 1 ? _readSessionMethods(slot[1]) : <String>[];
+
+    if (time.isNotEmpty || methods.isNotEmpty) {
+      return _AvailabilitySlot(timeLabel: time.isNotEmpty ? time : '?', channels: methods);
+    }
+    final fallback = slot
+        .map((e) => e?.toString().trim() ?? '')
+        .where((e) => e.isNotEmpty)
+        .join(', ');
+    if (fallback.isEmpty) return null;
+    return _AvailabilitySlot(timeLabel: fallback, channels: const []);
+  }
+
+  final fallback = slot.toString().trim();
+  if (fallback.isEmpty) return null;
+  return _AvailabilitySlot(timeLabel: fallback, channels: const []);
+}
+
+List<String> _readSessionMethods(dynamic raw) {
+  if (raw is List) {
+    return raw
+        .map((e) => _normalizeChannelLabel(e?.toString() ?? ''))
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  if (raw is String && raw.trim().isNotEmpty) {
+    return [_normalizeChannelLabel(raw)];
+  }
+
+  return const [];
+}
+
+String _normalizeChannelLabel(String raw) {
+  final value = raw.trim().toLowerCase();
+  switch (value) {
+    case 'call':
+    case 'phone':
+      return 'Phone';
+    case 'chat':
+    case 'message':
+      return 'Chat';
+    case 'video':
+    case 'video_call':
+    case 'video-call':
+      return 'Video';
+    default:
+      return _capitalizeDay(raw.trim());
+  }
+}
+
+int _slotSortValue(String label) {
+  final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(label);
+  if (match == null) return 9999;
+  final hour = int.tryParse(match.group(1) ?? '') ?? 99;
+  final minute = int.tryParse(match.group(2) ?? '') ?? 99;
+  return (hour * 60) + minute;
+}
+
+String _formatDayTitle(String rawDay, AppTranslations t) {
+  final date = DateTime.tryParse(rawDay);
+  if (date == null) return _localizedDay(rawDay, t);
+
+  final weekday = switch (date.weekday) {
+    DateTime.monday => t.monday,
+    DateTime.tuesday => t.tuesday,
+    DateTime.wednesday => t.wednesday,
+    DateTime.thursday => t.thursday,
+    DateTime.friday => t.friday,
+    DateTime.saturday => t.saturday,
+    _ => t.sunday,
+  };
+
+  final mm = date.month.toString().padLeft(2, '0');
+  final dd = date.day.toString().padLeft(2, '0');
+  return '$weekday  $dd/$mm/${date.year}';
+}
+
+IconData _channelIcon(String channel) {
+  switch (channel.toLowerCase()) {
+    case 'phone':
+      return Icons.call_outlined;
+    case 'chat':
+      return Icons.chat_bubble_outline;
+    case 'video':
+      return Icons.videocam_outlined;
+    default:
+      return Icons.circle_outlined;
+  }
 }
 
 String _toFrenchDay(String englishDay) {
