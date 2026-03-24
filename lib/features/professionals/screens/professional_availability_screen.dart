@@ -18,8 +18,20 @@ class ProfessionalAvailabilityScreen extends ConsumerStatefulWidget {
 class _ProfessionalAvailabilityScreenState
     extends ConsumerState<ProfessionalAvailabilityScreen> {
   bool _submitting = false;
+  static final List<Map<String, dynamic>> _pendingCreatedItems = [];
 
   Future<void> _showAddSlotDialog() async {
+    final backendKeys = <String>{};
+    for (final item in items) {
+      if (item is! Map<String, dynamic>) continue;
+      backendKeys.addAll(_extractIdentityKeysFromItem(item));
+    }
+
+    _pendingCreatedItems.removeWhere((pending) {
+      final pendingKeys = _extractIdentityKeysFromItem(pending);
+      return pendingKeys.isNotEmpty && pendingKeys.every(backendKeys.contains);
+    });
+
     final t = ref.read(translationsProvider);
     final dayCtrl = TextEditingController();
     final timeCtrl = TextEditingController();
@@ -142,7 +154,7 @@ class _ProfessionalAvailabilityScreenState
           ? startTime
           : timeEndCtrl.text.trim();
       final payload = {
-        'di_days': [_toFrenchDay(selectedDay)],
+        'di_days': [_toBackendWeekday(selectedDay)],
         'di_hour_from': startTime,
         'di_hour_to': endTime,
         'di_include': true,
@@ -152,7 +164,18 @@ class _ProfessionalAvailabilityScreenState
           .read(professionalsRepositoryProvider)
           .createDisponibility(payload);
 
-      final _ = await ref.refresh(professionalDisponibilitiesProvider.future);
+      if (mounted) {
+        setState(() {
+          _pendingCreatedItems.add({
+            'di_days': [_toBackendWeekday(selectedDay)],
+            'di_hour_from': startTime,
+            'di_hour_to': endTime,
+          });
+        });
+      }
+
+      ref.invalidate(professionalDisponibilitiesProvider);
+      await ref.read(professionalDisponibilitiesProvider.future);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -248,7 +271,8 @@ class _ProfessionalAvailabilityScreenState
           ),
         ),
         data: (items) {
-          final rows = _normalizeDisponibilities(items);
+          final mergedItems = [...items, ..._pendingCreatedItems];
+          final rows = _normalizeDisponibilities(mergedItems);
 
           if (rows.isEmpty) {
             return Center(
@@ -422,6 +446,101 @@ String _minutesToTimeLabel(int minutes) {
   return '$hour:$minute';
 }
 
+String _normalizeTimeValue(String raw) {
+  final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(raw.trim());
+  if (match == null) return raw.trim();
+  final hour = (int.tryParse(match.group(1) ?? '') ?? 0)
+      .clamp(0, 23)
+      .toString()
+      .padLeft(2, '0');
+  final minute = (int.tryParse(match.group(2) ?? '') ?? 0)
+      .clamp(0, 59)
+      .toString()
+      .padLeft(2, '0');
+  return '$hour:$minute';
+}
+
+String _slotIdentity(String day, String start, String end) {
+  final normalizedDay = _normalizeDayValue(day);
+  final normalizedStart = _normalizeTimeValue(start);
+  final normalizedEnd = _normalizeTimeValue(end);
+  return '$normalizedDay|$normalizedStart|$normalizedEnd';
+}
+
+Set<String> _extractIdentityKeysFromItem(Map<String, dynamic> item) {
+  final keys = <String>{};
+
+  final diDays = _extractDayValues(item['di_days']);
+  final from = item['di_hour_from']?.toString().trim() ?? '';
+  final to = item['di_hour_to']?.toString().trim() ?? from;
+
+  if (diDays.isNotEmpty && from.isNotEmpty) {
+    for (final day in diDays) {
+      keys.add(_slotIdentity(day, from, to));
+    }
+    return keys;
+  }
+
+  final day = _normalizeDayValue(
+    item['day'] ?? item['di_day'] ?? item['weekday'] ?? item['date'],
+  );
+
+  final rawSlots =
+      item['slots'] ?? item['di_slots'] ?? item['times'] ?? item['hours'];
+
+  if (rawSlots is List) {
+    for (final slot in rawSlots) {
+      final parsed = _parseAvailabilitySlot(slot);
+      if (parsed == null) continue;
+      final range = _extractSlotRange(parsed.timeLabel);
+      if (range.isEmpty) continue;
+      final start = _minutesToTimeLabel(range.first);
+      final end = _minutesToTimeLabel(range.last);
+      keys.add(_slotIdentity(day, start, end));
+    }
+  } else {
+    final single =
+        (item['slot'] ?? item['time'] ?? item['hour'])?.toString().trim() ?? '';
+    if (single.isNotEmpty) {
+      final range = _extractSlotRange(single);
+      if (range.isNotEmpty) {
+        final start = _minutesToTimeLabel(range.first);
+        final end = _minutesToTimeLabel(range.last);
+        keys.add(_slotIdentity(day, start, end));
+      }
+    }
+  }
+
+  return keys;
+}
+
+List<String> _extractDayValues(dynamic raw) {
+  if (raw is List) {
+    return raw
+        .map((e) => e?.toString().trim() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  if (raw is String) {
+    final text = raw.trim();
+    if (text.isEmpty) return const [];
+
+    final bracketMatch = RegExp(r'^\[(.*)\]$').firstMatch(text);
+    final normalized = (bracketMatch?.group(1) ?? text)
+        .replaceAll('"', '')
+        .replaceAll("'", '');
+
+    return normalized
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  return const [];
+}
+
 class _AvailabilityRow {
   final String day;
   final List<_AvailabilitySlot> slots;
@@ -443,11 +562,11 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     if (item is! Map<String, dynamic>) continue;
 
     // Current backend format: di_days array + di_hour_from / di_hour_to.
-    final diDays = item['di_days'];
+    final diDays = _extractDayValues(item['di_days']);
     final hourFrom = item['di_hour_from']?.toString().trim() ?? '';
     final hourTo = item['di_hour_to']?.toString().trim() ?? '';
 
-    if (diDays is List && diDays.isNotEmpty) {
+    if (diDays.isNotEmpty) {
       final timeLabel =
           (hourFrom.isNotEmpty && hourTo.isNotEmpty && hourFrom != hourTo)
           ? '$hourFrom – $hourTo'
@@ -456,7 +575,7 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
           : '?';
 
       for (final dayRaw in diDays) {
-        final day = _toEnglishDay(dayRaw?.toString() ?? '');
+        final day = _normalizeDayValue(dayRaw);
         rows.add(
           _AvailabilityRow(
             day: day,
@@ -470,10 +589,9 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     }
 
     // Fallback: legacy format with day + slots list.
-    final day =
-        (item['day'] ?? item['di_day'] ?? item['weekday'] ?? item['date'])
-            ?.toString() ??
-        'Unknown day';
+    final day = _normalizeDayValue(
+      item['day'] ?? item['di_day'] ?? item['weekday'] ?? item['date'],
+    );
 
     final rawSlots =
         item['slots'] ?? item['di_slots'] ?? item['times'] ?? item['hours'];
@@ -493,6 +611,13 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
       }
     }
 
+    if (slots.isEmpty && hourFrom.isNotEmpty) {
+      final timeLabel = (hourTo.isNotEmpty && hourTo != hourFrom)
+          ? '$hourFrom – $hourTo'
+          : hourFrom;
+      slots.add(_AvailabilitySlot(timeLabel: timeLabel, channels: const []));
+    }
+
     if (slots.isNotEmpty) rows.add(_AvailabilityRow(day: day, slots: slots));
   }
 
@@ -501,9 +626,17 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     grouped.putIfAbsent(row.day, () => <_AvailabilitySlot>[]).addAll(row.slots);
   }
 
-  final mergedRows = grouped.entries
-      .map((e) => _AvailabilityRow(day: e.key, slots: e.value))
-      .toList();
+  final mergedRows = grouped.entries.map((e) {
+    final seen = <String>{};
+    final uniqueSlots = <_AvailabilitySlot>[];
+    for (final slot in e.value) {
+      final key = '${slot.timeLabel}|${slot.channels.join(',')}';
+      if (seen.add(key)) {
+        uniqueSlots.add(slot);
+      }
+    }
+    return _AvailabilityRow(day: e.key, slots: uniqueSlots);
+  }).toList();
 
   mergedRows.sort((a, b) {
     final dateA = DateTime.tryParse(a.day);
@@ -678,6 +811,19 @@ String _toFrenchDay(String englishDay) {
   return map[englishDay] ?? englishDay.toLowerCase();
 }
 
+int _toBackendWeekday(String englishDay) {
+  const map = {
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+    'Saturday': 6,
+    'Sunday': 7,
+  };
+  return map[englishDay] ?? 1;
+}
+
 String _toEnglishDay(String frenchDay) {
   const map = {
     'lundi': 'Monday',
@@ -689,6 +835,50 @@ String _toEnglishDay(String frenchDay) {
     'dimanche': 'Sunday',
   };
   return map[frenchDay.toLowerCase()] ?? _capitalizeDay(frenchDay);
+}
+
+String _normalizeDayValue(dynamic raw) {
+  if (raw == null) return 'Unknown day';
+
+  if (raw is int) {
+    return _weekdayFromNumber(raw) ?? raw.toString();
+  }
+
+  final text = raw.toString().trim();
+  if (text.isEmpty) return 'Unknown day';
+
+  final asInt = int.tryParse(text);
+  if (asInt != null) {
+    return _weekdayFromNumber(asInt) ?? text;
+  }
+
+  final date = DateTime.tryParse(text);
+  if (date != null) {
+    return text;
+  }
+
+  return _toEnglishDay(text);
+}
+
+String? _weekdayFromNumber(int value) {
+  switch (value) {
+    case 1:
+      return 'Monday';
+    case 2:
+      return 'Tuesday';
+    case 3:
+      return 'Wednesday';
+    case 4:
+      return 'Thursday';
+    case 5:
+      return 'Friday';
+    case 6:
+      return 'Saturday';
+    case 7:
+      return 'Sunday';
+    default:
+      return null;
+  }
 }
 
 String _capitalizeDay(String s) =>
