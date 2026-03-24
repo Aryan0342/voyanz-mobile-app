@@ -177,6 +177,8 @@ class _ProfessionalAvailabilityScreenState
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
     final availabilityAsync = ref.watch(professionalDisponibilitiesProvider);
+    final topContentInset =
+        MediaQuery.of(context).padding.top + kToolbarHeight + 16;
 
     return GradientScaffold(
       appBar: AppBar(
@@ -281,9 +283,10 @@ class _ProfessionalAvailabilityScreenState
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
+            padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
             itemBuilder: (context, index) {
               final row = rows[index];
+              final dayRange = _summarizeDayRange(row.slots);
               return Container(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 decoration: BoxDecoration(
@@ -332,103 +335,31 @@ class _ProfessionalAvailabilityScreenState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    ...row.slots.map(
-                      (slot) => Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          color: AppColors.surfaceDark.withValues(alpha: 0.28),
-                          border: Border.all(
-                            color: AppColors.borderSubtle.withValues(
-                              alpha: 0.30,
-                            ),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: AppColors.surfaceDark.withValues(alpha: 0.28),
+                        border: Border.all(
+                          color: AppColors.borderSubtle.withValues(alpha: 0.30),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: AppColors.rosePink.withValues(
-                                  alpha: 0.20,
-                                ),
-                              ),
-                              child: Text(
-                                slot.timeLabel,
-                                style: GoogleFonts.jost(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: slot.channels.isEmpty
-                                  ? Text(
-                                      'General',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    )
-                                  : Wrap(
-                                      spacing: 6,
-                                      runSpacing: 6,
-                                      children: slot.channels
-                                          .map(
-                                            (channel) => Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 5,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(999),
-                                                color: AppColors.rosePink
-                                                    .withValues(alpha: 0.15),
-                                                border: Border.all(
-                                                  color: AppColors.rosePink
-                                                      .withValues(alpha: 0.35),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    _channelIcon(channel),
-                                                    size: 14,
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    channel,
-                                                    style:
-                                                        GoogleFonts.montserrat(
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: AppColors
-                                                              .textPrimary,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                    ),
-                            ),
-                          ],
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.rosePink.withValues(alpha: 0.20),
+                        ),
+                        child: Text(
+                          dayRange,
+                          style: GoogleFonts.jost(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                     ),
@@ -443,6 +374,52 @@ class _ProfessionalAvailabilityScreenState
       ),
     );
   }
+}
+
+String _summarizeDayRange(List<_AvailabilitySlot> slots) {
+  if (slots.isEmpty) return '?';
+
+  final values = <int>[];
+  for (final slot in slots) {
+    final parts = _extractSlotRange(slot.timeLabel);
+    if (parts.isEmpty) continue;
+    values.add(parts.first);
+    values.add(parts.last);
+  }
+
+  if (values.isEmpty) {
+    return slots.first.timeLabel;
+  }
+
+  values.sort();
+  final start = _minutesToTimeLabel(values.first);
+  final end = _minutesToTimeLabel(values.last);
+
+  if (start == end) return start;
+  return '$start – $end';
+}
+
+List<int> _extractSlotRange(String label) {
+  final matches = RegExp(r'(\d{1,2}):(\d{2})').allMatches(label).toList();
+  if (matches.isEmpty) return const [];
+
+  final minutes = matches
+      .map(
+        (m) =>
+            ((int.tryParse(m.group(1) ?? '') ?? 0) * 60) +
+            (int.tryParse(m.group(2) ?? '') ?? 0),
+      )
+      .toList();
+
+  if (minutes.length == 1) return [minutes.first, minutes.first];
+  return [minutes.first, minutes.last];
+}
+
+String _minutesToTimeLabel(int minutes) {
+  final clamped = minutes.clamp(0, (23 * 60) + 59);
+  final hour = (clamped ~/ 60).toString().padLeft(2, '0');
+  final minute = (clamped % 60).toString().padLeft(2, '0');
+  return '$hour:$minute';
 }
 
 class _AvailabilityRow {
