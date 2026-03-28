@@ -80,6 +80,39 @@ class ProfessionalsDataSource {
     return const [];
   }
 
+  Future<Map<String, dynamic>> getDisponibilitiesPayload() async {
+    final response = await _dio.get(ApiEndpoints.professionalDisponibilities);
+    final raw = response.data;
+
+    if (raw is List) {
+      return {
+        'data': const <dynamic>[],
+        'nextdisponibilities': raw,
+        'days': const <dynamic>[],
+      };
+    }
+
+    if (raw is! Map<String, dynamic>) {
+      return {
+        'data': const <dynamic>[],
+        'nextdisponibilities': const <dynamic>[],
+        'days': const <dynamic>[],
+      };
+    }
+
+    _throwIfApiError(raw, fallbackPrefix: 'Disponibilities API error');
+
+    final rawData = raw['data'];
+    final rawNext = raw['nextdisponibilities'];
+    final rawDays = raw['days'];
+
+    final data = rawData is List ? rawData : const <dynamic>[];
+    final next = rawNext is List ? rawNext : const <dynamic>[];
+    final days = rawDays is List ? rawDays : const <dynamic>[];
+
+    return {'data': data, 'nextdisponibilities': next, 'days': days};
+  }
+
   Future<void> createDisponibility(Map<String, dynamic> data) async {
     final response = await _dio.post(
       ApiEndpoints.createDisponibilities,
@@ -89,6 +122,30 @@ class ProfessionalsDataSource {
     final raw = response.data;
     if (raw is Map<String, dynamic>) {
       _throwIfApiError(raw, fallbackPrefix: 'Create disponibility failed');
+    }
+  }
+
+  Future<void> updateDisponibility(
+    String diId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _dio.put(
+      ApiEndpoints.updateDisponibility(diId),
+      data: data,
+    );
+
+    final raw = response.data;
+    if (raw is Map<String, dynamic>) {
+      _throwIfApiError(raw, fallbackPrefix: 'Update disponibility failed');
+    }
+  }
+
+  Future<void> deleteDisponibility(String diId) async {
+    final response = await _dio.delete(ApiEndpoints.deleteDisponibility(diId));
+
+    final raw = response.data;
+    if (raw is Map<String, dynamic>) {
+      _throwIfApiError(raw, fallbackPrefix: 'Delete disponibility failed');
     }
   }
 

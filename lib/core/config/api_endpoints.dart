@@ -21,6 +21,10 @@ class ApiEndpoints {
   static const String professionalDisponibilities =
       '/web/1.0/professional/disponibilities';
   static const String createDisponibilities = '/web/1.0/disponibilities';
+  static String updateDisponibility(String diId) =>
+      '/web/1.0/disponibilities/$diId';
+  static String deleteDisponibility(String diId) =>
+      '/web/1.0/disponibilities/$diId';
 
   // ── Pricing / Promo ────────────────────────────────────────────────────
   static const String customerPricing = '/web/1.0/customer/pricing';

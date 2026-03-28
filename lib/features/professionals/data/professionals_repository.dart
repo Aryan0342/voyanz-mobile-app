@@ -112,11 +112,83 @@ class ProfessionalsRepository {
     return _ds.getDisponibilities();
   }
 
+  Future<Map<String, dynamic>> getDisponibilitiesPayload() async {
+    if (kUseMockBackend) {
+      const next = [
+        {
+          'date': '2026-03-30',
+          'hours': [
+            [
+              '09:00',
+              ['period'],
+            ],
+            [
+              '10:00',
+              ['period'],
+            ],
+          ],
+          'hoursIntervals': [
+            [
+              '9:00',
+              '11:00',
+              ['period'],
+            ],
+          ],
+        },
+      ];
+
+      return {
+        'data': const <dynamic>[
+          {
+            'di_id': 1,
+            'di_days': [1],
+            'di_hour_from': '09:00',
+            'di_hour_to': '11:00',
+            'di_include': true,
+            'di_what': 'days',
+            'di_how': ['period'],
+          },
+        ],
+        'nextdisponibilities': next,
+        'days': const [
+          'lundi',
+          'mardi',
+          'mercredi',
+          'jeudi',
+          'vendredi',
+          'samedi',
+          'dimanche',
+        ],
+      };
+    }
+
+    return _ds.getDisponibilitiesPayload();
+  }
+
   Future<void> createDisponibility(Map<String, dynamic> data) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
       return;
     }
     return _ds.createDisponibility(data);
+  }
+
+  Future<void> updateDisponibility(
+    String diId,
+    Map<String, dynamic> data,
+  ) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return;
+    }
+    return _ds.updateDisponibility(diId, data);
+  }
+
+  Future<void> deleteDisponibility(String diId) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    return _ds.deleteDisponibility(diId);
   }
 }
