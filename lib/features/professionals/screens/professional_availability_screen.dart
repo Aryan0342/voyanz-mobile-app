@@ -303,7 +303,6 @@ class _ProfessionalAvailabilityScreenState
           final mergedRawItems = [...rawItems, ..._pendingCreatedItems];
           final sourceItems = nextItems.isNotEmpty ? nextItems : mergedRawItems;
           final rows = _normalizeDisponibilities(sourceItems);
-          final rules = _extractRuleItems(rawItems);
 
           return ListView(
             padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
@@ -417,99 +416,6 @@ class _ProfessionalAvailabilityScreenState
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
-              Text(
-                'Rules (manage)',
-                style: GoogleFonts.jost(
-                  color: AppColors.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (rules.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCard.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Text(
-                    'No rules available',
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ...rules.map((rule) {
-                final badgeColor = rule.include
-                    ? Colors.green.withValues(alpha: 0.22)
-                    : Colors.red.withValues(alpha: 0.22);
-                final badgeLabel = rule.include ? 'Include' : 'Exclude';
-                final what = rule.what.isEmpty ? 'days' : rule.what;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceCard.withValues(alpha: 0.75),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: badgeColor,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                badgeLabel,
-                                style: GoogleFonts.jost(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${rule.dayLabel}  ${rule.hourFrom}-${rule.hourTo}',
-                          style: GoogleFonts.jost(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$what • ${rule.dateFrom} -> ${rule.dateTo} • #${rule.diId ?? '-'}',
-                          style: GoogleFonts.montserrat(
-                            color: AppColors.textSecondary,
-                            fontSize: 11,
                           ),
                         ),
                       ],
@@ -678,78 +584,6 @@ class _AvailabilitySlot {
   final List<String> channels;
 
   const _AvailabilitySlot({required this.timeLabel, required this.channels});
-}
-
-class _RuleItem {
-  final String? diId;
-  final bool include;
-  final String what;
-  final List<int> dayNumbers;
-  final String dayLabel;
-  final String hourFrom;
-  final String hourTo;
-  final String dateFrom;
-  final String dateTo;
-
-  const _RuleItem({
-    required this.diId,
-    required this.include,
-    required this.what,
-    required this.dayNumbers,
-    required this.dayLabel,
-    required this.hourFrom,
-    required this.hourTo,
-    required this.dateFrom,
-    required this.dateTo,
-  });
-}
-
-List<_RuleItem> _extractRuleItems(List<dynamic> rawItems) {
-  final rules = <_RuleItem>[];
-
-  for (final item in rawItems) {
-    if (item is! Map<String, dynamic>) continue;
-
-    final diId = item['di_id']?.toString();
-    final include = item['di_include'] == true || item['di_include'] == 1;
-    final what = (item['di_what']?.toString().trim() ?? '').toLowerCase();
-    final dayValues = _extractDayValues(item['di_days']);
-    final dayNumbers = dayValues
-        .map((e) => int.tryParse(e))
-        .whereType<int>()
-        .toList();
-    final dayLabel = item['di_days_text']?.toString().trim().isNotEmpty == true
-        ? item['di_days_text'].toString().trim()
-        : dayNumbers
-              .map((n) => _weekdayFromNumber(n) ?? n.toString())
-              .join(', ');
-    final hourFrom = item['di_hour_from']?.toString().trim() ?? '';
-    final hourTo = item['di_hour_to']?.toString().trim() ?? '';
-    final dateFrom = item['di_date_from']?.toString().trim() ?? '';
-    final dateTo = item['di_date_to']?.toString().trim() ?? '';
-
-    rules.add(
-      _RuleItem(
-        diId: diId,
-        include: include,
-        what: what,
-        dayNumbers: dayNumbers,
-        dayLabel: dayLabel.isEmpty ? 'Unknown day' : dayLabel,
-        hourFrom: hourFrom.isEmpty ? '--:--' : hourFrom,
-        hourTo: hourTo.isEmpty ? '--:--' : hourTo,
-        dateFrom: dateFrom.isEmpty ? '-' : dateFrom,
-        dateTo: dateTo.isEmpty ? '-' : dateTo,
-      ),
-    );
-  }
-
-  rules.sort((a, b) {
-    final ida = int.tryParse(a.diId ?? '') ?? 0;
-    final idb = int.tryParse(b.diId ?? '') ?? 0;
-    return idb.compareTo(ida);
-  });
-
-  return rules;
 }
 
 List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
