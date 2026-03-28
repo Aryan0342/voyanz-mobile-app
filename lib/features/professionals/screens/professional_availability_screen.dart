@@ -21,17 +21,6 @@ class _ProfessionalAvailabilityScreenState
   static final List<Map<String, dynamic>> _pendingCreatedItems = [];
 
   Future<void> _showAddSlotDialog() async {
-    final backendKeys = <String>{};
-    for (final item in items) {
-      if (item is! Map<String, dynamic>) continue;
-      backendKeys.addAll(_extractIdentityKeysFromItem(item));
-    }
-
-    _pendingCreatedItems.removeWhere((pending) {
-      final pendingKeys = _extractIdentityKeysFromItem(pending);
-      return pendingKeys.isNotEmpty && pendingKeys.every(backendKeys.contains);
-    });
-
     final t = ref.read(translationsProvider);
     final dayCtrl = TextEditingController();
     final timeCtrl = TextEditingController();
@@ -153,8 +142,15 @@ class _ProfessionalAvailabilityScreenState
       final endTime = timeEndCtrl.text.trim().isEmpty
           ? startTime
           : timeEndCtrl.text.trim();
+      final weekday = _toBackendWeekday(selectedDay);
+      final nextDate = _nextDateForWeekday(weekday);
+      final dateWindow = _formatDate(nextDate);
       final payload = {
-        'di_days': [_toBackendWeekday(selectedDay)],
+        'di_days': [weekday],
+        'di_what': 'days',
+        'di_how': 'period',
+        'di_date_from': dateWindow,
+        'di_date_to': dateWindow,
         'di_hour_from': startTime,
         'di_hour_to': endTime,
         'di_include': true,
@@ -167,15 +163,39 @@ class _ProfessionalAvailabilityScreenState
       if (mounted) {
         setState(() {
           _pendingCreatedItems.add({
-            'di_days': [_toBackendWeekday(selectedDay)],
+            'di_days': [weekday],
+            'di_what': 'days',
+            'di_how': ['period'],
+            'di_date_from': dateWindow,
+            'di_date_to': dateWindow,
             'di_hour_from': startTime,
             'di_hour_to': endTime,
           });
         });
       }
 
-      ref.invalidate(professionalDisponibilitiesProvider);
-      await ref.read(professionalDisponibilitiesProvider.future);
+      ref.invalidate(professionalDisponibilitiesPayloadProvider);
+      final refreshed = await ref.read(
+        professionalDisponibilitiesPayloadProvider.future,
+      );
+
+      final backendKeys = <String>{};
+      final backendData = refreshed['data'];
+      if (backendData is List) {
+        for (final item in backendData) {
+          if (item is! Map<String, dynamic>) continue;
+          backendKeys.addAll(_extractIdentityKeysFromItem(item));
+        }
+      }
+      if (mounted && backendKeys.isNotEmpty) {
+        setState(() {
+          _pendingCreatedItems.removeWhere((pending) {
+            final pendingKeys = _extractIdentityKeysFromItem(pending);
+            return pendingKeys.isNotEmpty &&
+                pendingKeys.every(backendKeys.contains);
+          });
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -199,7 +219,9 @@ class _ProfessionalAvailabilityScreenState
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
-    final availabilityAsync = ref.watch(professionalDisponibilitiesProvider);
+    final availabilityAsync = ref.watch(
+      professionalDisponibilitiesPayloadProvider,
+    );
     final topContentInset =
         MediaQuery.of(context).padding.top + kToolbarHeight + 16;
 
@@ -215,7 +237,7 @@ class _ProfessionalAvailabilityScreenState
         actions: [
           IconButton(
             onPressed: () =>
-                ref.invalidate(professionalDisponibilitiesProvider),
+                ref.invalidate(professionalDisponibilitiesPayloadProvider),
             icon: const Icon(Icons.refresh),
             tooltip: t.refresh,
           ),
@@ -261,8 +283,9 @@ class _ProfessionalAvailabilityScreenState
                 ),
                 const SizedBox(height: 14),
                 ElevatedButton.icon(
-                  onPressed: () =>
-                      ref.invalidate(professionalDisponibilitiesProvider),
+                  onPressed: () => ref.invalidate(
+                    professionalDisponibilitiesPayloadProvider,
+                  ),
                   icon: const Icon(Icons.refresh),
                   label: Text(t.retry),
                 ),
@@ -270,129 +293,231 @@ class _ProfessionalAvailabilityScreenState
             ),
           ),
         ),
-        data: (items) {
-          final mergedItems = [...items, ..._pendingCreatedItems];
-          final rows = _normalizeDisponibilities(mergedItems);
+        data: (payload) {
+          final rawData = payload['data'];
+          final nextData = payload['nextdisponibilities'];
 
-          if (rows.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 54,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    t.noSlotsYet,
-                    style: GoogleFonts.jost(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
+          final rawItems = rawData is List ? rawData : const <dynamic>[];
+          final nextItems = nextData is List ? nextData : const <dynamic>[];
+
+          final mergedRawItems = [...rawItems, ..._pendingCreatedItems];
+          final sourceItems = nextItems.isNotEmpty ? nextItems : mergedRawItems;
+          final rows = _normalizeDisponibilities(sourceItems);
+          final rules = _extractRuleItems(rawItems);
+
+          return ListView(
+            padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
+            children: [
+              Text(
+                'Computed availability',
+                style: GoogleFonts.jost(
+                  color: AppColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (rows.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.borderSubtle.withValues(alpha: 0.35),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    t.tapAddSlot,
+                  child: Text(
+                    t.noSlotsYet,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
-            itemBuilder: (context, index) {
-              final row = rows[index];
-              final dayRange = _summarizeDayRange(row.slots);
-              return Container(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.surfaceCard.withValues(alpha: 0.90),
-                      AppColors.surfaceCard.withValues(alpha: 0.65),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.surfaceDark.withValues(alpha: 0.18),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.rosePink,
-                          ),
+              ...rows.map((row) {
+                final dayRange = _summarizeDayRange(row.slots);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.surfaceCard.withValues(alpha: 0.90),
+                          AppColors.surfaceCard.withValues(alpha: 0.65),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(
+                        color: AppColors.borderSubtle.withValues(alpha: 0.35),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.surfaceDark.withValues(alpha: 0.18),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatDayTitle(row.day, t),
-                          style: GoogleFonts.jost(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.rosePink,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _formatDayTitle(row.day, t),
+                              style: GoogleFonts.jost(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: AppColors.surfaceDark.withValues(
+                              alpha: 0.28,
+                            ),
+                            border: Border.all(
+                              color: AppColors.borderSubtle.withValues(
+                                alpha: 0.30,
+                              ),
+                            ),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: AppColors.rosePink.withValues(alpha: 0.20),
+                            ),
+                            child: Text(
+                              dayRange,
+                              style: GoogleFonts.jost(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        color: AppColors.surfaceDark.withValues(alpha: 0.28),
-                        border: Border.all(
-                          color: AppColors.borderSubtle.withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: AppColors.rosePink.withValues(alpha: 0.20),
-                        ),
-                        child: Text(
-                          dayRange,
-                          style: GoogleFonts.jost(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+              Text(
+                'Rules (manage)',
+                style: GoogleFonts.jost(
+                  color: AppColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (rules.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.borderSubtle.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Text(
+                    'No rules available',
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ...rules.map((rule) {
+                final badgeColor = rule.include
+                    ? Colors.green.withValues(alpha: 0.22)
+                    : Colors.red.withValues(alpha: 0.22);
+                final badgeLabel = rule.include ? 'Include' : 'Exclude';
+                final what = rule.what.isEmpty ? 'days' : rule.what;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceCard.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.borderSubtle.withValues(alpha: 0.35),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemCount: rows.length,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: badgeColor,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                badgeLabel,
+                                style: GoogleFonts.jost(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${rule.dayLabel}  ${rule.hourFrom}-${rule.hourTo}',
+                          style: GoogleFonts.jost(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$what • ${rule.dateFrom} -> ${rule.dateTo} • #${rule.diId ?? '-'}',
+                          style: GoogleFonts.montserrat(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
           );
         },
       ),
@@ -553,6 +678,78 @@ class _AvailabilitySlot {
   final List<String> channels;
 
   const _AvailabilitySlot({required this.timeLabel, required this.channels});
+}
+
+class _RuleItem {
+  final String? diId;
+  final bool include;
+  final String what;
+  final List<int> dayNumbers;
+  final String dayLabel;
+  final String hourFrom;
+  final String hourTo;
+  final String dateFrom;
+  final String dateTo;
+
+  const _RuleItem({
+    required this.diId,
+    required this.include,
+    required this.what,
+    required this.dayNumbers,
+    required this.dayLabel,
+    required this.hourFrom,
+    required this.hourTo,
+    required this.dateFrom,
+    required this.dateTo,
+  });
+}
+
+List<_RuleItem> _extractRuleItems(List<dynamic> rawItems) {
+  final rules = <_RuleItem>[];
+
+  for (final item in rawItems) {
+    if (item is! Map<String, dynamic>) continue;
+
+    final diId = item['di_id']?.toString();
+    final include = item['di_include'] == true || item['di_include'] == 1;
+    final what = (item['di_what']?.toString().trim() ?? '').toLowerCase();
+    final dayValues = _extractDayValues(item['di_days']);
+    final dayNumbers = dayValues
+        .map((e) => int.tryParse(e))
+        .whereType<int>()
+        .toList();
+    final dayLabel = item['di_days_text']?.toString().trim().isNotEmpty == true
+        ? item['di_days_text'].toString().trim()
+        : dayNumbers
+              .map((n) => _weekdayFromNumber(n) ?? n.toString())
+              .join(', ');
+    final hourFrom = item['di_hour_from']?.toString().trim() ?? '';
+    final hourTo = item['di_hour_to']?.toString().trim() ?? '';
+    final dateFrom = item['di_date_from']?.toString().trim() ?? '';
+    final dateTo = item['di_date_to']?.toString().trim() ?? '';
+
+    rules.add(
+      _RuleItem(
+        diId: diId,
+        include: include,
+        what: what,
+        dayNumbers: dayNumbers,
+        dayLabel: dayLabel.isEmpty ? 'Unknown day' : dayLabel,
+        hourFrom: hourFrom.isEmpty ? '--:--' : hourFrom,
+        hourTo: hourTo.isEmpty ? '--:--' : hourTo,
+        dateFrom: dateFrom.isEmpty ? '-' : dateFrom,
+        dateTo: dateTo.isEmpty ? '-' : dateTo,
+      ),
+    );
+  }
+
+  rules.sort((a, b) {
+    final ida = int.tryParse(a.diId ?? '') ?? 0;
+    final idb = int.tryParse(b.diId ?? '') ?? 0;
+    return idb.compareTo(ida);
+  });
+
+  return rules;
 }
 
 List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
@@ -785,30 +982,18 @@ String _formatDayTitle(String rawDay, AppTranslations t) {
   return '$weekday  $dd/$mm/${date.year}';
 }
 
-IconData _channelIcon(String channel) {
-  switch (channel.toLowerCase()) {
-    case 'phone':
-      return Icons.call_outlined;
-    case 'chat':
-      return Icons.chat_bubble_outline;
-    case 'video':
-      return Icons.videocam_outlined;
-    default:
-      return Icons.circle_outlined;
-  }
+DateTime _nextDateForWeekday(int weekday) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final delta = (weekday - today.weekday + 7) % 7;
+  return today.add(Duration(days: delta));
 }
 
-String _toFrenchDay(String englishDay) {
-  const map = {
-    'Monday': 'lundi',
-    'Tuesday': 'mardi',
-    'Wednesday': 'mercredi',
-    'Thursday': 'jeudi',
-    'Friday': 'vendredi',
-    'Saturday': 'samedi',
-    'Sunday': 'dimanche',
-  };
-  return map[englishDay] ?? englishDay.toLowerCase();
+String _formatDate(DateTime date) {
+  final y = date.year.toString().padLeft(4, '0');
+  final m = date.month.toString().padLeft(2, '0');
+  final d = date.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
 }
 
 int _toBackendWeekday(String englishDay) {

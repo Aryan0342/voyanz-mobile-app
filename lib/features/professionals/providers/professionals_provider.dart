@@ -53,3 +53,10 @@ final professionalDisponibilitiesProvider = FutureProvider<List<dynamic>>((
 ) async {
   return ref.watch(professionalsRepositoryProvider).getDisponibilities();
 });
+
+final professionalDisponibilitiesPayloadProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
+      return ref
+          .watch(professionalsRepositoryProvider)
+          .getDisponibilitiesPayload();
+    });
