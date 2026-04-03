@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/sessions/models/session_status.dart';
 
 class VideoCallScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -20,6 +21,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   Timer? _heartbeatTimer;
   Duration _elapsed = Duration.zero;
   Timer? _elapsedTimer;
+  bool _sessionEndedHandled = false;
 
   @override
   void initState() {
@@ -54,6 +56,32 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   Widget build(BuildContext context) {
     final tokenAsync = ref.watch(
       videoTokenProvider((seId: widget.seId, coId: widget.coId)),
+    );
+    final liveStatusAsync = ref.watch(
+      sessionStatusLivePollingProvider(widget.seId),
+    );
+
+    ref.listen<AsyncValue<SessionStatus>>(
+      sessionStatusLivePollingProvider(widget.seId),
+      (_, next) {
+        next.whenData((status) {
+          if (!mounted || _sessionEndedHandled || !status.isTerminal) return;
+          _sessionEndedHandled = true;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(status.uiMessage),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          Future<void>.delayed(const Duration(milliseconds: 400), () {
+            if (!mounted) return;
+            Navigator.of(context).pop();
+          });
+        });
+      },
     );
 
     return Scaffold(
@@ -156,6 +184,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                       ],
                     ),
                   ),
+                  _SessionStatusBanner(statusAsync: liveStatusAsync),
 
                   // ── Video placeholder area ──
                   Expanded(
@@ -256,6 +285,49 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SessionStatusBanner extends StatelessWidget {
+  final AsyncValue<SessionStatus> statusAsync;
+
+  const _SessionStatusBanner({required this.statusAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    return statusAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (status) {
+        final isGood = status.isInProgress;
+        final color = isGood ? AppColors.success : AppColors.mediumPurple;
+        return Container(
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.45)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: color, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${status.uiLabel}: ${status.uiMessage}',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
