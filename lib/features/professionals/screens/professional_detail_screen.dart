@@ -244,31 +244,8 @@ class _ProfessionalDetailScreenState
 
       if (!mounted) return;
 
-      if (type == 'video') {
-        context.push('/video/$seId/${pro.coId}');
-        return;
-      }
-
-      if (type == 'phone') {
-        context.push('/session/phone/$seId/${pro.coId}');
-        return;
-      }
-
-      if (type == 'chat') {
-        context.push('/session/chat/$seId/${pro.coId}');
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.sessionCreated(seId, type)),
-          backgroundColor: AppColors.mediumPurple,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      context.push('/session/wait/$type/$seId/${pro.coId}');
+      return;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

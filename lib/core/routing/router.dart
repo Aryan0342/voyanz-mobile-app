@@ -10,6 +10,7 @@ import 'package:voyanz/features/professionals/screens/professional_availability_
 import 'package:voyanz/features/sessions/screens/video_call_screen.dart';
 import 'package:voyanz/features/sessions/screens/phone_session_screen.dart';
 import 'package:voyanz/features/sessions/screens/chat_session_screen.dart';
+import 'package:voyanz/features/sessions/screens/session_waiting_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_groups_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_messages_screen.dart';
 import 'package:voyanz/features/reviews/screens/history_screen.dart';
@@ -97,6 +98,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ProfileScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/session/wait/:type/:seId/:coId',
+        builder: (context, state) => SessionWaitingScreen(
+          type: state.pathParameters['type']!,
+          seId: state.pathParameters['seId']!,
+          coId: state.pathParameters['coId']!,
+        ),
       ),
       GoRoute(
         path: '/video/:seId/:coId',

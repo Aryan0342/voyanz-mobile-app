@@ -1,5 +1,6 @@
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
+import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/video_token.dart';
 
 class SessionsRepository {
@@ -41,5 +42,16 @@ class SessionsRepository {
       return 'mock-se-${DateTime.now().millisecondsSinceEpoch}';
     }
     return _ds.createSessionCall(typeCall: typeCall, coId: coId, apId: apId);
+  }
+
+  Future<SessionStatus> getSessionStatus(String seId) async {
+    if (kUseMockBackend) {
+      return SessionStatus(
+        seId: seId,
+        status: 'active',
+        raw: const {'source': 'mock'},
+      );
+    }
+    return _ds.getSessionStatus(seId);
   }
 }

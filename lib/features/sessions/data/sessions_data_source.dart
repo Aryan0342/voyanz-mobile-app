@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:voyanz/core/config/api_endpoints.dart';
+import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/video_token.dart';
 
 class SessionsDataSource {
@@ -57,6 +58,50 @@ class SessionsDataSource {
       throw Exception('Session id missing from response');
     }
     return sessionId;
+  }
+
+  /// GET /web/1.0/session/:se_id
+  Future<SessionStatus> getSessionStatus(String seId) async {
+    final response = await _dio.get(ApiEndpoints.sessionStatus(seId));
+    final body = response.data;
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Unexpected session status response format');
+    }
+
+    final err = body['err'];
+    final error = body['error'];
+    if (err != null) {
+      if (err is Map<String, dynamic>) {
+        final message =
+            err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
+        throw Exception(message);
+      }
+      throw Exception(err.toString());
+    }
+    if (error != null) {
+      throw Exception(error.toString());
+    }
+
+    final payload = _extractStatusPayload(body);
+    return SessionStatus.fromJson(seId, payload);
+  }
+
+  Map<String, dynamic> _extractStatusPayload(Map<String, dynamic> body) {
+    final data = body['data'];
+    if (data is Map<String, dynamic>) {
+      final nestedSession = data['session'];
+      if (nestedSession is Map<String, dynamic>) {
+        return nestedSession;
+      }
+      return data;
+    }
+
+    final session = body['session'];
+    if (session is Map<String, dynamic>) {
+      return session;
+    }
+
+    return body;
   }
 
   String? _extractSessionId(Map<String, dynamic> body) {
