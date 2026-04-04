@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
@@ -37,6 +40,9 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
+    final isProfessional =
+        ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
     final statusAsync = ref.watch(sessionStatusPollingProvider(widget.seId));
 
     ref.listen<AsyncValue<SessionStatus>>(
@@ -59,8 +65,9 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
             child: statusAsync.when(
               loading: _buildLoading,
-              error: (e, _) => _buildError(context, e.toString()),
-              data: (status) => _buildStatus(context, status),
+              error: (e, _) => _buildError(context, e.toString(), t),
+              data: (status) =>
+                  _buildStatus(context, status, t, isProfessional),
             ),
           ),
         ),
@@ -74,7 +81,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     );
   }
 
-  Widget _buildError(BuildContext context, String message) {
+  Widget _buildError(BuildContext context, String message, AppTranslations t) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -82,7 +89,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           const Icon(Icons.error_outline, color: AppColors.error, size: 56),
           const SizedBox(height: 14),
           Text(
-            'Unable to check session status',
+            t.unableCheckSessionStatus,
             textAlign: TextAlign.center,
             style: GoogleFonts.jost(
               fontSize: 22,
@@ -101,14 +108,19 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             onPressed: () =>
                 ref.invalidate(sessionStatusPollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(t.retry),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatus(BuildContext context, SessionStatus status) {
+  Widget _buildStatus(
+    BuildContext context,
+    SessionStatus status,
+    AppTranslations t,
+    bool isProfessional,
+  ) {
     final isWaiting = status.isWaiting;
     final hasTimedOut =
         isWaiting && DateTime.now().difference(_enteredAt) >= _waitTimeout;
@@ -132,7 +144,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                status.uiLabel,
+                status.localizedLabel(t),
                 style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.w700,
                   color: isWaiting ? AppColors.mediumPurple : AppColors.error,
@@ -159,8 +171,8 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         const SizedBox(height: 20),
         Text(
           isWaiting
-              ? 'Waiting for professional to join'
-              : 'Session unavailable',
+              ? t.waitingForJoinTitle(isProfessional: isProfessional)
+              : t.sessionUnavailable,
           textAlign: TextAlign.center,
           style: GoogleFonts.jost(
             fontSize: 28,
@@ -171,8 +183,8 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         const SizedBox(height: 8),
         Text(
           hasTimedOut
-              ? 'This is taking longer than expected. You can retry now or create a new session request.'
-              : status.uiMessage,
+              ? t.sessionWaitTimedOutMessage
+              : status.localizedMessage(t, isProfessional: isProfessional),
           textAlign: TextAlign.center,
           style: GoogleFonts.montserrat(color: AppColors.textSecondary),
         ),
@@ -182,27 +194,27 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             onPressed: () =>
                 ref.invalidate(sessionStatusPollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
-            label: const Text('Refresh now'),
+            label: Text(t.refreshNow),
           ),
         if (isWaiting && hasTimedOut) ...[
           ElevatedButton.icon(
             onPressed: _rebookSession,
             icon: const Icon(Icons.replay_outlined),
-            label: const Text('Rebook session'),
+            label: Text(t.rebookSession),
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () =>
                 ref.invalidate(sessionStatusPollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry status check'),
+            label: Text(t.retryStatusCheck),
           ),
         ],
         if (!isWaiting)
           ElevatedButton.icon(
             onPressed: () => context.go('/home'),
             icon: const Icon(Icons.home_outlined),
-            label: const Text('Back to home'),
+            label: Text(t.backToHome),
           ),
       ],
     );
@@ -238,11 +250,10 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
       );
     } catch (_) {
       if (!mounted) return;
+      final t = ref.read(translationsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not create a new session request. Please try again.',
-          ),
+        SnackBar(
+          content: Text(t.rebookSessionFailed),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

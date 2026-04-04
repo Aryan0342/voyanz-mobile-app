@@ -1,3 +1,5 @@
+import 'package:voyanz/core/l10n/app_translations.dart';
+
 class SessionStatus {
   final String seId;
   final String status;
@@ -63,27 +65,27 @@ class SessionStatus {
 
   bool get isWaiting => isCalling || (!isActive && !isTerminal);
 
-  String get uiLabel {
-    if (isCalling) return 'Calling';
-    if (isInProgress) return 'In progress';
-    if (isCompleted) return 'Completed';
-    if (isRejected) return 'Rejected';
-    return status.isEmpty ? 'Unknown' : status;
+  String localizedLabel(AppTranslations t) {
+    if (isCalling) return t.sessionStatusCallingLabel;
+    if (isInProgress) return t.sessionStatusInProgressLabel;
+    if (isCompleted) return t.sessionStatusCompletedLabel;
+    if (isRejected) return t.sessionStatusRejectedLabel;
+    return t.sessionStatusUnknownLabel(status);
   }
 
-  String get uiMessage {
+  String localizedMessage(AppTranslations t, {required bool isProfessional}) {
     if (isCalling) {
-      return 'The session is being connected. Please stay on this screen.';
+      return t.sessionStatusCallingMessage(isProfessional: isProfessional);
     }
     if (isInProgress) {
-      return 'The session is live. You can continue your consultation.';
+      return t.sessionStatusInProgressMessage(isProfessional: isProfessional);
     }
     if (isCompleted) {
-      return 'This session has ended.';
+      return t.sessionStatusCompletedMessage;
     }
     if (isRejected) {
-      return 'This session was rejected and cannot be joined.';
+      return t.sessionStatusRejectedMessage;
     }
-    return 'Session status changed: ${status.isEmpty ? 'unknown' : status}.';
+    return t.sessionStatusChangedMessage(status);
   }
 }

@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 
@@ -54,6 +57,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
+    final isProfessional =
+        ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
     final tokenAsync = ref.watch(
       videoTokenProvider((seId: widget.seId, coId: widget.coId)),
     );
@@ -70,7 +76,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(status.uiMessage),
+              content: Text(
+                status.localizedMessage(t, isProfessional: isProfessional),
+              ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -105,7 +113,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Connection Error',
+                      t.connectionError,
                       style: GoogleFonts.jost(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -124,7 +132,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     const SizedBox(height: 24),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Go Back'),
+                      child: Text(t.goBack),
                     ),
                   ],
                 ),
@@ -184,7 +192,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                       ],
                     ),
                   ),
-                  _SessionStatusBanner(statusAsync: liveStatusAsync),
+                  _SessionStatusBanner(
+                    statusAsync: liveStatusAsync,
+                    t: t,
+                    isProfessional: isProfessional,
+                  ),
 
                   // ── Video placeholder area ──
                   Expanded(
@@ -225,7 +237,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Provider: ${token.provider}',
+                            t.providerLabel(token.provider),
                             style: GoogleFonts.montserrat(
                               fontSize: 14,
                               color: AppColors.textMuted,
@@ -244,7 +256,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                       children: [
                         _ControlButton(
                           icon: Icons.mic,
-                          label: 'Mute',
+                          label: t.mute,
                           onTap: () {},
                         ),
                         // End call button — larger red
@@ -273,7 +285,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                         ),
                         _ControlButton(
                           icon: Icons.videocam,
-                          label: 'Camera',
+                          label: t.camera,
                           onTap: () {},
                         ),
                       ],
@@ -291,8 +303,14 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
 class _SessionStatusBanner extends StatelessWidget {
   final AsyncValue<SessionStatus> statusAsync;
+  final AppTranslations t;
+  final bool isProfessional;
 
-  const _SessionStatusBanner({required this.statusAsync});
+  const _SessionStatusBanner({
+    required this.statusAsync,
+    required this.t,
+    required this.isProfessional,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +334,7 @@ class _SessionStatusBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${status.uiLabel}: ${status.uiMessage}',
+                  '${status.localizedLabel(t)}: ${status.localizedMessage(t, isProfessional: isProfessional)}',
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

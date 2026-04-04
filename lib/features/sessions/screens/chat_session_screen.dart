@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
@@ -24,6 +26,8 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
+    final isProfessional =
+        ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
     );
@@ -37,7 +41,9 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(status.uiMessage),
+              content: Text(
+                status.localizedMessage(t, isProfessional: isProfessional),
+              ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -69,7 +75,11 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
                     const Spacer(),
                   ],
                 ),
-                _SessionStatusBanner(statusAsync: liveStatusAsync),
+                _SessionStatusBanner(
+                  statusAsync: liveStatusAsync,
+                  t: t,
+                  isProfessional: isProfessional,
+                ),
                 const Spacer(),
                 Container(
                   width: 120,
@@ -130,8 +140,14 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
 
 class _SessionStatusBanner extends StatelessWidget {
   final AsyncValue<SessionStatus> statusAsync;
+  final AppTranslations t;
+  final bool isProfessional;
 
-  const _SessionStatusBanner({required this.statusAsync});
+  const _SessionStatusBanner({
+    required this.statusAsync,
+    required this.t,
+    required this.isProfessional,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +171,7 @@ class _SessionStatusBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${status.uiLabel}: ${status.uiMessage}',
+                  '${status.localizedLabel(t)}: ${status.localizedMessage(t, isProfessional: isProfessional)}',
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

@@ -418,6 +418,66 @@ class AppTranslations {
   String get openConversations =>
       _fr ? 'Ouvrir les conversations' : 'Open conversations';
   String get endSession => _fr ? 'Terminer la session' : 'End Session';
+  String get sessionStatusCallingLabel => _fr ? 'Appel en cours' : 'Calling';
+  String get sessionStatusInProgressLabel => _fr ? 'En cours' : 'In progress';
+  String get sessionStatusCompletedLabel => _fr ? 'Terminée' : 'Completed';
+  String get sessionStatusRejectedLabel => _fr ? 'Refusée' : 'Rejected';
+  String sessionStatusUnknownLabel(String rawStatus) => _fr
+      ? (rawStatus.isEmpty ? 'Inconnu' : rawStatus)
+      : (rawStatus.isEmpty ? 'Unknown' : rawStatus);
+  String sessionStatusCallingMessage({required bool isProfessional}) => _fr
+      ? (isProfessional
+            ? 'Le client est en train d\'être connecté. Veuillez rester sur cet écran.'
+            : 'Le professionnel est en train d\'être connecté. Veuillez rester sur cet écran.')
+      : (isProfessional
+            ? 'The customer is being connected. Please stay on this screen.'
+            : 'The professional is being connected. Please stay on this screen.');
+  String sessionStatusInProgressMessage({required bool isProfessional}) => _fr
+      ? (isProfessional
+            ? 'La session est active. Vous êtes en consultation avec votre client.'
+            : 'La session est active. Vous êtes en consultation avec votre professionnel.')
+      : (isProfessional
+            ? 'The session is live. You are connected with your customer.'
+            : 'The session is live. You are connected with your professional.');
+  String get sessionStatusCompletedMessage =>
+      _fr ? 'Cette session est terminée.' : 'This session has ended.';
+  String get sessionStatusRejectedMessage => _fr
+      ? 'Cette session a été refusée et ne peut pas être rejointe.'
+      : 'This session was rejected and cannot be joined.';
+  String sessionStatusChangedMessage(String rawStatus) => _fr
+      ? 'Le statut de la session a changé : ${rawStatus.isEmpty ? 'inconnu' : rawStatus}.'
+      : 'Session status changed: ${rawStatus.isEmpty ? 'unknown' : rawStatus}.';
+  String get unableCheckSessionStatus => _fr
+      ? 'Impossible de vérifier le statut de la session'
+      : 'Unable to check session status';
+  String waitingForJoinTitle({required bool isProfessional}) => _fr
+      ? (isProfessional
+            ? 'En attente du client'
+            : 'En attente du professionnel')
+      : (isProfessional
+            ? 'Waiting for customer to join'
+            : 'Waiting for professional to join');
+  String get sessionUnavailable =>
+      _fr ? 'Session indisponible' : 'Session unavailable';
+  String get sessionWaitTimedOutMessage => _fr
+      ? 'Cela prend plus de temps que prévu. Vous pouvez réessayer maintenant ou créer une nouvelle demande de session.'
+      : 'This is taking longer than expected. You can retry now or create a new session request.';
+  String get refreshNow => _fr ? 'Actualiser maintenant' : 'Refresh now';
+  String get rebookSession =>
+      _fr ? 'Reprogrammer la session' : 'Rebook session';
+  String get retryStatusCheck =>
+      _fr ? 'Réessayer le statut' : 'Retry status check';
+  String get backToHome => _fr ? 'Retour à l\'accueil' : 'Back to home';
+  String get rebookSessionFailed => _fr
+      ? 'Impossible de créer une nouvelle demande de session. Veuillez réessayer.'
+      : 'Could not create a new session request. Please try again.';
+  String get connectionError =>
+      _fr ? 'Erreur de connexion' : 'Connection Error';
+  String get goBack => _fr ? 'Retour' : 'Go Back';
+  String get mute => _fr ? 'Muet' : 'Mute';
+  String get camera => _fr ? 'Caméra' : 'Camera';
+  String providerLabel(String provider) =>
+      _fr ? 'Fournisseur : $provider' : 'Provider: $provider';
 
   // ── Language selector ────────────────────────────────────────────────────────
   String get selectLanguage => _fr ? 'Choisir la langue' : 'Select Language';
