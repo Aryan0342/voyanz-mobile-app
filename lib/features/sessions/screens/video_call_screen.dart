@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,8 +9,9 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
-import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
+import 'package:voyanz/features/sessions/models/video_token.dart';
+import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class VideoCallScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -22,9 +25,22 @@ class VideoCallScreen extends ConsumerStatefulWidget {
 
 class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   Timer? _heartbeatTimer;
-  Duration _elapsed = Duration.zero;
   Timer? _elapsedTimer;
+
+  Duration _elapsed = Duration.zero;
   bool _sessionEndedHandled = false;
+
+  RtcEngine? _engine;
+  bool _engineInitializing = false;
+  bool _engineInitialized = false;
+  bool _joined = false;
+  int? _remoteUid;
+  String? _channelId;
+
+  bool _micEnabled = true;
+  bool _cameraEnabled = true;
+  ConnectionStateType? _connectionState;
+  String? _connectionError;
 
   @override
   void initState() {
@@ -33,9 +49,8 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
       ref.read(sessionsRepositoryProvider).sendHeartbeat(widget.seId);
     });
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() => _elapsed += const Duration(seconds: 1));
-      }
+      if (!mounted) return;
+      setState(() => _elapsed += const Duration(seconds: 1));
     });
   }
 
@@ -43,6 +58,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   void dispose() {
     _heartbeatTimer?.cancel();
     _elapsedTimer?.cancel();
+    unawaited(_disposeEngine());
     super.dispose();
   }
 
@@ -55,16 +71,174 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     return '$m:$s';
   }
 
+  Future<void> _ensureAgoraJoined(VideoToken token) async {
+    if (_joined || _engineInitializing) return;
+    if (!token.isAgora) {
+      setState(() {
+        _connectionError = 'provider:${token.provider}';
+      });
+      return;
+    }
+    if (token.appId == null || token.appId!.trim().isEmpty) {
+      setState(() {
+        _connectionError = 'missing-app-id';
+      });
+      return;
+    }
+
+    _engineInitializing = true;
+    try {
+      final engine = createAgoraRtcEngine();
+      await engine.initialize(RtcEngineContext(appId: token.appId!.trim()));
+
+      engine.registerEventHandler(
+        RtcEngineEventHandler(
+          onJoinChannelSuccess: (connection, elapsed) {
+            if (!mounted) return;
+            setState(() {
+              _joined = true;
+              _connectionState = ConnectionStateType.connectionStateConnected;
+              _connectionError = null;
+            });
+          },
+          onUserJoined: (connection, remoteUid, elapsed) {
+            if (!mounted) return;
+            setState(() {
+              _remoteUid = remoteUid;
+            });
+          },
+          onUserOffline: (connection, remoteUid, reason) {
+            if (!mounted) return;
+            if (_remoteUid == remoteUid) {
+              setState(() {
+                _remoteUid = null;
+              });
+            }
+          },
+          onConnectionStateChanged: (connection, state, reason) {
+            if (!mounted) return;
+            setState(() {
+              _connectionState = state;
+            });
+          },
+          onError: (err, msg) {
+            if (!mounted) return;
+            setState(() {
+              _connectionError = msg.isEmpty ? err.name : msg;
+            });
+          },
+        ),
+      );
+
+      await engine.enableAudio();
+      await engine.enableVideo();
+      await engine.startPreview();
+
+      final room = token.room.trim();
+      final uid = token.uid ?? 0;
+
+      await engine.joinChannel(
+        token: token.token,
+        channelId: room,
+        uid: uid,
+        options: const ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+        ),
+      );
+
+      if (!mounted) {
+        await engine.leaveChannel();
+        await engine.release();
+        return;
+      }
+
+      setState(() {
+        _engine = engine;
+        _engineInitialized = true;
+        _channelId = room;
+      });
+    } catch (e) {
+      setState(() {
+        _connectionError = e.toString();
+      });
+    } finally {
+      _engineInitializing = false;
+    }
+  }
+
+  Future<void> _disposeEngine() async {
+    final engine = _engine;
+    _engine = null;
+
+    if (engine == null) return;
+    try {
+      await engine.leaveChannel();
+    } catch (_) {}
+
+    try {
+      await engine.release();
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      _engineInitialized = false;
+      _joined = false;
+      _remoteUid = null;
+      _channelId = null;
+    });
+  }
+
+  Future<void> _toggleMic() async {
+    final engine = _engine;
+    if (engine == null) return;
+
+    final next = !_micEnabled;
+    await engine.muteLocalAudioStream(!next);
+    if (!mounted) return;
+    setState(() {
+      _micEnabled = next;
+    });
+  }
+
+  Future<void> _toggleCamera() async {
+    final engine = _engine;
+    if (engine == null) return;
+
+    final next = !_cameraEnabled;
+    await engine.muteLocalVideoStream(!next);
+    if (!mounted) return;
+    setState(() {
+      _cameraEnabled = next;
+    });
+  }
+
+  Future<void> _endCallAndExit() async {
+    await _disposeEngine();
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
     final isProfessional =
         ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
+
     final tokenAsync = ref.watch(
       videoTokenProvider((seId: widget.seId, coId: widget.coId)),
     );
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
+    );
+
+    ref.listen<AsyncValue<VideoToken>>(
+      videoTokenProvider((seId: widget.seId, coId: widget.coId)),
+      (_, next) {
+        next.whenData((token) {
+          unawaited(_ensureAgoraJoined(token));
+        });
+      },
     );
 
     ref.listen<AsyncValue<SessionStatus>>(
@@ -85,8 +259,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
           );
 
           Future<void>.delayed(const Duration(milliseconds: 400), () {
-            if (!mounted) return;
-            Navigator.of(context).pop();
+            unawaited(_endCallAndExit());
           });
         });
       },
@@ -139,9 +312,25 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
               ),
             ),
             data: (token) {
+              if (!token.isAgora) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      t.videoProviderNotSupported,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.montserrat(
+                        color: AppColors.error,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
               return Column(
                 children: [
-                  // ── Top bar ──
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -152,7 +341,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                             size: 20,
                             color: AppColors.textPrimary,
                           ),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () {
+                            unawaited(_endCallAndExit());
+                          },
                         ),
                         const Spacer(),
                         Container(
@@ -197,71 +388,88 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     t: t,
                     isProfessional: isProfessional,
                   ),
-
-                  // ── Video placeholder area ──
                   Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: AppGradients.accent,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.rosePink.withValues(
-                                    alpha: 0.3,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _buildRemoteView(t),
+                            if (_engineInitialized)
+                              Positioned(
+                                right: 12,
+                                top: 12,
+                                width: 120,
+                                height: 170,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black87,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.white24),
                                   ),
-                                  blurRadius: 40,
-                                  spreadRadius: 4,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: _cameraEnabled
+                                        ? AgoraVideoView(
+                                            controller: VideoViewController(
+                                              rtcEngine: _engine!,
+                                              canvas: const VideoCanvas(uid: 0),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              t.localPreview,
+                                              style: GoogleFonts.montserrat(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
                                 ),
-                              ],
+                              ),
+                            Positioned(
+                              left: 14,
+                              bottom: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  t.providerLabel(token.provider),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.videocam,
-                              color: Colors.white,
-                              size: 52,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            token.room,
-                            style: GoogleFonts.jost(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            t.providerLabel(token.provider),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-
-                  // ── Bottom controls ──
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                    padding: const EdgeInsets.fromLTRB(32, 16, 32, 32),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _ControlButton(
-                          icon: Icons.mic,
-                          label: t.mute,
-                          onTap: () {},
+                          icon: _micEnabled ? Icons.mic : Icons.mic_off,
+                          label: _micEnabled ? t.mute : t.unmute,
+                          onTap: _toggleMic,
                         ),
-                        // End call button — larger red
                         GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: () {
+                            unawaited(_endCallAndExit());
+                          },
                           child: Container(
                             width: 68,
                             height: 68,
@@ -284,9 +492,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                           ),
                         ),
                         _ControlButton(
-                          icon: Icons.videocam,
-                          label: t.camera,
-                          onTap: () {},
+                          icon: _cameraEnabled
+                              ? Icons.videocam
+                              : Icons.videocam_off,
+                          label: _cameraEnabled ? t.cameraOff : t.camera,
+                          onTap: _toggleCamera,
                         ),
                       ],
                     ),
@@ -295,6 +505,72 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRemoteView(AppTranslations t) {
+    final isConnecting = !_joined || _engineInitializing;
+    final isReconnecting =
+        _connectionState == ConnectionStateType.connectionStateReconnecting;
+
+    if (_connectionError != null && _connectionError!.isNotEmpty) {
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              _connectionError!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(color: Colors.white, fontSize: 13),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_remoteUid != null && _engine != null && _channelId != null) {
+      return AgoraVideoView(
+        controller: VideoViewController.remote(
+          rtcEngine: _engine!,
+          canvas: VideoCanvas(uid: _remoteUid),
+          connection: RtcConnection(channelId: _channelId!),
+        ),
+      );
+    }
+
+    final message = isConnecting
+        ? t.connectingVideo
+        : isReconnecting
+        ? t.reconnectingVideo
+        : t.waitingRemoteParticipant;
+
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 36,
+              height: 36,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: AppColors.rosePink,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Voyanz uses your camera for video consultation sessions.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Voyanz uses your microphone for video and phone consultation sessions.</string>
 </dict>
 </plist>

@@ -476,8 +476,23 @@ class AppTranslations {
   String get goBack => _fr ? 'Retour' : 'Go Back';
   String get mute => _fr ? 'Muet' : 'Mute';
   String get camera => _fr ? 'Caméra' : 'Camera';
+  String get unmute => _fr ? 'Activer micro' : 'Unmute';
+  String get cameraOff => _fr ? 'Couper caméra' : 'Camera off';
   String providerLabel(String provider) =>
       _fr ? 'Fournisseur : $provider' : 'Provider: $provider';
+  String get connectingVideo =>
+      _fr ? 'Connexion vidéo en cours...' : 'Connecting video...';
+  String get waitingRemoteParticipant => _fr
+      ? 'En attente de l\'autre participant...'
+      : 'Waiting for the other participant...';
+  String get reconnectingVideo =>
+      _fr ? 'Reconnexion en cours...' : 'Reconnecting...';
+  String get localPreview => _fr ? 'Vous' : 'You';
+  String get remoteParticipant =>
+      _fr ? 'Participant distant' : 'Remote participant';
+  String get videoProviderNotSupported => _fr
+      ? 'Le fournisseur vidéo reçu n\'est pas Agora.'
+      : 'The received video provider is not Agora.';
 
   // ── Language selector ────────────────────────────────────────────────────────
   String get selectLanguage => _fr ? 'Choisir la langue' : 'Select Language';
