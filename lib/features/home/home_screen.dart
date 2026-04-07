@@ -568,9 +568,10 @@ class ProfileScreen extends ConsumerWidget {
                             loading: () => null,
                             error: (_, __) => null,
                           );
+                          final finalCredit = user?.credit ?? credit;
 
                           return _CustomerStatsGrid(
-                            creditValue: _formatEuro(credit),
+                            creditValue: _formatEuro(finalCredit),
                             phoneCount: '${counts.phone}',
                             videoCount: '${counts.video}',
                             chatCount: '${counts.chat}',
@@ -969,25 +970,18 @@ _SessionTypeCounts _customerSessionTypeCounts(List<dynamic> history) {
 
   for (final item in history) {
     if (item is! Map<String, dynamic>) continue;
-    final rawType =
-        (item['se_type'] ??
-                item['session_type'] ??
-                item['typecall'] ??
-                item['type'])
-            ?.toString()
-            .trim()
-            .toLowerCase();
+    final normalized = _normalizeSessionType(item);
+    if (normalized == null) continue;
 
-    if (rawType == null || rawType.isEmpty) continue;
-    if (rawType.contains('phone')) {
+    if (normalized == 'phone') {
       phone++;
       continue;
     }
-    if (rawType.contains('video')) {
+    if (normalized == 'video') {
       video++;
       continue;
     }
-    if (rawType.contains('chat') || rawType.contains('text')) {
+    if (normalized == 'chat') {
       chat++;
       continue;
     }
@@ -996,24 +990,113 @@ _SessionTypeCounts _customerSessionTypeCounts(List<dynamic> history) {
   return _SessionTypeCounts(phone: phone, video: video, chat: chat);
 }
 
+String? _normalizeSessionType(Map<String, dynamic> item) {
+  final session = item['session'];
+  final source = session is Map<String, dynamic> ? session : item;
+
+  final rawCandidates = [
+    source['se_type'],
+    source['se_type_label'],
+    source['session_type'],
+    source['session_type_label'],
+    source['typecall'],
+    source['type'],
+    source['se_mode'],
+  ];
+
+  for (final raw in rawCandidates) {
+    final normalized = _normalizeSessionTypeValue(raw);
+    if (normalized != null) return normalized;
+  }
+
+  // Fallback inference when backend omits explicit type text.
+  if ((source['chgr_id']?.toString() ?? '').isNotEmpty) return 'chat';
+  if ((source['se_room']?.toString() ?? '').isNotEmpty) return 'video';
+
+  return null;
+}
+
+String? _normalizeSessionTypeValue(dynamic raw) {
+  if (raw == null) return null;
+
+  if (raw is num) {
+    // Common numeric mappings observed across legacy backends.
+    if (raw == 1) return 'phone';
+    if (raw == 2) return 'video';
+    if (raw == 3) return 'chat';
+  }
+
+  final text = raw.toString().trim().toLowerCase();
+  if (text.isEmpty) return null;
+
+  if (text == '1') return 'phone';
+  if (text == '2') return 'video';
+  if (text == '3') return 'chat';
+
+  if (text.contains('video') || text.contains('visio')) return 'video';
+  if (text.contains('phone') ||
+      text.contains('tel') ||
+      text.contains('audio')) {
+    return 'phone';
+  }
+  if (text.contains('chat') ||
+      text.contains('text') ||
+      text.contains('message')) {
+    return 'chat';
+  }
+
+  return null;
+}
+
 double? _extractCustomerCredit(Map<String, dynamic> pricing) {
-  const keys = [
+  return _findCreditValue(pricing);
+}
+
+double? _findCreditValue(dynamic node) {
+  const keys = {
     'credit',
     'co_credit',
     'customer_credit',
     'balance',
     'wallet',
     'amount',
-  ];
+  };
 
-  for (final key in keys) {
-    final raw = pricing[key];
-    if (raw is num) return raw.toDouble();
-    final parsed = double.tryParse(raw?.toString() ?? '');
-    if (parsed != null) return parsed;
+  if (node is Map<String, dynamic>) {
+    for (final entry in node.entries) {
+      final key = entry.key.toLowerCase();
+      if (keys.contains(key) ||
+          key.contains('credit') ||
+          key.contains('balance')) {
+        final parsed = _parseCurrencyLike(entry.value);
+        if (parsed != null) return parsed;
+      }
+    }
+
+    for (final value in node.values) {
+      final nested = _findCreditValue(value);
+      if (nested != null) return nested;
+    }
+  }
+
+  if (node is List) {
+    for (final value in node) {
+      final nested = _findCreditValue(value);
+      if (nested != null) return nested;
+    }
   }
 
   return null;
+}
+
+double? _parseCurrencyLike(dynamic value) {
+  if (value is num) return value.toDouble();
+  final text = value?.toString() ?? '';
+  if (text.isEmpty) return null;
+  final normalized = text
+      .replaceAll(RegExp(r'[^0-9,.-]'), '')
+      .replaceAll(',', '.');
+  return double.tryParse(normalized);
 }
 
 String _formatEuro(double? value) {

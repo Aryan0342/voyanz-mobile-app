@@ -8,6 +8,7 @@ class User {
   final String? role; // 'customer' | 'professional'
   final String? phone;
   final String? avatar;
+  final double? credit;
 
   bool get isProfessional => role == 'professional';
 
@@ -19,6 +20,7 @@ class User {
     this.role,
     this.phone,
     this.avatar,
+    this.credit,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -51,7 +53,43 @@ class User {
           json['co_mobile'] as String? ??
           json['co_mobile1'] as String?,
       avatar: json['co_avatar'] as String?,
+      credit: _parseCredit(json),
     );
+  }
+
+  static double? _parseCredit(Map<String, dynamic> json) {
+    const keys = [
+      'co_credit',
+      'credit',
+      'balance',
+      'wallet',
+      'customer_credit',
+    ];
+
+    for (final key in keys) {
+      final parsed = _toDouble(json[key]);
+      if (parsed != null) return parsed;
+    }
+
+    final account = json['account'];
+    if (account is Map<String, dynamic>) {
+      for (final key in keys) {
+        final parsed = _toDouble(account[key]);
+        if (parsed != null) return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  static double? _toDouble(dynamic raw) {
+    if (raw is num) return raw.toDouble();
+    final text = raw?.toString() ?? '';
+    if (text.isEmpty) return null;
+    final normalized = text
+        .replaceAll(RegExp(r'[^0-9,.-]'), '')
+        .replaceAll(',', '.');
+    return double.tryParse(normalized);
   }
 
   static String _normalizeRole(dynamic value) {
