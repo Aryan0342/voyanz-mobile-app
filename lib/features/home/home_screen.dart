@@ -306,6 +306,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).valueOrNull;
+    final isProfessional = user?.isProfessional ?? false;
     final agency = ref.watch(agencyProvider);
     final t = ref.watch(translationsProvider);
     final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
@@ -315,15 +316,14 @@ class ProfileScreen extends ConsumerWidget {
 
     // Fetch dynamic stats from backend
     final historyAsync = ref.watch(
-      (user?.isProfessional ?? false)
-          ? professionalHistoryProvider
-          : customerHistoryProvider,
+      isProfessional ? professionalHistoryProvider : customerHistoryProvider,
     );
     final reviewsAsync = ref.watch(
-      (user?.isProfessional ?? false)
-          ? professionalReviewsProvider
-          : customerReviewsProvider,
+      isProfessional ? professionalReviewsProvider : customerReviewsProvider,
     );
+    final pricingAsync = isProfessional
+        ? const AsyncValue<Map<String, dynamic>>.data(<String, dynamic>{})
+        : ref.watch(customerPricingProvider);
 
     return GradientScaffold(
       body: SafeArea(
@@ -400,147 +400,187 @@ class ProfileScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: historyAsync.when(
-                  loading: () => Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.history,
-                          value: '--',
-                          label: t.sessionsLabel,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.access_time,
-                          value: '--',
-                          label: t.totalTime,
-                        ),
-                      ),
-                    ],
-                  ),
-                  error: (_, __) => Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.history,
-                          value: '0',
-                          label: t.sessionsLabel,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.access_time,
-                          value: '0h',
-                          label: t.totalTime,
-                        ),
-                      ),
-                    ],
-                  ),
-                  data: (history) {
-                    // Calculate sessions count
-                    final sessionCount = history.length;
-
-                    // Calculate total duration
-                    double totalMinutes = 0;
-                    for (final item in history) {
-                      final itemMap = item as Map<String, dynamic>;
-                      final durationStr =
-                          itemMap['se_duration']?.toString() ?? '';
-                      final minutes = _parseDuration(durationStr);
-                      totalMinutes += minutes;
-                    }
-                    final totalHours = (totalMinutes / 60).toStringAsFixed(1);
-
-                    return reviewsAsync.when(
-                      loading: () => Row(
-                        children: [
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.history,
-                              value: sessionCount.toString(),
-                              label: t.sessionsLabel,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.access_time,
-                              value: '${totalHours}h',
-                              label: t.totalTime,
-                            ),
-                          ),
-                        ],
-                      ),
-                      error: (_, __) => Row(
-                        children: [
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.history,
-                              value: sessionCount.toString(),
-                              label: t.sessionsLabel,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _StatCard(
-                              icon: Icons.access_time,
-                              value: '${totalHours}h',
-                              label: t.totalTime,
-                            ),
-                          ),
-                        ],
-                      ),
-                      data: (reviews) {
-                        // Calculate average rating
-                        double avgRating = 0;
-                        if (reviews.isNotEmpty) {
-                          double totalRating = 0;
-                          for (final review in reviews) {
-                            final reviewMap = review as Map<String, dynamic>;
-                            final rating = reviewMap['re_rating'] as num?;
-                            if (rating != null) {
-                              totalRating += rating.toDouble();
-                            }
-                          }
-                          avgRating = totalRating / reviews.length;
-                        }
-
-                        return Row(
+                child: isProfessional
+                    ? historyAsync.when(
+                        loading: () => Row(
                           children: [
                             Expanded(
                               child: _StatCard(
                                 icon: Icons.history,
-                                value: sessionCount.toString(),
+                                value: '--',
                                 label: t.sessionsLabel,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: _StatCard(
-                                icon: Icons.star,
-                                value: avgRating > 0
-                                    ? avgRating.toStringAsFixed(1)
-                                    : 'N/A',
-                                label: t.rating,
+                                icon: Icons.access_time,
+                                value: '--',
+                                label: t.totalTime,
+                              ),
+                            ),
+                          ],
+                        ),
+                        error: (_, __) => Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.history,
+                                value: '0',
+                                label: t.sessionsLabel,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: _StatCard(
                                 icon: Icons.access_time,
-                                value: '${totalHours}h',
+                                value: '0h',
                                 label: t.totalTime,
                               ),
                             ),
                           ],
-                        );
-                      },
-                    );
-                  },
-                ),
+                        ),
+                        data: (history) {
+                          final sessionCount = history.length;
+                          double totalMinutes = 0;
+                          for (final item in history) {
+                            final itemMap = item as Map<String, dynamic>;
+                            final durationStr =
+                                itemMap['se_duration']?.toString() ?? '';
+                            final minutes = _parseDuration(durationStr);
+                            totalMinutes += minutes;
+                          }
+                          final totalHours = (totalMinutes / 60)
+                              .toStringAsFixed(1);
+
+                          return reviewsAsync.when(
+                            loading: () => Row(
+                              children: [
+                                Expanded(
+                                  child: _StatCard(
+                                    icon: Icons.history,
+                                    value: sessionCount.toString(),
+                                    label: t.sessionsLabel,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _StatCard(
+                                    icon: Icons.access_time,
+                                    value: '${totalHours}h',
+                                    label: t.totalTime,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            error: (_, __) => Row(
+                              children: [
+                                Expanded(
+                                  child: _StatCard(
+                                    icon: Icons.history,
+                                    value: sessionCount.toString(),
+                                    label: t.sessionsLabel,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _StatCard(
+                                    icon: Icons.access_time,
+                                    value: '${totalHours}h',
+                                    label: t.totalTime,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            data: (reviews) {
+                              double avgRating = 0;
+                              if (reviews.isNotEmpty) {
+                                double totalRating = 0;
+                                for (final review in reviews) {
+                                  final reviewMap =
+                                      review as Map<String, dynamic>;
+                                  final rating = reviewMap['re_rating'] as num?;
+                                  if (rating != null) {
+                                    totalRating += rating.toDouble();
+                                  }
+                                }
+                                avgRating = totalRating / reviews.length;
+                              }
+
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: _StatCard(
+                                      icon: Icons.history,
+                                      value: sessionCount.toString(),
+                                      label: t.sessionsLabel,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _StatCard(
+                                      icon: Icons.star,
+                                      value: avgRating > 0
+                                          ? avgRating.toStringAsFixed(1)
+                                          : 'N/A',
+                                      label: t.rating,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _StatCard(
+                                      icon: Icons.access_time,
+                                      value: '${totalHours}h',
+                                      label: t.totalTime,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : historyAsync.when(
+                        loading: () => _CustomerStatsGrid(
+                          creditValue: '--',
+                          phoneCount: '--',
+                          videoCount: '--',
+                          chatCount: '--',
+                          creditLabel: t.credit,
+                          phoneLabel: t.phoneCall,
+                          videoLabel: t.videoCall,
+                          chatLabel: t.textChat,
+                        ),
+                        error: (_, __) => _CustomerStatsGrid(
+                          creditValue: '€0.00',
+                          phoneCount: '0',
+                          videoCount: '0',
+                          chatCount: '0',
+                          creditLabel: t.credit,
+                          phoneLabel: t.phoneCall,
+                          videoLabel: t.videoCall,
+                          chatLabel: t.textChat,
+                        ),
+                        data: (history) {
+                          final counts = _customerSessionTypeCounts(history);
+                          final credit = pricingAsync.when(
+                            data: _extractCustomerCredit,
+                            loading: () => null,
+                            error: (_, __) => null,
+                          );
+
+                          return _CustomerStatsGrid(
+                            creditValue: _formatEuro(credit),
+                            phoneCount: '${counts.phone}',
+                            videoCount: '${counts.video}',
+                            chatCount: '${counts.chat}',
+                            creditLabel: t.credit,
+                            phoneLabel: t.phoneCall,
+                            videoLabel: t.videoCall,
+                            chatLabel: t.textChat,
+                          );
+                        },
+                      ),
               ),
             ),
             // ── Menu section ──
@@ -839,6 +879,146 @@ class _StatCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CustomerStatsGrid extends StatelessWidget {
+  final String creditValue;
+  final String phoneCount;
+  final String videoCount;
+  final String chatCount;
+  final String creditLabel;
+  final String phoneLabel;
+  final String videoLabel;
+  final String chatLabel;
+
+  const _CustomerStatsGrid({
+    required this.creditValue,
+    required this.phoneCount,
+    required this.videoCount,
+    required this.chatCount,
+    required this.creditLabel,
+    required this.phoneLabel,
+    required this.videoLabel,
+    required this.chatLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.account_balance_wallet_outlined,
+                value: creditValue,
+                label: creditLabel,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.phone_in_talk_outlined,
+                value: phoneCount,
+                label: phoneLabel,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.videocam_outlined,
+                value: videoCount,
+                label: videoLabel,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.chat_bubble_outline,
+                value: chatCount,
+                label: chatLabel,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SessionTypeCounts {
+  final int phone;
+  final int video;
+  final int chat;
+
+  const _SessionTypeCounts({
+    required this.phone,
+    required this.video,
+    required this.chat,
+  });
+}
+
+_SessionTypeCounts _customerSessionTypeCounts(List<dynamic> history) {
+  var phone = 0;
+  var video = 0;
+  var chat = 0;
+
+  for (final item in history) {
+    if (item is! Map<String, dynamic>) continue;
+    final rawType =
+        (item['se_type'] ??
+                item['session_type'] ??
+                item['typecall'] ??
+                item['type'])
+            ?.toString()
+            .trim()
+            .toLowerCase();
+
+    if (rawType == null || rawType.isEmpty) continue;
+    if (rawType.contains('phone')) {
+      phone++;
+      continue;
+    }
+    if (rawType.contains('video')) {
+      video++;
+      continue;
+    }
+    if (rawType.contains('chat') || rawType.contains('text')) {
+      chat++;
+      continue;
+    }
+  }
+
+  return _SessionTypeCounts(phone: phone, video: video, chat: chat);
+}
+
+double? _extractCustomerCredit(Map<String, dynamic> pricing) {
+  const keys = [
+    'credit',
+    'co_credit',
+    'customer_credit',
+    'balance',
+    'wallet',
+    'amount',
+  ];
+
+  for (final key in keys) {
+    final raw = pricing[key];
+    if (raw is num) return raw.toDouble();
+    final parsed = double.tryParse(raw?.toString() ?? '');
+    if (parsed != null) return parsed;
+  }
+
+  return null;
+}
+
+String _formatEuro(double? value) {
+  if (value == null) return '--';
+  return '€${value.toStringAsFixed(2)}';
 }
 
 class _ProfileTile extends StatelessWidget {

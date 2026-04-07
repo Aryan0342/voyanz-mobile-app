@@ -401,6 +401,7 @@ class AppTranslations {
       ? 'Aucune information tarifaire disponible'
       : 'No pricing information available';
   String get consultation => _fr ? 'Consultation' : 'Consultation';
+  String get credit => _fr ? 'Crédit' : 'Credit';
   String get promoCode => _fr ? 'Code promo' : 'Promo code';
   String get applyPromo => _fr ? 'Appliquer' : 'Apply';
   String promoApplied(String code, String discount) => _fr
