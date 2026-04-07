@@ -1097,7 +1097,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 6),
                       Icon(
                         Icons.circle,
                         size: 10,
@@ -1105,24 +1105,6 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                             ? AppColors.online
                             : AppColors.offline,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        professional.isAvailableNow
-                            ? t.availableNow
-                            : t.offline,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 11,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
@@ -1133,6 +1115,22 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                             fontSize: 11,
                             color: AppColors.textMuted,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _avatarInitial() {
+    return Center(
+      child: Text(
         professional.displayName.isNotEmpty
             ? professional.displayName[0].toUpperCase()
             : '?',
