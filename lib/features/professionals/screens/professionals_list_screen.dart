@@ -282,30 +282,7 @@ class _ProfessionalsListScreenState
           ),
         ),
         data: (pros) {
-          final specialties = _buildSpecialties(pros);
-          if (!specialties.contains(_selectedSpecialty)) {
-            _selectedSpecialty = 'All';
-          }
-          final languages = _buildLanguages(pros);
-          if (!languages.contains(_selectedLanguage)) {
-            _selectedLanguage = 'All';
-          }
-
-          final activeFilters = _activeFiltersCount();
-
           final filteredPros = _filterProfessionals(pros, favoriteIds);
-          final quickVideoCandidate = _pickQuickCandidate(
-            pros,
-            supportsVideo: true,
-          );
-          final quickPhoneCandidate = _pickQuickCandidate(
-            pros,
-            supportsPhone: true,
-          );
-          final quickChatCandidate = _pickQuickCandidate(
-            pros,
-            supportsChat: true,
-          );
           final featuredPros = [
             ...filteredPros.where((p) => p.isOnline == true),
             ...filteredPros.where((p) => p.isOnline != true),
@@ -375,56 +352,6 @@ class _ProfessionalsListScreenState
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                    child: _FilterPanel(
-                      specialties: specialties,
-                      selectedSpecialty: _selectedSpecialty,
-                      selectedType: _selectedType,
-                      selectedExperience: _selectedExperience,
-                      selectedPrice: _selectedPrice,
-                      selectedLanguage: _selectedLanguage,
-                      selectedSessionTypes: _selectedSessionTypes,
-                      languages: languages,
-                      favoritesOnly: _favoritesOnly,
-                      activeFiltersCount: activeFilters,
-                      onSpecialtyChanged: (v) =>
-                          setState(() => _selectedSpecialty = v),
-                      onTypeChanged: (v) => setState(() => _selectedType = v),
-                      onExperienceChanged: (v) =>
-                          setState(() => _selectedExperience = v),
-                      onPriceChanged: (v) => setState(() => _selectedPrice = v),
-                      onLanguageChanged: (v) =>
-                          setState(() => _selectedLanguage = v),
-                      onFavoritesChanged: (v) =>
-                          setState(() => _favoritesOnly = v),
-                      onToggleSessionType: (value) {
-                        setState(() {
-                          if (_selectedSessionTypes.contains(value)) {
-                            _selectedSessionTypes.remove(value);
-                          } else {
-                            _selectedSessionTypes.add(value);
-                          }
-                        });
-                      },
-                      onReset: _resetFilters,
-                    ),
-                  ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                    child: _QuickSessionTestPanel(
-                      quickVideoCandidate: quickVideoCandidate,
-                      quickPhoneCandidate: quickPhoneCandidate,
-                      quickChatCandidate: quickChatCandidate,
-                      onQuickOpen: _openQuickCandidate,
-                    ),
-                  ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: _SectionTitle(
                       title: t.featuredAdvisors,
@@ -476,19 +403,7 @@ class _ProfessionalsListScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      child: Column(
-                        children: [
-                          _EmptyState(message: t.noAdvisorsMatch),
-                          if (activeFilters > 0) ...[
-                            const SizedBox(height: 12),
-                            OutlinedButton.icon(
-                              onPressed: _resetFilters,
-                              icon: const Icon(Icons.filter_alt_off_outlined),
-                              label: Text(t.clearFiltersAndRetry),
-                            ),
-                          ],
-                        ],
-                      ),
+                      child: _EmptyState(message: t.noAdvisorsMatch),
                     ),
                   )
                 else
