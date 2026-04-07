@@ -423,7 +423,7 @@ class _ProfessionalsListScreenState
                           name: pro.displayName,
                           specialty: pro.specialty,
                           avatarUrl: pro.avatar,
-                          isOnline: pro.isOnline == true,
+                          isOnline: pro.isAvailableNow,
                           rating: pro.rating,
                           pricePerMinute: pro.pricePerMinute,
                           onTap: () =>
@@ -461,8 +461,8 @@ class _ProfessionalsListScreenState
         continue;
       }
 
-      final bestOnline = best.isOnline == true;
-      final currentOnline = pro.isOnline == true;
+      final bestOnline = best.isAvailableNow;
+      final currentOnline = pro.isAvailableNow;
       if (currentOnline && !bestOnline) {
         best = pro;
         continue;

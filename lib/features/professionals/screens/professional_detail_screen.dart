@@ -7,6 +7,7 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
@@ -373,6 +374,10 @@ class _ProfessionalDetailScreenState
             }
           }
 
+          final availabilityLabel = effectiveAvailableNow
+              ? t.availableNow
+              : (effectiveAvailabilityText ?? t.noAvailabilityAtMoment);
+
           // Initialize favorite status from data
           if (!_isFavorite && pro.isFavorite) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -649,10 +654,7 @@ class _ProfessionalDetailScreenState
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              effectiveAvailabilityText ??
-                                  (effectiveAvailableNow
-                                      ? t.availableNow
-                                      : t.noAvailabilityAtMoment),
+                              availabilityLabel,
                               style: GoogleFonts.montserrat(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
