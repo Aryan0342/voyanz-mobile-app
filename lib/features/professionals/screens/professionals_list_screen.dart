@@ -95,7 +95,7 @@ class _ProfessionalsListScreenState
   bool _matchesType(Professional pro) {
     switch (_selectedType) {
       case 'Online':
-        return pro.isOnline == true;
+        return pro.isAvailableNow;
       case 'Recommended':
         return pro.isRecommended;
       default:
@@ -284,8 +284,8 @@ class _ProfessionalsListScreenState
         data: (pros) {
           final filteredPros = _filterProfessionals(pros, favoriteIds);
           final featuredPros = [
-            ...filteredPros.where((p) => p.isOnline == true),
-            ...filteredPros.where((p) => p.isOnline != true),
+            ...filteredPros.where((p) => p.isAvailableNow),
+            ...filteredPros.where((p) => !p.isAvailableNow),
           ].take(5).toList();
 
           if (pros.isEmpty) {
@@ -1004,7 +1004,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _FeaturedProfessionalCard extends StatelessWidget {
+class _FeaturedProfessionalCard extends ConsumerWidget {
   final Professional professional;
   final VoidCallback onTap;
 
@@ -1014,7 +1014,8 @@ class _FeaturedProfessionalCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     final imageUrl = _profileImageUrl(
       rawAvatar: professional.avatar,
       seed: professional.coId.isNotEmpty
@@ -1100,19 +1101,21 @@ class _FeaturedProfessionalCard extends StatelessWidget {
                       Icon(
                         Icons.circle,
                         size: 10,
-                        color: professional.isOnline == true
+                        color: professional.isAvailableNow
                             ? AppColors.online
                             : AppColors.offline,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        professional.isOnline == true ? 'Online' : 'Offline',
+                        professional.isAvailableNow
+                            ? t.availableNow
+                            : t.offline,
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
                           color: AppColors.textMuted,
                         ),
                       ),
-                    ],
+                      const SizedBox(width: 6),
                   ),
                 ],
               ),
@@ -1120,12 +1123,16 @@ class _FeaturedProfessionalCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _avatarInitial() {
-    return Center(
-      child: Text(
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          professional.isAvailableNow ? t.online : t.offline,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
         professional.displayName.isNotEmpty
             ? professional.displayName[0].toUpperCase()
             : '?',

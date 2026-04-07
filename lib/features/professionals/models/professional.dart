@@ -176,6 +176,26 @@ class Professional {
     return years < 0 ? 0 : years;
   }
 
+  static bool? _inferAvailabilityFromText(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final text = value.toLowerCase();
+
+    if (text.contains('no availability') ||
+        text.contains('not available') ||
+        text.contains('indisponible') ||
+        text.contains('pas disponible')) {
+      return false;
+    }
+
+    if (text.contains('available now') ||
+        text.contains('disponible') ||
+        text.contains('available')) {
+      return true;
+    }
+
+    return null;
+  }
+
   factory Professional.fromJson(Map<String, dynamic> json) {
     final firstName = _readString(json, ['co_first_name', 'co_firstname']);
     final lastName = _readString(json, [
@@ -211,8 +231,12 @@ class Professional {
     final languages = _readStringList(json, ['co_languages', 'languages']);
 
     final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
+    final availabilityText = _readString(json, ['disponibilityText']);
     final availableNow =
-        _readBool(json, ['disponibilityNow']) ?? online ?? false;
+        _readBool(json, ['disponibilityNow']) ??
+        _readBool(json, ['is_available_now', 'availability_now']) ??
+        _inferAvailabilityFromText(availabilityText) ??
+        false;
 
     return Professional(
       coId: json['co_id']?.toString() ?? '',
@@ -262,7 +286,7 @@ class Professional {
       experienceYears: _readExperienceYears(json),
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
-      availabilityText: _readString(json, ['disponibilityText']),
+      availabilityText: availabilityText,
     );
   }
 }
@@ -319,8 +343,17 @@ class ProfessionalDetail extends Professional {
       'co_online',
       'is_online',
     ]);
+    final availabilityText = Professional._readString(json, [
+      'disponibilityText',
+    ]);
     final availableNow =
-        Professional._readBool(json, ['disponibilityNow']) ?? online ?? false;
+        Professional._readBool(json, ['disponibilityNow']) ??
+        Professional._readBool(json, [
+          'is_available_now',
+          'availability_now',
+        ]) ??
+        Professional._inferAvailabilityFromText(availabilityText) ??
+        false;
 
     return ProfessionalDetail(
       coId: json['co_id']?.toString() ?? '',
@@ -369,7 +402,7 @@ class ProfessionalDetail extends Professional {
       isVerified:
           Professional._readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
-      availabilityText: Professional._readString(json, ['disponibilityText']),
+      availabilityText: availabilityText,
       isFavorite:
           Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
       supportsPhone:
