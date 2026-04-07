@@ -294,6 +294,18 @@ class _ProfessionalsListScreenState
           final activeFilters = _activeFiltersCount();
 
           final filteredPros = _filterProfessionals(pros, favoriteIds);
+          final quickVideoCandidate = _pickQuickCandidate(
+            pros,
+            supportsVideo: true,
+          );
+          final quickPhoneCandidate = _pickQuickCandidate(
+            pros,
+            supportsPhone: true,
+          );
+          final quickChatCandidate = _pickQuickCandidate(
+            pros,
+            supportsChat: true,
+          );
           final featuredPros = [
             ...filteredPros.where((p) => p.isOnline == true),
             ...filteredPros.where((p) => p.isOnline != true),
@@ -401,6 +413,18 @@ class _ProfessionalsListScreenState
 
                 SliverToBoxAdapter(
                   child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    child: _QuickSessionTestPanel(
+                      quickVideoCandidate: quickVideoCandidate,
+                      quickPhoneCandidate: quickPhoneCandidate,
+                      quickChatCandidate: quickChatCandidate,
+                      onQuickOpen: _openQuickCandidate,
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: _SectionTitle(
                       title: t.featuredAdvisors,
@@ -452,7 +476,19 @@ class _ProfessionalsListScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      child: _EmptyState(message: t.noAdvisorsMatch),
+                      child: Column(
+                        children: [
+                          _EmptyState(message: t.noAdvisorsMatch),
+                          if (activeFilters > 0) ...[
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _resetFilters,
+                              icon: const Icon(Icons.filter_alt_off_outlined),
+                              label: Text(t.clearFiltersAndRetry),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   )
                 else
@@ -485,6 +521,155 @@ class _ProfessionalsListScreenState
             ),
           );
         },
+      ),
+    );
+  }
+
+  Professional? _pickQuickCandidate(
+    List<Professional> pros, {
+    bool supportsVideo = false,
+    bool supportsPhone = false,
+    bool supportsChat = false,
+  }) {
+    bool supports(Professional pro) {
+      if (supportsVideo && !pro.supportsVideo) return false;
+      if (supportsPhone && !pro.supportsPhone) return false;
+      if (supportsChat && !pro.supportsChat) return false;
+      return true;
+    }
+
+    Professional? best;
+    for (final pro in pros) {
+      if (!supports(pro)) continue;
+      if (best == null) {
+        best = pro;
+        continue;
+      }
+
+      final bestOnline = best.isOnline == true;
+      final currentOnline = pro.isOnline == true;
+      if (currentOnline && !bestOnline) {
+        best = pro;
+        continue;
+      }
+
+      final bestRating = best.rating ?? 0;
+      final currentRating = pro.rating ?? 0;
+      if (currentRating > bestRating) {
+        best = pro;
+      }
+    }
+
+    return best;
+  }
+
+  void _openQuickCandidate(
+    BuildContext context,
+    Professional? candidate,
+    String fallbackMessage,
+  ) {
+    if (candidate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(fallbackMessage),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    context.push('/professional/${candidate.coId}');
+  }
+}
+
+class _QuickSessionTestPanel extends ConsumerWidget {
+  final Professional? quickVideoCandidate;
+  final Professional? quickPhoneCandidate;
+  final Professional? quickChatCandidate;
+  final void Function(BuildContext context, Professional? candidate, String msg)
+  onQuickOpen;
+
+  const _QuickSessionTestPanel({
+    required this.quickVideoCandidate,
+    required this.quickPhoneCandidate,
+    required this.quickChatCandidate,
+    required this.onQuickOpen,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.mediumPurple.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.mediumPurple.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.quickSessionTest,
+            style: GoogleFonts.jost(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            t.quickSessionTestHint,
+            style: GoogleFonts.montserrat(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onQuickOpen(
+                    context,
+                    quickVideoCandidate,
+                    t.noVideoTestCandidate,
+                  ),
+                  icon: const Icon(Icons.videocam_outlined),
+                  label: Text(t.videoCall),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onQuickOpen(
+                    context,
+                    quickPhoneCandidate,
+                    t.noPhoneTestCandidate,
+                  ),
+                  icon: const Icon(Icons.phone_in_talk_outlined),
+                  label: Text(t.phoneCall),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onQuickOpen(
+                    context,
+                    quickChatCandidate,
+                    t.noChatTestCandidate,
+                  ),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: Text(t.textChat),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -194,6 +194,22 @@ class AppTranslations {
   String get noAdvisorsMatch => _fr
       ? 'Aucun conseiller ne correspond à votre recherche.'
       : 'No advisors match your search right now.';
+  String get clearFiltersAndRetry =>
+      _fr ? 'Effacer les filtres et réessayer' : 'Clear filters and retry';
+  String get quickSessionTest =>
+      _fr ? 'Test rapide de session' : 'Quick session test';
+  String get quickSessionTestHint => _fr
+      ? 'Ouvre directement un profil compatible pour tester le module de session.'
+      : 'Opens a compatible profile directly to test the session module.';
+  String get noVideoTestCandidate => _fr
+      ? 'Aucun professionnel disponible pour un test vidéo.'
+      : 'No professional available for video test.';
+  String get noPhoneTestCandidate => _fr
+      ? 'Aucun professionnel disponible pour un test téléphone.'
+      : 'No professional available for phone test.';
+  String get noChatTestCandidate => _fr
+      ? 'Aucun professionnel disponible pour un test chat.'
+      : 'No professional available for chat test.';
   String get discoverYourGuide =>
       _fr ? 'Découvrez votre guide' : 'Discover Your Guide';
   String nAdvisorsAvailable(int n) => _fr
