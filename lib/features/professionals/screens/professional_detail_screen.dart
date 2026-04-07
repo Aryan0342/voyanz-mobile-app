@@ -265,6 +265,7 @@ class _ProfessionalDetailScreenState
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
     final detailAsync = ref.watch(professionalDetailProvider(widget.coId));
+    final listAsync = ref.watch(professionalsListProvider);
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
     final isMarkedFavorite = favoriteIds.contains(widget.coId) || _isFavorite;
 
@@ -348,6 +349,30 @@ class _ProfessionalDetailScreenState
           ),
         ),
         data: (pro) {
+          Professional? listPro;
+          final list = listAsync.valueOrNull;
+          if (list != null) {
+            for (final item in list) {
+              if (item.coId == pro.coId) {
+                listPro = item;
+                break;
+              }
+            }
+          }
+
+          final effectiveOnline = pro.isOnline ?? listPro?.isOnline;
+          final effectiveAvailableNow =
+              pro.isAvailableNow || (listPro?.isAvailableNow ?? false);
+
+          String? effectiveAvailabilityText = pro.availabilityText;
+          if (effectiveAvailabilityText == null ||
+              effectiveAvailabilityText.trim().isEmpty) {
+            final fallbackText = listPro?.availabilityText;
+            if (fallbackText != null && fallbackText.trim().isNotEmpty) {
+              effectiveAvailabilityText = fallbackText;
+            }
+          }
+
           // Initialize favorite status from data
           if (!_isFavorite && pro.isFavorite) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -400,7 +425,7 @@ class _ProfessionalDetailScreenState
                             ),
                           ),
                         ),
-                        if (pro.isOnline != null)
+                        if (effectiveOnline != null)
                           Positioned(
                             bottom: 8,
                             right: 8,
@@ -408,7 +433,7 @@ class _ProfessionalDetailScreenState
                               width: 20,
                               height: 20,
                               decoration: BoxDecoration(
-                                color: pro.isOnline == true
+                                color: effectiveOnline == true
                                     ? AppColors.online
                                     : AppColors.offline,
                                 shape: BoxShape.circle,
@@ -450,7 +475,7 @@ class _ProfessionalDetailScreenState
                     const SizedBox(height: 12),
 
                     // ── Online Status Badge ──
-                    if (pro.isOnline != null)
+                    if (effectiveOnline != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -458,14 +483,14 @@ class _ProfessionalDetailScreenState
                         ),
                         decoration: BoxDecoration(
                           color:
-                              (pro.isOnline == true
+                              (effectiveOnline == true
                                       ? AppColors.online
                                       : AppColors.offline)
                                   .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color:
-                                (pro.isOnline == true
+                                (effectiveOnline == true
                                         ? AppColors.online
                                         : AppColors.offline)
                                     .withValues(alpha: 0.4),
@@ -479,7 +504,7 @@ class _ProfessionalDetailScreenState
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: pro.isOnline == true
+                                color: effectiveOnline == true
                                     ? AppColors.online
                                     : AppColors.offline,
                                 shape: BoxShape.circle,
@@ -487,7 +512,7 @@ class _ProfessionalDetailScreenState
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              pro.isOnline == true ? t.online : t.offline,
+                              effectiveOnline == true ? t.online : t.offline,
                               style: GoogleFonts.montserrat(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -599,12 +624,12 @@ class _ProfessionalDetailScreenState
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: pro.isAvailableNow
+                        color: effectiveAvailableNow
                             ? AppColors.online.withValues(alpha: 0.12)
                             : AppColors.rosePink.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: pro.isAvailableNow
+                          color: effectiveAvailableNow
                               ? AppColors.online.withValues(alpha: 0.3)
                               : AppColors.rosePink.withValues(alpha: 0.25),
                           width: 1.5,
@@ -613,10 +638,10 @@ class _ProfessionalDetailScreenState
                       child: Row(
                         children: [
                           Icon(
-                            pro.isAvailableNow
+                            effectiveAvailableNow
                                 ? Icons.check_circle_outline
                                 : Icons.schedule,
-                            color: pro.isAvailableNow
+                            color: effectiveAvailableNow
                                 ? AppColors.online
                                 : AppColors.rosePink,
                             size: 22,
@@ -624,8 +649,8 @@ class _ProfessionalDetailScreenState
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              pro.availabilityText ??
-                                  (pro.isAvailableNow
+                              effectiveAvailabilityText ??
+                                  (effectiveAvailableNow
                                       ? t.availableNow
                                       : t.noAvailabilityAtMoment),
                               style: GoogleFonts.montserrat(
@@ -805,7 +830,7 @@ class _ProfessionalDetailScreenState
                     const SizedBox(height: 24),
 
                     // ── Start Session CTA ──
-                    if (pro.isAvailableNow)
+                    if (effectiveAvailableNow)
                       GradientButton(
                         onPressed: () => _startSession(context, pro),
                         width: double.infinity,

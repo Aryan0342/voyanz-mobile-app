@@ -37,9 +37,31 @@ class ProfessionalsDataSource {
   Future<ProfessionalDetail> getProfessionalInfos(String coId) async {
     final response = await _dio.get(ApiEndpoints.professionalInfos(coId));
     final body = response.data as Map<String, dynamic>;
-    return ProfessionalDetail.fromJson(
+
+    final data = Map<String, dynamic>.from(
       body['data'] as Map<String, dynamic>? ?? body,
     );
+
+    // Some backend versions return availability fields at top-level,
+    // while others include them inside `data`.
+    const passthroughKeys = <String>[
+      'disponibilityNow',
+      'disponibilityText',
+      'is_available_now',
+      'availability_now',
+      'co_online',
+      'co_is_online',
+      'is_online',
+      'nextdisponibilities',
+      'disponibilities',
+    ];
+    for (final key in passthroughKeys) {
+      if (data[key] == null && body.containsKey(key)) {
+        data[key] = body[key];
+      }
+    }
+
+    return ProfessionalDetail.fromJson(data);
   }
 
   Future<void> setProfessionalFavorite(String coId, bool isFavorite) async {
