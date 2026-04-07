@@ -20,9 +20,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _goNext() async {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
+    final isLoggedIn = await ref
+        .read(authStateProvider.notifier)
+        .restoreSession();
     if (!mounted) return;
-
-    final isLoggedIn = ref.read(authStateProvider).valueOrNull != null;
     context.go(isLoggedIn ? '/home' : '/login');
   }
 

@@ -88,5 +88,10 @@ class AuthRepository {
     return _dataSource.getUserInfos();
   }
 
+  Future<bool> hasStoredSession() async {
+    final token = await _tokenStorage.accessToken;
+    return token != null && token.isNotEmpty;
+  }
+
   Future<void> logout() => _tokenStorage.clear();
 }

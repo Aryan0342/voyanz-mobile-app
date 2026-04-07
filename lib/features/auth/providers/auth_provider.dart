@@ -25,8 +25,11 @@ final authStateProvider =
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   final Ref _ref;
   final AuthRepository _repo;
+  Future<bool>? _restoreFuture;
 
-  AuthNotifier(this._ref, this._repo) : super(const AsyncValue.data(null));
+  AuthNotifier(this._ref, this._repo) : super(const AsyncValue.data(null)) {
+    restoreSession();
+  }
 
   Future<void> login({required String email, required String password}) async {
     state = const AsyncValue.loading();
@@ -40,6 +43,32 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> fetchUser() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _repo.getUserInfos());
+  }
+
+  Future<bool> restoreSession() {
+    return _restoreFuture ??= _restoreSessionImpl();
+  }
+
+  Future<bool> _restoreSessionImpl() async {
+    try {
+      final hasStoredSession = await _repo.hasStoredSession();
+      if (!hasStoredSession) {
+        state = const AsyncValue.data(null);
+        return false;
+      }
+
+      state = const AsyncValue.loading();
+      final user = await _repo.getUserInfos();
+      state = AsyncValue.data(user);
+      return true;
+    } catch (_) {
+      await _repo.logout();
+      _ref.read(agencyProvider.notifier).state = null;
+      state = const AsyncValue.data(null);
+      return false;
+    } finally {
+      _restoreFuture = null;
+    }
   }
 
   Future<void> logout() async {
