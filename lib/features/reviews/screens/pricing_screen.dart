@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:voyanz/features/appointments/providers/appointments_provider.dar
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class PricingScreen extends ConsumerStatefulWidget {
   final String? coId;
@@ -250,6 +252,69 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
   }
 
+  String? _resolveSelectedSessionType(
+    dynamic t,
+    dynamic professional, {
+    Professional? fromList,
+  }) {
+    if (_selectedPricingKey == t.phoneCall) return 'phone';
+    if (_selectedPricingKey == t.videoCall) return 'video';
+    if (_selectedPricingKey == t.textChat) return 'chat';
+
+    final supportsPhone =
+        (professional.supportsPhone as bool? ?? false) ||
+        (fromList?.supportsPhone ?? false);
+    final supportsVideo =
+        (professional.supportsVideo as bool? ?? false) ||
+        (fromList?.supportsVideo ?? false);
+    final supportsChat =
+        (professional.supportsChat as bool? ?? false) ||
+        (fromList?.supportsChat ?? false);
+
+    if (supportsPhone) return 'phone';
+    if (supportsVideo) return 'video';
+    if (supportsChat) return 'chat';
+    return null;
+  }
+
+  Future<void> _startSessionFromPricing(
+    dynamic professional, {
+    Professional? fromList,
+  }) async {
+    final t = ref.read(translationsProvider);
+    final type = _resolveSelectedSessionType(
+      t,
+      professional,
+      fromList: fromList,
+    );
+    if (type == null || widget.coId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.chooseSessionType),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final seId = await ref
+          .read(sessionsRepositoryProvider)
+          .createSessionCall(typeCall: type, coId: widget.coId!);
+      if (!mounted) return;
+      context.push('/session/wait/$type/$seId/${widget.coId!}');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.errorMessage(e.toString())),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   void _selectPricing(String key) {
     setState(() {
       _selectedPricingKey = key;
@@ -307,9 +372,12 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _registerAppointment,
-                      icon: const Icon(Icons.event_available),
-                      label: Text(t.registerAppointment),
+                      onPressed: () => _startSessionFromPricing(
+                        professional,
+                        fromList: fromList,
+                      ),
+                      icon: const Icon(Icons.play_circle_outline),
+                      label: Text(t.startSessionNow),
                     ),
                   ),
                 ),
