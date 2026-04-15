@@ -231,7 +231,7 @@ class _ProfessionalDetailScreenState
                 icon: Icons.phone,
                 label: t.phoneCall,
                 price: _sessionTypePrice('phone', pro, fromList: fromList),
-                onTap: () => _startSessionType(context, pro, 'phone'),
+                onTap: () => _startSessionType(ctx, pro, 'phone'),
               ),
               const SizedBox(height: 8),
             ],
@@ -240,7 +240,7 @@ class _ProfessionalDetailScreenState
                 icon: Icons.videocam,
                 label: t.videoCall,
                 price: _sessionTypePrice('video', pro, fromList: fromList),
-                onTap: () => _startSessionType(context, pro, 'video'),
+                onTap: () => _startSessionType(ctx, pro, 'video'),
               ),
               const SizedBox(height: 8),
             ],
@@ -249,7 +249,7 @@ class _ProfessionalDetailScreenState
                 icon: Icons.chat_bubble_outline,
                 label: t.textChat,
                 price: _sessionTypePrice('chat', pro, fromList: fromList),
-                onTap: () => _startSessionType(context, pro, 'chat'),
+                onTap: () => _startSessionType(ctx, pro, 'chat'),
               ),
             ],
           ],
@@ -268,12 +268,13 @@ class _ProfessionalDetailScreenState
   }
 
   Future<void> _startSessionType(
-    BuildContext context,
+    BuildContext dialogContext,
     dynamic pro,
     String type,
   ) async {
+    if (!mounted) return;
     final t = ref.read(translationsProvider);
-    Navigator.pop(context); // Close dialog
+    Navigator.of(dialogContext).pop(); // Close dialog only
 
     try {
       final seId = await ref
