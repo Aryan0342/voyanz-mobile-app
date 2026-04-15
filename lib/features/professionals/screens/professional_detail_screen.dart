@@ -148,10 +148,58 @@ class _ProfessionalDetailScreenState
     context.push('/pricing/${pro.coId}');
   }
 
-  void _startSession(BuildContext context, dynamic pro) {
+  double? _sessionTypePrice(
+    String type,
+    Professional pro, {
+    Professional? fromList,
+  }) {
+    final candidates = switch (type) {
+      'phone' => <double?>[
+        pro.pricePhonePerMinute,
+        fromList?.pricePhonePerMinute,
+        pro.pricePerMinute,
+        fromList?.pricePerMinute,
+      ],
+      'video' => <double?>[
+        pro.priceVideoPerMinute,
+        fromList?.priceVideoPerMinute,
+        pro.pricePerMinute,
+        fromList?.pricePerMinute,
+      ],
+      'chat' => <double?>[
+        pro.priceChatPerMinute,
+        fromList?.priceChatPerMinute,
+        pro.pricePerMinute,
+        fromList?.pricePerMinute,
+      ],
+      _ => <double?>[pro.pricePerMinute, fromList?.pricePerMinute],
+    };
+
+    for (final value in candidates) {
+      if (value != null && value > 0) return value;
+    }
+    return null;
+  }
+
+  bool _supportsSessionType(
+    String type,
+    Professional pro, {
+    Professional? fromList,
+  }) {
+    return switch (type) {
+      'phone' => pro.supportsPhone || (fromList?.supportsPhone ?? false),
+      'video' => pro.supportsVideo || (fromList?.supportsVideo ?? false),
+      'chat' => pro.supportsChat || (fromList?.supportsChat ?? false),
+      _ => false,
+    };
+  }
+
+  void _startSession(
+    BuildContext context,
+    Professional pro, {
+    Professional? fromList,
+  }) {
     final t = ref.read(translationsProvider);
-    // For now, navigate to pricing/booking since we need to create a session first
-    // In production, this would create a session and get a session ID
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -178,29 +226,29 @@ class _ProfessionalDetailScreenState
               ),
             ),
             const SizedBox(height: 16),
-            if (pro.supportsPhone) ...[
+            if (_supportsSessionType('phone', pro, fromList: fromList)) ...[
               _SessionTypeOption(
                 icon: Icons.phone,
                 label: t.phoneCall,
-                price: pro.pricePerMinute ?? 0,
+                price: _sessionTypePrice('phone', pro, fromList: fromList),
                 onTap: () => _startSessionType(context, pro, 'phone'),
               ),
               const SizedBox(height: 8),
             ],
-            if (pro.supportsVideo) ...[
+            if (_supportsSessionType('video', pro, fromList: fromList)) ...[
               _SessionTypeOption(
                 icon: Icons.videocam,
                 label: t.videoCall,
-                price: pro.pricePerMinute ?? 0,
+                price: _sessionTypePrice('video', pro, fromList: fromList),
                 onTap: () => _startSessionType(context, pro, 'video'),
               ),
               const SizedBox(height: 8),
             ],
-            if (pro.supportsChat) ...[
+            if (_supportsSessionType('chat', pro, fromList: fromList)) ...[
               _SessionTypeOption(
                 icon: Icons.chat_bubble_outline,
                 label: t.textChat,
-                price: (pro.pricePerMinute ?? 0) * 0.8,
+                price: _sessionTypePrice('chat', pro, fromList: fromList),
                 onTap: () => _startSessionType(context, pro, 'chat'),
               ),
             ],
@@ -226,17 +274,6 @@ class _ProfessionalDetailScreenState
   ) async {
     final t = ref.read(translationsProvider);
     Navigator.pop(context); // Close dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          t.startingSession(type, pro.firstName ?? 'professional'),
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: AppColors.online,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
 
     try {
       final seId = await ref
@@ -834,7 +871,8 @@ class _ProfessionalDetailScreenState
                     // ── Start Session CTA ──
                     if (effectiveAvailableNow)
                       GradientButton(
-                        onPressed: () => _startSession(context, pro),
+                        onPressed: () =>
+                            _startSession(context, pro, fromList: listPro),
                         width: double.infinity,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1081,7 +1119,7 @@ class _SessionTypeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final priceText = price != null
-        ? '€${(price! / 100).toStringAsFixed(2)}/min'
+        ? '€${price!.toStringAsFixed(2)}/min'
         : null;
 
     return GestureDetector(
