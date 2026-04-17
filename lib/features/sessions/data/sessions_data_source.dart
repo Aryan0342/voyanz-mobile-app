@@ -29,35 +29,43 @@ class SessionsDataSource {
     required String coId,
     String? apId,
   }) async {
-    final response = await _dio.post(
-      ApiEndpoints.createSessionCall(typeCall, coId),
-      data: apId == null ? null : {'ap_id': apId},
-    );
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.createSessionCall(typeCall, coId),
+        data: apId == null ? null : {'ap_id': apId},
+      );
 
-    final body = response.data;
-    if (body is! Map<String, dynamic>) {
-      throw Exception('Unexpected create session response format');
-    }
-
-    final err = body['err'];
-    final error = body['error'];
-    if (err != null) {
-      if (err is Map<String, dynamic>) {
-        final message =
-            err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
-        throw Exception(message);
+      final body = response.data;
+      if (body is! Map<String, dynamic>) {
+        throw Exception('Unexpected create session response format');
       }
-      throw Exception(err.toString());
-    }
-    if (error != null) {
-      throw Exception(error.toString());
-    }
 
-    final sessionId = _extractSessionId(body);
-    if (sessionId == null || sessionId.isEmpty) {
-      throw Exception('Session id missing from response');
+      final err = body['err'];
+      final error = body['error'];
+      if (err != null) {
+        if (err is Map<String, dynamic>) {
+          final message =
+              err['message']?.toString() ??
+              err['key']?.toString() ??
+              'API error';
+          throw Exception(message);
+        }
+        throw Exception(err.toString());
+      }
+      if (error != null) {
+        throw Exception(error.toString());
+      }
+
+      final sessionId = _extractSessionId(body);
+      if (sessionId == null || sessionId.isEmpty) {
+        throw Exception('Session id missing from response');
+      }
+      return sessionId;
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(e, fallback: 'Session request failed'),
+      );
     }
-    return sessionId;
   }
 
   /// GET /web/1.0/session/:se_id
@@ -127,5 +135,41 @@ class SessionsDataSource {
     }
 
     return null;
+  }
+
+  String _extractApiErrorMessage(
+    DioException exception, {
+    required String fallback,
+  }) {
+    final response = exception.response;
+    final statusCode = response?.statusCode;
+    final data = response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final err = data['err'];
+      if (err is Map<String, dynamic>) {
+        final message =
+            err['message']?.toString() ??
+            err['key']?.toString() ??
+            err['code']?.toString();
+        if (message != null && message.trim().isNotEmpty) {
+          return message;
+        }
+      }
+
+      final message =
+          data['message']?.toString() ??
+          data['error']?.toString() ??
+          data['detail']?.toString();
+      if (message != null && message.trim().isNotEmpty) {
+        return message;
+      }
+    }
+
+    if (statusCode == 403) {
+      return 'Session request was forbidden by the server (403)';
+    }
+
+    return '$fallback (${statusCode ?? 'network error'})';
   }
 }

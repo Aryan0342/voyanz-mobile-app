@@ -8,10 +8,52 @@ class AppointmentsDataSource {
 
   /// POST /web/1.0/registration  body: { ap_id }
   Future<Map<String, dynamic>> register({required String apId}) async {
-    final response = await _dio.post(
-      ApiEndpoints.registration,
-      data: {'ap_id': apId},
-    );
-    return response.data as Map<String, dynamic>;
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.registration,
+        data: {'ap_id': apId},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(e, fallback: 'Appointment registration failed'),
+      );
+    }
+  }
+
+  String _extractApiErrorMessage(
+    DioException exception, {
+    required String fallback,
+  }) {
+    final response = exception.response;
+    final statusCode = response?.statusCode;
+    final data = response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final err = data['err'];
+      if (err is Map<String, dynamic>) {
+        final message =
+            err['message']?.toString() ??
+            err['key']?.toString() ??
+            err['code']?.toString();
+        if (message != null && message.trim().isNotEmpty) {
+          return message;
+        }
+      }
+
+      final message =
+          data['message']?.toString() ??
+          data['error']?.toString() ??
+          data['detail']?.toString();
+      if (message != null && message.trim().isNotEmpty) {
+        return message;
+      }
+    }
+
+    if (statusCode == 403) {
+      return 'Appointment registration was forbidden by the server (403)';
+    }
+
+    return '$fallback (${statusCode ?? 'network error'})';
   }
 }

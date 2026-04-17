@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:logger/logger.dart';
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/core/config/env.dart';
@@ -12,9 +14,12 @@ class ApiClient {
   ApiClient._();
 
   static Dio? _instance;
+  static CookieJar? _cookieJar;
 
   static Dio create(TokenStorage tokenStorage) {
     if (_instance != null) return _instance!;
+
+    _cookieJar = CookieJar();
 
     _instance = Dio(
       BaseOptions(
@@ -33,6 +38,8 @@ class ApiClient {
       ),
     );
 
+    _instance!.interceptors.add(CookieManager(_cookieJar!));
+    _instance!.interceptors.add(_CsrfHeaderInterceptor(_cookieJar!));
     _instance!.interceptors.add(AuthInterceptor(tokenStorage));
 
     // Keep logs light in mock mode to avoid noisy output and extra work.
@@ -50,5 +57,41 @@ class ApiClient {
   }
 
   /// Reset for testing or environment switch.
-  static void reset() => _instance = null;
+  static void reset() {
+    _instance = null;
+    _cookieJar = null;
+  }
+}
+
+class _CsrfHeaderInterceptor extends Interceptor {
+  final CookieJar _cookieJar;
+
+  _CsrfHeaderInterceptor(this._cookieJar);
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final cookies = await _cookieJar.loadForRequest(options.uri);
+    final csrfToken = _extractCsrfToken(cookies);
+    if (csrfToken != null && csrfToken.isNotEmpty) {
+      options.headers['X-CSRF-Token'] = csrfToken;
+      options.headers['X-XSRF-TOKEN'] = csrfToken;
+    }
+    handler.next(options);
+  }
+
+  String? _extractCsrfToken(List<Cookie> cookies) {
+    for (final cookie in cookies) {
+      final name = cookie.name.toLowerCase();
+      if (name == 'xsrf-token' ||
+          name == 'csrf-token' ||
+          name == 'csrf_token' ||
+          name == '_csrf') {
+        return cookie.value;
+      }
+    }
+    return null;
+  }
 }
