@@ -485,6 +485,9 @@ class AppTranslations {
   String get retryStatusCheck =>
       _fr ? 'Réessayer le statut' : 'Retry status check';
   String get backToHome => _fr ? 'Retour à l\'accueil' : 'Back to home';
+  String get sessionAlreadyStarted => _fr
+      ? 'La session est déjà lancée. Veuillez patienter.'
+      : 'The session is already started. Please wait.';
   String get rebookSessionFailed => _fr
       ? 'Impossible de créer une nouvelle demande de session. Veuillez réessayer.'
       : 'Could not create a new session request. Please try again.';

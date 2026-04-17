@@ -8,6 +8,7 @@ import 'package:voyanz/features/appointments/providers/appointments_provider.dar
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class PricingScreen extends ConsumerStatefulWidget {
@@ -127,6 +128,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     return candidates;
   }
 
+  // ignore: unused_element
   Future<void> _registerAppointment() async {
     final t = ref.read(translationsProvider);
     final candidates = await _loadAppointmentCandidates();
@@ -304,6 +306,36 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           .createSessionCall(typeCall: type, coId: widget.coId!);
       if (!mounted) return;
       context.push('/session/wait/$type/$seId/${widget.coId!}');
+    } on SessionLaunchException catch (e) {
+      if (!mounted) return;
+      if (e.canResume) {
+        context.push('/session/wait/$type/${e.sessionId}/${widget.coId!}');
+        return;
+      }
+
+      if (e.statusCode == 409 ||
+          e.toString().toLowerCase().contains('session_already_launched')) {
+        final recoveredSeId = await _recoverRecentSessionId();
+        if (!mounted) return;
+        if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
+          context.push('/session/wait/$type/$recoveredSeId/${widget.coId!}');
+          return;
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.statusCode == 409 ||
+                    e.toString().toLowerCase().contains(
+                      'session_already_launched',
+                    )
+                ? t.sessionAlreadyStarted
+                : t.errorMessage(e.toString()),
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -313,6 +345,42 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         ),
       );
     }
+  }
+
+  Future<String?> _recoverRecentSessionId() async {
+    try {
+      final history = await ref.read(customerHistoryProvider.future);
+      for (final item in history) {
+        if (item is! Map<String, dynamic>) continue;
+        final type = item['type']?.toString().toLowerCase() ?? '';
+        if (type != 'session') continue;
+
+        final status =
+            item['se_status']?.toString().toLowerCase() ??
+            item['status']?.toString().toLowerCase() ??
+            item['state']?.toString().toLowerCase() ??
+            '';
+        final seId = item['se_id']?.toString() ?? item['id']?.toString();
+        if (seId == null || seId.isEmpty) continue;
+
+        if (status == 'inprogress' ||
+            status == 'calling' ||
+            status == 'accepted' ||
+            status == 'pending') {
+          return seId;
+        }
+      }
+
+      for (final item in history) {
+        if (item is! Map<String, dynamic>) continue;
+        final type = item['type']?.toString().toLowerCase() ?? '';
+        if (type != 'session') continue;
+        final seId = item['se_id']?.toString() ?? item['id']?.toString();
+        if (seId != null && seId.isNotEmpty) return seId;
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   void _selectPricing(String key) {

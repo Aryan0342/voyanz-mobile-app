@@ -3,6 +3,19 @@ import 'package:voyanz/core/config/api_endpoints.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/video_token.dart';
 
+class SessionLaunchException implements Exception {
+  final String message;
+  final String? sessionId;
+  final int? statusCode;
+
+  const SessionLaunchException(this.message, {this.sessionId, this.statusCode});
+
+  bool get canResume => sessionId != null && sessionId!.isNotEmpty;
+
+  @override
+  String toString() => message;
+}
+
 class SessionsDataSource {
   final Dio _dio;
 
@@ -62,8 +75,9 @@ class SessionsDataSource {
       }
       return sessionId;
     } on DioException catch (e) {
-      throw Exception(
-        _extractApiErrorMessage(e, fallback: 'Session request failed'),
+      throw _extractSessionLaunchException(
+        e,
+        fallback: 'Session request failed',
       );
     }
   }
@@ -171,5 +185,25 @@ class SessionsDataSource {
     }
 
     return '$fallback (${statusCode ?? 'network error'})';
+  }
+
+  SessionLaunchException _extractSessionLaunchException(
+    DioException exception, {
+    required String fallback,
+  }) {
+    final response = exception.response;
+    final statusCode = response?.statusCode;
+    final data = response?.data;
+    final sessionId = data is Map<String, dynamic>
+        ? _extractSessionId(data)
+        : null;
+
+    final message = _extractApiErrorMessage(exception, fallback: fallback);
+
+    return SessionLaunchException(
+      message,
+      sessionId: sessionId,
+      statusCode: statusCode,
+    );
   }
 }

@@ -7,8 +7,10 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 String? _resolveImageUrl(String? raw) {
@@ -285,6 +287,39 @@ class _ProfessionalDetailScreenState
 
       context.push('/session/wait/$type/$seId/${pro.coId}');
       return;
+    } on SessionLaunchException catch (e) {
+      if (!mounted) return;
+      if (e.canResume) {
+        context.push('/session/wait/$type/${e.sessionId}/${pro.coId}');
+        return;
+      }
+
+      final isDuplicateLaunch =
+          e.statusCode == 409 ||
+          e.toString().toLowerCase().contains('session_already_launched');
+      if (isDuplicateLaunch) {
+        final recoveredSeId = await _recoverRecentSessionId();
+        if (!mounted) return;
+        if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
+          context.push('/session/wait/$type/$recoveredSeId/${pro.coId}');
+          return;
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isDuplicateLaunch
+                ? t.sessionAlreadyStarted
+                : t.errorMessage(e.toString()),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -298,6 +333,42 @@ class _ProfessionalDetailScreenState
         ),
       );
     }
+  }
+
+  Future<String?> _recoverRecentSessionId() async {
+    try {
+      final history = await ref.read(customerHistoryProvider.future);
+      for (final item in history) {
+        if (item is! Map<String, dynamic>) continue;
+        final type = item['type']?.toString().toLowerCase() ?? '';
+        if (type != 'session') continue;
+
+        final status =
+            item['se_status']?.toString().toLowerCase() ??
+            item['status']?.toString().toLowerCase() ??
+            item['state']?.toString().toLowerCase() ??
+            '';
+        final seId = item['se_id']?.toString() ?? item['id']?.toString();
+        if (seId == null || seId.isEmpty) continue;
+
+        if (status == 'inprogress' ||
+            status == 'calling' ||
+            status == 'accepted' ||
+            status == 'pending') {
+          return seId;
+        }
+      }
+
+      for (final item in history) {
+        if (item is! Map<String, dynamic>) continue;
+        final type = item['type']?.toString().toLowerCase() ?? '';
+        if (type != 'session') continue;
+        final seId = item['se_id']?.toString() ?? item['id']?.toString();
+        if (seId != null && seId.isNotEmpty) return seId;
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   @override
