@@ -289,11 +289,20 @@ class _ProfessionalDetailScreenState
       return;
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
+
+      // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
+      if (e.isDuplicateSessionWithDetails) {
+        context.push('/session/wait/${e.seType}/${e.sessionId}/${pro.coId}');
+        return;
+      }
+
+      // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume) {
         context.push('/session/wait/$type/${e.sessionId}/${pro.coId}');
         return;
       }
 
+      // Fallback 2: Search history if 409 but no details in exception
       final isDuplicateLaunch =
           e.statusCode == 409 ||
           e.toString().toLowerCase().contains('session_already_launched');

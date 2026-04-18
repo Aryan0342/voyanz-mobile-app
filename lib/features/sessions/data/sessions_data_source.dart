@@ -7,9 +7,31 @@ class SessionLaunchException implements Exception {
   final String message;
   final String? sessionId;
   final int? statusCode;
+  final String? seType; // "video" | "phone" | "chat"
+  final String? seStatus; // "calling" | "accepted" | "inprogress"
+  final String? seRoom; // Agora channel name
+  final String? chgrId; // Channel group ID
 
-  const SessionLaunchException(this.message, {this.sessionId, this.statusCode});
+  const SessionLaunchException(
+    this.message, {
+    this.sessionId,
+    this.statusCode,
+    this.seType,
+    this.seStatus,
+    this.seRoom,
+    this.chgrId,
+  });
 
+  /// Returns true if this exception represents a session already running (409)
+  /// with enough info to rejoin it.
+  bool get isDuplicateSessionWithDetails =>
+      statusCode == 409 &&
+      sessionId != null &&
+      sessionId!.isNotEmpty &&
+      seType != null &&
+      seRoom != null;
+
+  /// Legacy canResume for backward compatibility.
   bool get canResume => sessionId != null && sessionId!.isNotEmpty;
 
   @override
@@ -194,9 +216,23 @@ class SessionsDataSource {
     final response = exception.response;
     final statusCode = response?.statusCode;
     final data = response?.data;
-    final sessionId = data is Map<String, dynamic>
-        ? _extractSessionId(data)
-        : null;
+
+    String? sessionId;
+    String? seType;
+    String? seStatus;
+    String? seRoom;
+    String? chgrId;
+
+    if (data is Map<String, dynamic>) {
+      sessionId = _extractSessionId(data);
+      // Extract 409-specific fields from duplicate-session response
+      if (statusCode == 409) {
+        seType = data['se_type']?.toString();
+        seStatus = data['se_status']?.toString();
+        seRoom = data['se_room']?.toString();
+        chgrId = data['chgr_id']?.toString();
+      }
+    }
 
     final message = _extractApiErrorMessage(exception, fallback: fallback);
 
@@ -204,6 +240,10 @@ class SessionsDataSource {
       message,
       sessionId: sessionId,
       statusCode: statusCode,
+      seType: seType,
+      seStatus: seStatus,
+      seRoom: seRoom,
+      chgrId: chgrId,
     );
   }
 }

@@ -39,7 +39,6 @@ class ApiClient {
     );
 
     _instance!.interceptors.add(CookieManager(_cookieJar!));
-    _instance!.interceptors.add(_CsrfHeaderInterceptor(_cookieJar!));
     _instance!.interceptors.add(AuthInterceptor(tokenStorage));
 
     // Keep logs light in mock mode to avoid noisy output and extra work.
@@ -60,38 +59,5 @@ class ApiClient {
   static void reset() {
     _instance = null;
     _cookieJar = null;
-  }
-}
-
-class _CsrfHeaderInterceptor extends Interceptor {
-  final CookieJar _cookieJar;
-
-  _CsrfHeaderInterceptor(this._cookieJar);
-
-  @override
-  Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    final cookies = await _cookieJar.loadForRequest(options.uri);
-    final csrfToken = _extractCsrfToken(cookies);
-    if (csrfToken != null && csrfToken.isNotEmpty) {
-      options.headers['X-CSRF-Token'] = csrfToken;
-      options.headers['X-XSRF-TOKEN'] = csrfToken;
-    }
-    handler.next(options);
-  }
-
-  String? _extractCsrfToken(List<Cookie> cookies) {
-    for (final cookie in cookies) {
-      final name = cookie.name.toLowerCase();
-      if (name == 'xsrf-token' ||
-          name == 'csrf-token' ||
-          name == 'csrf_token' ||
-          name == '_csrf') {
-        return cookie.value;
-      }
-    }
-    return null;
   }
 }

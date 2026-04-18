@@ -308,13 +308,26 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       context.push('/session/wait/$type/$seId/${widget.coId!}');
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
+
+      // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
+      if (e.isDuplicateSessionWithDetails) {
+        context.push(
+          '/session/wait/${e.seType}/${e.sessionId}/${widget.coId!}',
+        );
+        return;
+      }
+
+      // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume) {
         context.push('/session/wait/$type/${e.sessionId}/${widget.coId!}');
         return;
       }
 
-      if (e.statusCode == 409 ||
-          e.toString().toLowerCase().contains('session_already_launched')) {
+      // Fallback 2: Search history if 409 but no details in exception
+      final isDuplicateLaunch =
+          e.statusCode == 409 ||
+          e.toString().toLowerCase().contains('session_already_launched');
+      if (isDuplicateLaunch) {
         final recoveredSeId = await _recoverRecentSessionId();
         if (!mounted) return;
         if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
@@ -326,10 +339,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.statusCode == 409 ||
-                    e.toString().toLowerCase().contains(
-                      'session_already_launched',
-                    )
+            isDuplicateLaunch
                 ? t.sessionAlreadyStarted
                 : t.errorMessage(e.toString()),
           ),
