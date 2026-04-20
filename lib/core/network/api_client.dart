@@ -17,7 +17,10 @@ class ApiClient {
   static CookieJar? _cookieJar;
 
   static Dio create(TokenStorage tokenStorage) {
-    if (_instance != null) return _instance!;
+    if (_instance != null) {
+      _sanitizeExistingClient(_instance!);
+      return _instance!;
+    }
 
     _cookieJar = CookieJar();
 
@@ -38,8 +41,16 @@ class ApiClient {
       ),
     );
 
+    _instance!.interceptors.add(_MobileApiHeadersInterceptor());
     _instance!.interceptors.add(CookieManager(_cookieJar!));
     _instance!.interceptors.add(AuthInterceptor(tokenStorage));
+
+    _logger.i(
+      'ApiClient initialized: baseUrl=${EnvConfig.current.baseUrl}, '
+      'environment=${EnvConfig.current.environment.name}, '
+      'apiKey=${EnvConfig.current.apiKey == null ? "missing" : "present"}, '
+      'mockBackend=$kUseMockBackend',
+    );
 
     // Keep logs light in mock mode to avoid noisy output and extra work.
     if (!kUseMockBackend) {
@@ -55,9 +66,44 @@ class ApiClient {
     return _instance!;
   }
 
+  static void _sanitizeExistingClient(Dio dio) {
+    final apiKey = EnvConfig.current.apiKey;
+    if (apiKey != null && apiKey.isNotEmpty) {
+      dio.options.headers['x-api-key'] = apiKey;
+      dio.options.headers['ApiKey'] = apiKey;
+    }
+
+    // Remove stale CSRF interceptors/headers that may survive hot reload.
+    dio.interceptors.removeWhere(
+      (interceptor) => interceptor.runtimeType.toString().contains('Csrf'),
+    );
+    if (!dio.interceptors.any((i) => i is _MobileApiHeadersInterceptor)) {
+      dio.interceptors.insert(0, _MobileApiHeadersInterceptor());
+    }
+  }
+
   /// Reset for testing or environment switch.
   static void reset() {
     _instance = null;
     _cookieJar = null;
+  }
+}
+
+class _MobileApiHeadersInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final apiKey = EnvConfig.current.apiKey;
+    if (apiKey != null && apiKey.isNotEmpty) {
+      options.headers['x-api-key'] = apiKey;
+      options.headers['ApiKey'] = apiKey;
+    }
+
+    // Mobile API must not send CSRF headers.
+    options.headers.remove('X-CSRF-Token');
+    options.headers.remove('x-csrf-token');
+    options.headers.remove('X-XSRF-TOKEN');
+    options.headers.remove('x-xsrf-token');
+
+    handler.next(options);
   }
 }

@@ -26,6 +26,8 @@ class AuthInterceptor extends Interceptor {
     final token = await _tokenStorage.accessToken;
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+      // Some backend middlewares still read the legacy mobile auth header.
+      options.headers['x-auth-accesstoken'] = token;
     }
     handler.next(options);
   }

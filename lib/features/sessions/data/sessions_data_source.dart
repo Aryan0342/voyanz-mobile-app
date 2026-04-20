@@ -48,14 +48,49 @@ class SessionsDataSource {
     required String seId,
     required String coId,
   }) async {
-    final response = await _dio.get(ApiEndpoints.videoAccessToken(seId, coId));
-    final body = response.data as Map<String, dynamic>;
-    return VideoToken.fromJson(body['data'] as Map<String, dynamic>? ?? body);
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.videoAccessToken(seId, coId),
+      );
+      final body = response.data as Map<String, dynamic>;
+
+      final err = body['err'];
+      final error = body['error'];
+      if (err != null) {
+        if (err is Map<String, dynamic>) {
+          final message =
+              err['message']?.toString() ??
+              err['key']?.toString() ??
+              err['code']?.toString() ??
+              'API error';
+          throw Exception(message);
+        }
+        throw Exception(err.toString());
+      }
+      if (error != null) {
+        throw Exception(error.toString());
+      }
+
+      return VideoToken.fromJson(body['data'] as Map<String, dynamic>? ?? body);
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(
+          e,
+          fallback: 'Video access token request failed',
+        ),
+      );
+    }
   }
 
   /// POST /web/1.0/video/heartbeat/:se_id
   Future<void> sendHeartbeat(String seId) async {
-    await _dio.post(ApiEndpoints.videoHeartbeat(seId));
+    try {
+      await _dio.post(ApiEndpoints.videoHeartbeat(seId));
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(e, fallback: 'Video heartbeat failed'),
+      );
+    }
   }
 
   /// POST /web/1.0/call/:typecall/:co_id
@@ -106,28 +141,36 @@ class SessionsDataSource {
 
   /// GET /web/1.0/session/:se_id
   Future<SessionStatus> getSessionStatus(String seId) async {
-    final response = await _dio.get(ApiEndpoints.sessionStatus(seId));
-    final body = response.data;
-    if (body is! Map<String, dynamic>) {
-      throw Exception('Unexpected session status response format');
-    }
-
-    final err = body['err'];
-    final error = body['error'];
-    if (err != null) {
-      if (err is Map<String, dynamic>) {
-        final message =
-            err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
-        throw Exception(message);
+    try {
+      final response = await _dio.get(ApiEndpoints.sessionStatus(seId));
+      final body = response.data;
+      if (body is! Map<String, dynamic>) {
+        throw Exception('Unexpected session status response format');
       }
-      throw Exception(err.toString());
-    }
-    if (error != null) {
-      throw Exception(error.toString());
-    }
 
-    final payload = _extractStatusPayload(body);
-    return SessionStatus.fromJson(seId, payload);
+      final err = body['err'];
+      final error = body['error'];
+      if (err != null) {
+        if (err is Map<String, dynamic>) {
+          final message =
+              err['message']?.toString() ??
+              err['key']?.toString() ??
+              'API error';
+          throw Exception(message);
+        }
+        throw Exception(err.toString());
+      }
+      if (error != null) {
+        throw Exception(error.toString());
+      }
+
+      final payload = _extractStatusPayload(body);
+      return SessionStatus.fromJson(seId, payload);
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(e, fallback: 'Session status request failed'),
+      );
+    }
   }
 
   Map<String, dynamic> _extractStatusPayload(Map<String, dynamic> body) {
@@ -203,7 +246,7 @@ class SessionsDataSource {
     }
 
     if (statusCode == 403) {
-      return 'Session request was forbidden by the server (403)';
+      return 'Request was forbidden by the server (403)';
     }
 
     return '$fallback (${statusCode ?? 'network error'})';

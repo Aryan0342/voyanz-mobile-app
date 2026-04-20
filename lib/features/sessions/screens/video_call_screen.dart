@@ -4,6 +4,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
@@ -42,11 +43,40 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   ConnectionStateType? _connectionState;
   String? _connectionError;
 
+  Future<bool> _ensureMediaPermissions() async {
+    final statuses = await [Permission.microphone, Permission.camera].request();
+
+    final mic = statuses[Permission.microphone];
+    final cam = statuses[Permission.camera];
+
+    final granted =
+        mic == PermissionStatus.granted && cam == PermissionStatus.granted;
+    if (granted) return true;
+
+    final permanentlyDenied =
+        mic == PermissionStatus.permanentlyDenied ||
+        cam == PermissionStatus.permanentlyDenied;
+
+    if (mounted) {
+      setState(() {
+        _connectionError = permanentlyDenied
+            ? 'Camera/microphone permissions are permanently denied. Please enable them in app settings.'
+            : 'Camera/microphone permissions are required to start video.';
+      });
+    }
+
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      ref.read(sessionsRepositoryProvider).sendHeartbeat(widget.seId);
+      unawaited(() async {
+        try {
+          await ref.read(sessionsRepositoryProvider).sendHeartbeat(widget.seId);
+        } catch (_) {}
+      }());
     });
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -73,6 +103,10 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
   Future<void> _ensureAgoraJoined(VideoToken token) async {
     if (_joined || _engineInitializing) return;
+
+    final hasPermissions = await _ensureMediaPermissions();
+    if (!hasPermissions) return;
+
     if (!token.isAgora) {
       setState(() {
         _connectionError = 'provider:${token.provider}';
