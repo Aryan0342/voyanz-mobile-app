@@ -7,6 +7,7 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
@@ -287,6 +288,18 @@ class _ProfessionalDetailScreenState
 
       context.push('/session/wait/$type/$seId/${pro.coId}');
       return;
+    } on SessionAuthExpiredException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.errorMessage(e.toString())),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      await ref.read(authStateProvider.notifier).logout();
+      if (!mounted) return;
+      context.go('/login');
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
 

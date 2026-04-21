@@ -38,6 +38,15 @@ class SessionLaunchException implements Exception {
   String toString() => message;
 }
 
+class SessionAuthExpiredException implements Exception {
+  final String message;
+
+  const SessionAuthExpiredException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class SessionsDataSource {
   final Dio _dio;
 
@@ -57,6 +66,11 @@ class SessionsDataSource {
       final err = body['err'];
       final error = body['error'];
       if (err != null) {
+        if (_isAuthExpiredError(err)) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         if (err is Map<String, dynamic>) {
           final message =
               err['message']?.toString() ??
@@ -68,6 +82,11 @@ class SessionsDataSource {
         throw Exception(err.toString());
       }
       if (error != null) {
+        if (_isAuthExpiredText(error.toString())) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         throw Exception(error.toString());
       }
 
@@ -87,6 +106,11 @@ class SessionsDataSource {
     try {
       await _dio.post(ApiEndpoints.videoHeartbeat(seId));
     } on DioException catch (e) {
+      if (_isAuthExpiredText(_extractApiErrorMessage(e, fallback: ''))) {
+        throw const SessionAuthExpiredException(
+          'Token expired. Please log in again.',
+        );
+      }
       throw Exception(
         _extractApiErrorMessage(e, fallback: 'Video heartbeat failed'),
       );
@@ -113,6 +137,11 @@ class SessionsDataSource {
       final err = body['err'];
       final error = body['error'];
       if (err != null) {
+        if (_isAuthExpiredError(err)) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         if (err is Map<String, dynamic>) {
           final message =
               err['message']?.toString() ??
@@ -123,6 +152,11 @@ class SessionsDataSource {
         throw Exception(err.toString());
       }
       if (error != null) {
+        if (_isAuthExpiredText(error.toString())) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         throw Exception(error.toString());
       }
 
@@ -151,6 +185,11 @@ class SessionsDataSource {
       final err = body['err'];
       final error = body['error'];
       if (err != null) {
+        if (_isAuthExpiredError(err)) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         if (err is Map<String, dynamic>) {
           final message =
               err['message']?.toString() ??
@@ -161,6 +200,11 @@ class SessionsDataSource {
         throw Exception(err.toString());
       }
       if (error != null) {
+        if (_isAuthExpiredText(error.toString())) {
+          throw const SessionAuthExpiredException(
+            'Token expired. Please log in again.',
+          );
+        }
         throw Exception(error.toString());
       }
 
@@ -250,6 +294,25 @@ class SessionsDataSource {
     }
 
     return '$fallback (${statusCode ?? 'network error'})';
+  }
+
+  bool _isAuthExpiredError(dynamic err) {
+    if (err is Map<String, dynamic>) {
+      final key = err['key']?.toString().toLowerCase() ?? '';
+      final message = err['message']?.toString().toLowerCase() ?? '';
+      return key.contains('token_expired') ||
+          message.contains('token expir') ||
+          message.contains('refresh token');
+    }
+
+    return _isAuthExpiredText(err.toString());
+  }
+
+  bool _isAuthExpiredText(String text) {
+    final normalized = text.toLowerCase();
+    return normalized.contains('token_expired') ||
+        normalized.contains('token expir') ||
+        normalized.contains('refresh token');
   }
 
   SessionLaunchException _extractSessionLaunchException(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/appointments/providers/appointments_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
@@ -306,6 +307,18 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           .createSessionCall(typeCall: type, coId: widget.coId!);
       if (!mounted) return;
       context.push('/session/wait/$type/$seId/${widget.coId!}');
+    } on SessionAuthExpiredException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.errorMessage(e.toString())),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      await ref.read(authStateProvider.notifier).logout();
+      if (!mounted) return;
+      context.go('/login');
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
 

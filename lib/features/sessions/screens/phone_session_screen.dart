@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
@@ -63,6 +65,24 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
     ref.listen<AsyncValue<SessionStatus>>(
       sessionStatusLivePollingProvider(widget.seId),
       (_, next) {
+        next.whenOrNull(
+          error: (error, _) async {
+            if (error is SessionAuthExpiredException) {
+              if (!mounted) return;
+              final t = ref.read(translationsProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(t.errorMessage(error.toString())),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              await ref.read(authStateProvider.notifier).logout();
+              if (!mounted) return;
+              context.go('/login');
+            }
+          },
+        );
         next.whenData((status) {
           if (!mounted || _sessionEndedHandled || !status.isTerminal) return;
           _sessionEndedHandled = true;
