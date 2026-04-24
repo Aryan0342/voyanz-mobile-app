@@ -12,6 +12,7 @@ import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
+import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 String? _resolveImageUrl(String? raw) {
@@ -280,13 +281,17 @@ class _ProfessionalDetailScreenState
     Navigator.of(dialogContext).pop(); // Close dialog only
 
     try {
+      final normalizedType = normalizeSessionType(type) ?? 'video';
       final seId = await ref
           .read(sessionsRepositoryProvider)
-          .createSessionCall(typeCall: type, coId: pro.coId.toString());
+          .createSessionCall(
+            typeCall: normalizedType,
+            coId: pro.coId.toString(),
+          );
 
       if (!mounted) return;
 
-      context.push('/session/wait/$type/$seId/${pro.coId}');
+      context.push('/session/wait/$normalizedType/$seId/${pro.coId}');
       return;
     } on SessionAuthExpiredException catch (e) {
       if (!mounted) return;
@@ -305,13 +310,15 @@ class _ProfessionalDetailScreenState
 
       // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
       if (e.isDuplicateSessionWithDetails) {
-        context.push('/session/wait/${e.seType}/${e.sessionId}/${pro.coId}');
+        final fallbackType = normalizeSessionType(type) ?? 'video';
+        context.push('/session/wait/$fallbackType/${e.sessionId}/${pro.coId}');
         return;
       }
 
       // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume) {
-        context.push('/session/wait/$type/${e.sessionId}/${pro.coId}');
+        final fallbackType = normalizeSessionType(type) ?? 'video';
+        context.push('/session/wait/$fallbackType/${e.sessionId}/${pro.coId}');
         return;
       }
 
@@ -323,7 +330,10 @@ class _ProfessionalDetailScreenState
         final recoveredSeId = await _recoverRecentSessionId();
         if (!mounted) return;
         if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
-          context.push('/session/wait/$type/$recoveredSeId/${pro.coId}');
+          final fallbackType = normalizeSessionType(type) ?? 'video';
+          context.push(
+            '/session/wait/$fallbackType/$recoveredSeId/${pro.coId}',
+          );
           return;
         }
       }

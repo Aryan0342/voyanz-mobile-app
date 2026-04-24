@@ -10,6 +10,7 @@ import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
+import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class PricingScreen extends ConsumerStatefulWidget {
@@ -290,6 +291,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       professional,
       fromList: fromList,
     );
+    final normalizedType = normalizeSessionType(type) ?? 'video';
     if (type == null || widget.coId == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -304,9 +306,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     try {
       final seId = await ref
           .read(sessionsRepositoryProvider)
-          .createSessionCall(typeCall: type, coId: widget.coId!);
+          .createSessionCall(typeCall: normalizedType, coId: widget.coId!);
       if (!mounted) return;
-      context.push('/session/wait/$type/$seId/${widget.coId!}');
+      context.push('/session/wait/$normalizedType/$seId/${widget.coId!}');
     } on SessionAuthExpiredException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -325,14 +327,16 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
       if (e.isDuplicateSessionWithDetails) {
         context.push(
-          '/session/wait/${e.seType}/${e.sessionId}/${widget.coId!}',
+          '/session/wait/$normalizedType/${e.sessionId}/${widget.coId!}',
         );
         return;
       }
 
       // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume) {
-        context.push('/session/wait/$type/${e.sessionId}/${widget.coId!}');
+        context.push(
+          '/session/wait/$normalizedType/${e.sessionId}/${widget.coId!}',
+        );
         return;
       }
 
@@ -344,7 +348,9 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         final recoveredSeId = await _recoverRecentSessionId();
         if (!mounted) return;
         if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
-          context.push('/session/wait/$type/$recoveredSeId/${widget.coId!}');
+          context.push(
+            '/session/wait/$normalizedType/$recoveredSeId/${widget.coId!}',
+          );
           return;
         }
       }

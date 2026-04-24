@@ -19,9 +19,28 @@ class HistoryScreen extends ConsumerStatefulWidget {
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   String _selectedFilter = 'All';
 
+  String _normalizedStatus(Map<String, dynamic> item) {
+    return (item['se_status'] ?? item['status'] ?? item['state'] ?? '')
+        .toString()
+        .toLowerCase();
+  }
+
+  bool _isSessionItem(Map<String, dynamic> item) {
+    final explicitType = (item['type'] ?? '').toString().toLowerCase();
+    if (explicitType.isNotEmpty) {
+      return explicitType == 'session';
+    }
+
+    // No explicit type returned: infer from common session keys.
+    return item.containsKey('se_id') ||
+        item.containsKey('se_status') ||
+        item.containsKey('se_type') ||
+        item.containsKey('se_date');
+  }
+
   bool _matchesFilter(Map<String, dynamic> item) {
     if (_selectedFilter == 'All') return true;
-    final status = item['se_status']?.toString().toLowerCase() ?? '';
+    final status = _normalizedStatus(item);
     if (_selectedFilter == 'Cancelled') {
       return status == 'cancelled' || status == 'canceled';
     }
@@ -31,7 +50,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Map<String, int> _statusCounts(List<Map<String, dynamic>> items) {
     final counts = <String, int>{'completed': 0, 'cancelled': 0, 'pending': 0};
     for (final item in items) {
-      final status = item['se_status']?.toString().toLowerCase() ?? '';
+      final status = _normalizedStatus(item);
       if (status == 'completed') counts['completed'] = counts['completed']! + 1;
       if (status == 'cancelled' || status == 'canceled') {
         counts['cancelled'] = counts['cancelled']! + 1;
@@ -116,6 +135,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             final validItems = items
                 .where((item) => item is Map<String, dynamic>)
                 .cast<Map<String, dynamic>>()
+                .where(_isSessionItem)
                 .toList();
 
             if (validItems.isEmpty) {
@@ -325,13 +345,43 @@ class _SessionCard extends ConsumerWidget {
 
   const _SessionCard({required this.item});
 
+  String _value(Map<String, dynamic> item, List<String> keys) {
+    for (final key in keys) {
+      final value = item[key];
+      if (value == null) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return '';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    final type = item['se_type']?.toString() ?? 'Session';
-    final date = item['se_date']?.toString() ?? '';
-    final status = item['se_status']?.toString() ?? '';
-    final duration = item['se_duration']?.toString() ?? '30 min';
+    final type = _value(item, const [
+      'se_type',
+      'type_call',
+      'call_type',
+      'type',
+    ]);
+    final date = _value(item, const [
+      'se_date',
+      'date',
+      'created_at',
+      'start_at',
+    ]);
+    final status = _value(item, const ['se_status', 'status', 'state']);
+    final duration =
+        _value(item, const ['se_duration', 'duration', 'call_duration']).isEmpty
+        ? '30 min'
+        : _value(item, const ['se_duration', 'duration', 'call_duration']);
+    final counterpart = _value(item, const [
+      'co_fullname',
+      'co_name',
+      'name',
+      'customer_name',
+    ]);
+    final sessionId = _value(item, const ['se_id', 'id']);
 
     return GlassCard(
       padding: const EdgeInsets.all(18),
@@ -363,13 +413,25 @@ class _SessionCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _localizedSessionType(type, t),
+                      _localizedSessionType(type.isEmpty ? 'session' : type, t),
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    if (counterpart.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        counterpart,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -432,6 +494,22 @@ class _SessionCard extends ConsumerWidget {
                     color: AppColors.textMuted,
                   ),
                 ),
+                if (sessionId.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.badge_outlined,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '#$sessionId',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

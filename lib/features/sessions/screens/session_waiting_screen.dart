@@ -8,6 +8,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
+import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
@@ -273,17 +274,19 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
   }
 
   void _navigateToSession(BuildContext context) {
-    if (widget.type == 'video') {
+    final resolvedType = normalizeSessionType(widget.type) ?? 'video';
+
+    if (resolvedType == 'video') {
       context.pushReplacement('/video/${widget.seId}/${widget.coId}');
       return;
     }
 
-    if (widget.type == 'phone') {
+    if (resolvedType == 'phone') {
       context.pushReplacement('/session/phone/${widget.seId}/${widget.coId}');
       return;
     }
 
-    if (widget.type == 'chat') {
+    if (resolvedType == 'chat') {
       context.pushReplacement('/session/chat/${widget.seId}/${widget.coId}');
       return;
     }
@@ -293,12 +296,13 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
 
   Future<void> _rebookSession() async {
     try {
+      final resolvedType = normalizeSessionType(widget.type) ?? 'video';
       final newSeId = await ref
           .read(sessionsRepositoryProvider)
-          .createSessionCall(typeCall: widget.type, coId: widget.coId);
+          .createSessionCall(typeCall: resolvedType, coId: widget.coId);
       if (!mounted) return;
       context.pushReplacement(
-        '/session/wait/${widget.type}/$newSeId/${widget.coId}',
+        '/session/wait/$resolvedType/$newSeId/${widget.coId}',
       );
     } on SessionAuthExpiredException catch (e) {
       if (!mounted) return;
