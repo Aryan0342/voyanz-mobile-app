@@ -258,7 +258,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     child: _RevealIn(
                       delayMs: 70,
                       child: SizedBox(
-                        height: 56,
+                        height: 48,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -269,21 +269,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               onTap: () =>
                                   setState(() => _selectedFilter = 'All'),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             _FilterChip(
                               label: t.completed,
                               isSelected: _selectedFilter == 'Completed',
                               onTap: () =>
                                   setState(() => _selectedFilter = 'Completed'),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             _FilterChip(
                               label: t.cancelled,
                               isSelected: _selectedFilter == 'Cancelled',
                               onTap: () =>
                                   setState(() => _selectedFilter = 'Cancelled'),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             _FilterChip(
                               label: t.pending,
                               isSelected: _selectedFilter == 'Pending',
@@ -363,16 +363,16 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minWidth: 118),
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        constraints: const BoxConstraints(minWidth: 92),
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: isSelected ? AppGradients.accent : null,
           color: isSelected
               ? null
               : AppColors.surfaceCard.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? AppColors.rosePink.withValues(alpha: 0.5)
@@ -383,7 +383,7 @@ class _FilterChip extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: GoogleFonts.montserrat(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
@@ -532,11 +532,15 @@ class _SessionCard extends ConsumerWidget {
                           color: AppColors.textMuted,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          duration,
-                          style: GoogleFonts.montserrat(
-                            fontSize: 13,
-                            color: AppColors.textMuted,
+                        Flexible(
+                          child: Text(
+                            duration,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ),
                       ],
