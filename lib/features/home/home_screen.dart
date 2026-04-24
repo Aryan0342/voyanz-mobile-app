@@ -132,30 +132,29 @@ class HomeShell extends ConsumerWidget {
         child: child,
       ),
       bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.borderSubtle.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
+          color: AppColors.surfaceCard.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Theme(
           data: Theme.of(context).copyWith(
             navigationBarTheme: NavigationBarThemeData(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              indicatorColor: AppColors.rosePink.withValues(alpha: 0.14),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 final selected = states.contains(WidgetState.selected);
-                return GoogleFonts.montserrat(
-                  fontSize: 11,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                return GoogleFonts.manrope(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 );
               }),
             ),
@@ -164,7 +163,7 @@ class HomeShell extends ConsumerWidget {
             selectedIndex: currentIdx,
             onDestinationSelected: (i) => onTap(context, i),
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            height: 72,
+            height: 74,
             destinations: tabs
                 .map(
                   (t) => NavigationDestination(

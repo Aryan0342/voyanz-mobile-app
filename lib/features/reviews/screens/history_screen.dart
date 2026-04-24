@@ -19,6 +19,28 @@ class HistoryScreen extends ConsumerStatefulWidget {
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   String _selectedFilter = 'All';
 
+  bool _matchesFilter(Map<String, dynamic> item) {
+    if (_selectedFilter == 'All') return true;
+    final status = item['se_status']?.toString().toLowerCase() ?? '';
+    if (_selectedFilter == 'Cancelled') {
+      return status == 'cancelled' || status == 'canceled';
+    }
+    return status == _selectedFilter.toLowerCase();
+  }
+
+  Map<String, int> _statusCounts(List<Map<String, dynamic>> items) {
+    final counts = <String, int>{'completed': 0, 'cancelled': 0, 'pending': 0};
+    for (final item in items) {
+      final status = item['se_status']?.toString().toLowerCase() ?? '';
+      if (status == 'completed') counts['completed'] = counts['completed']! + 1;
+      if (status == 'cancelled' || status == 'canceled') {
+        counts['cancelled'] = counts['cancelled']! + 1;
+      }
+      if (status == 'pending') counts['pending'] = counts['pending']! + 1;
+    }
+    return counts;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
@@ -100,13 +122,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               return _EmptyState();
             }
 
-            final filteredItems = _selectedFilter == 'All'
-                ? validItems
-                : validItems.where((item) {
-                    final status =
-                        item['se_status']?.toString().toLowerCase() ?? '';
-                    return status == _selectedFilter.toLowerCase();
-                  }).toList();
+            final filteredItems = validItems.where(_matchesFilter).toList();
+            final counts = _statusCounts(validItems);
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -139,6 +156,34 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             style: GoogleFonts.montserrat(
                               fontSize: 14,
                               color: AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          GlassCard(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                _HistoryStat(
+                                  label: t.totalSessions,
+                                  value: '${validItems.length}',
+                                  color: AppColors.mediumPurple,
+                                  icon: Icons.history,
+                                ),
+                                const SizedBox(width: 10),
+                                _HistoryStat(
+                                  label: t.completed,
+                                  value: '${counts['completed'] ?? 0}',
+                                  color: AppColors.success,
+                                  icon: Icons.check_circle_outline,
+                                ),
+                                const SizedBox(width: 10),
+                                _HistoryStat(
+                                  label: t.pending,
+                                  value: '${counts['pending'] ?? 0}',
+                                  color: AppColors.warning,
+                                  icon: Icons.schedule,
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -399,7 +444,12 @@ class _SessionCard extends ConsumerWidget {
     switch (status.toLowerCase()) {
       case 'completed':
         return AppColors.success;
+      case 'inprogress':
+      case 'accepted':
+      case 'calling':
+        return AppColors.mediumPurple;
       case 'cancelled':
+      case 'canceled':
         return AppColors.error;
       case 'pending':
         return AppColors.warning;
@@ -412,7 +462,12 @@ class _SessionCard extends ConsumerWidget {
     switch (status.toLowerCase()) {
       case 'completed':
         return Icons.check_circle;
+      case 'inprogress':
+      case 'accepted':
+      case 'calling':
+        return Icons.sensors;
       case 'cancelled':
+      case 'canceled':
         return Icons.cancel;
       case 'pending':
         return Icons.hourglass_empty;
@@ -481,11 +536,70 @@ String _localizedStatus(String status, dynamic t) {
     case 'completed':
       return t.completed;
     case 'cancelled':
+    case 'canceled':
       return t.cancelled;
     case 'pending':
       return t.pending;
+    case 'accepted':
+      return t.sessionStatusAcceptedLabel;
+    case 'calling':
+      return t.sessionStatusCallingLabel;
+    case 'inprogress':
+      return t.sessionStatusInProgressLabel;
     default:
       return status;
+  }
+}
+
+class _HistoryStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  const _HistoryStat({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: GoogleFonts.jost(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

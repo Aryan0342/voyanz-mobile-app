@@ -21,7 +21,7 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = borderRadius ?? BorderRadius.circular(14);
+    final radius = borderRadius ?? BorderRadius.circular(18);
     final enabled = onPressed != null;
 
     return SizedBox(
@@ -38,14 +38,9 @@ class GradientButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: AppColors.rosePink.withValues(alpha: 0.25),
-                    blurRadius: 20,
+                    color: AppColors.rosePink.withValues(alpha: 0.14),
+                    blurRadius: 18,
                     offset: const Offset(0, 6),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -59,7 +54,7 @@ class GradientButton extends StatelessWidget {
               child: DefaultTextStyle.merge(
                 style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontSize: 15,
                 ),
                 child: child,
@@ -87,27 +82,22 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = borderRadius ?? BorderRadius.circular(16);
+    final radius = borderRadius ?? BorderRadius.circular(22);
 
     return Container(
-      padding: padding ?? const EdgeInsets.all(20),
+      padding: padding ?? const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard.withValues(alpha: 0.8),
+        color: AppColors.surfaceCard.withValues(alpha: 0.92),
         borderRadius: radius,
         border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.3),
+          color: AppColors.borderSubtle.withValues(alpha: 0.55),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: AppColors.mediumPurple.withValues(alpha: 0.05),
-            blurRadius: 40,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -116,7 +106,7 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// A gradient scaffold background — wraps child in dark gradient background.
+/// A gradient scaffold background — wraps child in the app's premium shell.
 class GradientScaffold extends StatelessWidget {
   final Widget body;
   final PreferredSizeWidget? appBar;
@@ -140,7 +130,49 @@ class GradientScaffold extends StatelessWidget {
       floatingActionButton: floatingActionButton,
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: body,
+        child: Stack(
+          children: [
+            Positioned(
+              top: -120,
+              right: -80,
+              child: IgnorePointer(
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.rosePink.withValues(alpha: 0.16),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -120,
+              left: -90,
+              child: IgnorePointer(
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.mediumPurple.withValues(alpha: 0.12),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            body,
+          ],
+        ),
       ),
     );
   }

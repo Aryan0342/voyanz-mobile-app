@@ -143,6 +143,9 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     final isWaiting = status.isWaiting;
     final hasTimedOut =
         isWaiting && DateTime.now().difference(_enteredAt) >= _waitTimeout;
+    final elapsed = DateTime.now().difference(_enteredAt);
+    final elapsedText =
+        '${elapsed.inMinutes}:${elapsed.inSeconds.remainder(60).toString().padLeft(2, '0')}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -171,6 +174,36 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.mediumPurple.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _MetaStat(
+                  label: t.session,
+                  value: '#${widget.seId}',
+                  icon: Icons.badge_outlined,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MetaStat(
+                  label: t.sessionStatusPendingLabel,
+                  value: elapsedText,
+                  icon: Icons.timer_outlined,
+                ),
+              ),
+            ],
+          ),
         ),
         const Spacer(),
         Container(
@@ -291,5 +324,54 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         ),
       );
     }
+  }
+}
+
+class _MetaStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _MetaStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.deepIndigo.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.textSecondary, size: 16),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.jost(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

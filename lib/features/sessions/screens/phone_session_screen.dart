@@ -144,6 +144,37 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                   t: t,
                   isProfessional: isProfessional,
                 ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.mediumPurple.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _SessionMeta(
+                          label: t.session,
+                          value: '#${widget.seId}',
+                          icon: Icons.badge_outlined,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _SessionMeta(
+                          label: t.sessionStatusInProgressLabel,
+                          value: _formatDuration(_elapsed),
+                          icon: Icons.timer_outlined,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const Spacer(),
                 Container(
                   width: 120,
@@ -195,6 +226,55 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SessionMeta extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _SessionMeta({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.deepIndigo.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.jost(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.montserrat(
+              fontSize: 10,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
       ),
     );
   }

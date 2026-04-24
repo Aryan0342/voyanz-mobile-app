@@ -19,6 +19,18 @@ class ReviewsScreen extends ConsumerStatefulWidget {
 class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
   String _selectedFilter = 'All';
 
+  Map<int, int> _buildRatingBreakdown(List<Map<String, dynamic>> reviews) {
+    final result = <int, int>{1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    for (final review in reviews) {
+      final value =
+          double.tryParse(review['re_rating']?.toString() ?? '')?.round() ?? 0;
+      if (value >= 1 && value <= 5) {
+        result[value] = (result[value] ?? 0) + 1;
+      }
+    }
+    return result;
+  }
+
   Future<void> _submitReview() async {
     final t = ref.read(translationsProvider);
     double rating = 5;
@@ -254,6 +266,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                       ) /
                       totalReviews
                 : 0;
+            final breakdown = _buildRatingBreakdown(validItems);
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -280,10 +293,19 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                               color: Colors.white,
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            t.nReviews(totalReviews),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
                           const SizedBox(height: 20),
                           _RatingOverviewCard(
                             avgRating: avgRating.toDouble(),
                             totalReviews: totalReviews,
+                            breakdown: breakdown,
                           ),
                         ],
                       ),
@@ -389,10 +411,12 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
 class _RatingOverviewCard extends ConsumerWidget {
   final double avgRating;
   final int totalReviews;
+  final Map<int, int> breakdown;
 
   const _RatingOverviewCard({
     required this.avgRating,
     required this.totalReviews,
+    required this.breakdown,
   });
 
   @override
@@ -450,15 +474,40 @@ class _RatingOverviewCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _RatingBar(label: '5', value: 0.8),
+                _RatingBar(
+                  label: '5',
+                  value: totalReviews == 0
+                      ? 0
+                      : (breakdown[5] ?? 0) / totalReviews,
+                ),
                 const SizedBox(height: 6),
-                _RatingBar(label: '4', value: 0.6),
+                _RatingBar(
+                  label: '4',
+                  value: totalReviews == 0
+                      ? 0
+                      : (breakdown[4] ?? 0) / totalReviews,
+                ),
                 const SizedBox(height: 6),
-                _RatingBar(label: '3', value: 0.3),
+                _RatingBar(
+                  label: '3',
+                  value: totalReviews == 0
+                      ? 0
+                      : (breakdown[3] ?? 0) / totalReviews,
+                ),
                 const SizedBox(height: 6),
-                _RatingBar(label: '2', value: 0.1),
+                _RatingBar(
+                  label: '2',
+                  value: totalReviews == 0
+                      ? 0
+                      : (breakdown[2] ?? 0) / totalReviews,
+                ),
                 const SizedBox(height: 6),
-                _RatingBar(label: '1', value: 0.05),
+                _RatingBar(
+                  label: '1',
+                  value: totalReviews == 0
+                      ? 0
+                      : (breakdown[1] ?? 0) / totalReviews,
+                ),
               ],
             ),
           ),

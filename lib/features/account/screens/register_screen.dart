@@ -153,302 +153,365 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
+              padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
               child: FadeTransition(
                 opacity: _fadeAnim,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.rosePink.withValues(alpha: 0.15),
-                            blurRadius: 32,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/images/voyanz-logo.png',
-                        width: 100,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      t.createAccount,
-                      style: GoogleFonts.jost(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.joinCommunity,
-                      style: GoogleFonts.lora(
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    GlassCard(
-                      child: Form(
-                        key: _formKey,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GlassCard(
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // ── Role selector ──
-                            SegmentedButton<String>(
-                              segments: [
-                                ButtonSegment(
-                                  value: 'customer',
-                                  label: Text(t.customer),
-                                  icon: Icon(Icons.person_outline, size: 18),
-                                ),
-                                ButtonSegment(
-                                  value: 'professional',
-                                  label: Text(t.professional),
-                                  icon: Icon(Icons.auto_awesome, size: 18),
-                                ),
-                              ],
-                              selected: {_role},
-                              onSelectionChanged: (v) =>
-                                  setState(() => _role = v.first),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              t.iIdentifyAs,
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SegmentedButton<String>(
-                              segments: [
-                                ButtonSegment(
-                                  value: 'male',
-                                  label: Text(t.male),
-                                ),
-                                ButtonSegment(
-                                  value: 'female',
-                                  label: Text(t.female),
-                                ),
-                                ButtonSegment(
-                                  value: 'other',
-                                  label: Text(t.other),
-                                ),
-                              ],
-                              selected: {_gender},
-                              onSelectionChanged: (v) =>
-                                  setState(() => _gender = v.first),
-                            ),
-                            const SizedBox(height: 16),
                             Row(
                               children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _firstNameCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: t.firstName,
-                                    ),
-                                    textInputAction: TextInputAction.next,
-                                    validator: (v) => (v == null || v.isEmpty)
-                                        ? t.required
-                                        : null,
+                                Container(
+                                  width: 54,
+                                  height: 54,
+                                  decoration: BoxDecoration(
+                                    gradient: AppGradients.accent,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Image.asset(
+                                    'assets/images/voyanz-logo.png',
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 14),
                                 Expanded(
-                                  child: TextFormField(
-                                    controller: _lastNameCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: t.lastName,
-                                    ),
-                                    textInputAction: TextInputAction.next,
-                                    validator: (v) => (v == null || v.isEmpty)
-                                        ? t.required
-                                        : null,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t.createAccount,
+                                        style: GoogleFonts.jost(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        t.joinCommunity,
+                                        style: GoogleFonts.manrope(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _displayNameCtrl,
-                              decoration: InputDecoration(
-                                labelText: t.displayName,
-                                prefixIcon: Icon(Icons.badge_outlined),
-                              ),
-                              textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  (v == null || v.isEmpty) ? t.required : null,
+                            const SizedBox(height: 18),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: const [
+                                _FeaturePill(label: 'Quick setup'),
+                                _FeaturePill(label: 'Secure onboarding'),
+                                _FeaturePill(label: 'Role-based access'),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _dobCtrl,
-                              readOnly: true,
-                              onTap: _pickBirthDate,
-                              decoration: InputDecoration(
-                                labelText: t.dateOfBirth,
-                                hintText: 'YYYY-MM-DD',
-                                prefixIcon: Icon(Icons.cake_outlined),
-                                suffixIcon: Icon(Icons.calendar_month_outlined),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      GlassCard(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SegmentedButton<String>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: 'customer',
+                                    label: Text(t.customer),
+                                    icon: Icon(Icons.person_outline, size: 18),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'professional',
+                                    label: Text(t.professional),
+                                    icon: Icon(Icons.auto_awesome, size: 18),
+                                  ),
+                                ],
+                                selected: {_role},
+                                onSelectionChanged: (v) =>
+                                    setState(() => _role = v.first),
                               ),
-                              textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  (v == null || v.isEmpty) ? t.required : null,
-                            ),
-                            const SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              initialValue: null,
-                              decoration: InputDecoration(
-                                labelText: t.country,
-                                prefixIcon: Icon(Icons.flag_outlined),
+                              const SizedBox(height: 24),
+                              Text(
+                                t.iIdentifyAs,
+                                style: GoogleFonts.manrope(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              items: t.countryList
-                                  .map(
-                                    (c) => DropdownMenuItem<String>(
-                                      value: c,
-                                      child: Text(c),
+                              const SizedBox(height: 10),
+                              SegmentedButton<String>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: 'male',
+                                    label: Text(t.male),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'female',
+                                    label: Text(t.female),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'other',
+                                    label: Text(t.other),
+                                  ),
+                                ],
+                                selected: {_gender},
+                                onSelectionChanged: (v) =>
+                                    setState(() => _gender = v.first),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _firstNameCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: t.firstName,
+                                      ),
+                                      textInputAction: TextInputAction.next,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? t.required
+                                          : null,
                                     ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                _countryCtrl.text = value ?? '';
-                              },
-                              validator: (_) =>
-                                  _countryCtrl.text.isEmpty ? t.required : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _mobileCtrl,
-                              decoration: InputDecoration(
-                                labelText: t.mobile,
-                                prefixIcon: Icon(Icons.phone_outlined),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _lastNameCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: t.lastName,
+                                      ),
+                                      textInputAction: TextInputAction.next,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? t.required
+                                          : null,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              keyboardType: TextInputType.phone,
-                              textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  (v == null || v.isEmpty) ? t.required : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _emailCtrl,
-                              decoration: InputDecoration(
-                                labelText: t.email,
-                                prefixIcon: Icon(Icons.email_outlined),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  (v == null || v.isEmpty) ? t.required : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _passwordCtrl,
-                              decoration: InputDecoration(
-                                labelText: t.password,
-                                prefixIcon: Icon(Icons.lock_outline),
-                              ),
-                              obscureText: true,
-                              textInputAction: TextInputAction.next,
-                              validator: (v) => (v != null && v.length >= 6)
-                                  ? null
-                                  : t.min6Chars,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _confirmPasswordCtrl,
-                              decoration: InputDecoration(
-                                labelText: t.confirmPassword,
-                                prefixIcon: Icon(Icons.lock_outline),
-                              ),
-                              obscureText: true,
-                              textInputAction: TextInputAction.done,
-                              validator: (v) => v == _passwordCtrl.text
-                                  ? null
-                                  : t.passwordsNoMatch,
-                            ),
-                            const SizedBox(height: 14),
-                            CheckboxListTile(
-                              value: _acceptCgu,
-                              onChanged: (v) =>
-                                  setState(() => _acceptCgu = v ?? false),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                t.acceptCgu,
-                                style: GoogleFonts.montserrat(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _displayNameCtrl,
+                                decoration: InputDecoration(
+                                  labelText: t.displayName,
+                                  prefixIcon: const Icon(Icons.badge_outlined),
                                 ),
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.required
+                                    : null,
                               ),
-                            ),
-                            CheckboxListTile(
-                              value: _acceptCgs,
-                              onChanged: (v) =>
-                                  setState(() => _acceptCgs = v ?? false),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                t.acceptCgs,
-                                style: GoogleFonts.montserrat(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _dobCtrl,
+                                readOnly: true,
+                                onTap: _pickBirthDate,
+                                decoration: InputDecoration(
+                                  labelText: t.dateOfBirth,
+                                  hintText: 'YYYY-MM-DD',
+                                  prefixIcon: const Icon(Icons.cake_outlined),
+                                  suffixIcon: const Icon(
+                                    Icons.calendar_month_outlined,
+                                  ),
                                 ),
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.required
+                                    : null,
                               ),
-                            ),
-                            const SizedBox(height: 28),
-                            GradientButton(
-                              onPressed: _loading ? null : _submit,
-                              width: double.infinity,
-                              child: _loading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
+                              const SizedBox(height: 16),
+                              DropdownButtonFormField<String>(
+                                initialValue: null,
+                                decoration: InputDecoration(
+                                  labelText: t.country,
+                                  prefixIcon: const Icon(Icons.flag_outlined),
+                                ),
+                                items: t.countryList
+                                    .map(
+                                      (c) => DropdownMenuItem<String>(
+                                        value: c,
+                                        child: Text(c),
                                       ),
                                     )
-                                  : Text(t.createAccount),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: Text.rich(
-                        TextSpan(
-                          text: t.alreadyHaveAccount,
-                          style: GoogleFonts.montserrat(
-                            color: AppColors.textMuted,
-                            fontSize: 14,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: t.logIn,
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.rosePink,
-                                fontWeight: FontWeight.w600,
+                                    .toList(),
+                                onChanged: (value) {
+                                  _countryCtrl.text = value ?? '';
+                                },
+                                validator: (_) => _countryCtrl.text.isEmpty
+                                    ? t.required
+                                    : null,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _mobileCtrl,
+                                decoration: InputDecoration(
+                                  labelText: t.mobile,
+                                  prefixIcon: const Icon(Icons.phone_outlined),
+                                ),
+                                keyboardType: TextInputType.phone,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.required
+                                    : null,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _emailCtrl,
+                                decoration: InputDecoration(
+                                  labelText: t.email,
+                                  prefixIcon: const Icon(Icons.email_outlined),
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.required
+                                    : null,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _passwordCtrl,
+                                decoration: InputDecoration(
+                                  labelText: t.password,
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                ),
+                                obscureText: true,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v != null && v.length >= 6)
+                                    ? null
+                                    : t.min6Chars,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _confirmPasswordCtrl,
+                                decoration: InputDecoration(
+                                  labelText: t.confirmPassword,
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                ),
+                                obscureText: true,
+                                textInputAction: TextInputAction.done,
+                                validator: (v) => v == _passwordCtrl.text
+                                    ? null
+                                    : t.passwordsNoMatch,
+                              ),
+                              const SizedBox(height: 14),
+                              CheckboxListTile(
+                                value: _acceptCgu,
+                                onChanged: (v) =>
+                                    setState(() => _acceptCgu = v ?? false),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  t.acceptCgu,
+                                  style: GoogleFonts.manrope(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              CheckboxListTile(
+                                value: _acceptCgs,
+                                onChanged: (v) =>
+                                    setState(() => _acceptCgs = v ?? false),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  t.acceptCgs,
+                                  style: GoogleFonts.manrope(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              GradientButton(
+                                onPressed: _loading ? null : _submit,
+                                width: double.infinity,
+                                child: _loading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(t.createAccount),
+                              ),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: () => context.pop(),
+                                child: Text.rich(
+                                  TextSpan(
+                                    text: t.alreadyHaveAccount,
+                                    style: GoogleFonts.manrope(
+                                      color: AppColors.textMuted,
+                                      fontSize: 14,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: t.logIn,
+                                        style: GoogleFonts.manrope(
+                                          color: AppColors.rosePink,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturePill extends StatelessWidget {
+  final String label;
+
+  const _FeaturePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.borderSubtle.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.manrope(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textSecondary,
         ),
       ),
     );
