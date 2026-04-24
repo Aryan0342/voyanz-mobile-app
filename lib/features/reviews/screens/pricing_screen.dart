@@ -291,8 +291,18 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       professional,
       fromList: fromList,
     );
-    final normalizedType = normalizeSessionType(type) ?? 'video';
+    final normalizedType = normalizeSessionType(type);
     if (type == null || widget.coId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.chooseSessionType),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (normalizedType == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

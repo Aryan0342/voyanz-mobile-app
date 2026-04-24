@@ -6,6 +6,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/sessions/models/session_type.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   final bool isProfessional;
@@ -20,9 +21,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   String _selectedFilter = 'All';
 
   String _normalizedStatus(Map<String, dynamic> item) {
-    return (item['se_status'] ?? item['status'] ?? item['state'] ?? '')
+    final raw = (item['se_status'] ?? item['status'] ?? item['state'] ?? '')
         .toString()
         .toLowerCase();
+    return _canonicalStatus(raw);
   }
 
   bool _isSessionItem(Map<String, dynamic> item) {
@@ -358,23 +360,28 @@ class _SessionCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    final type = _value(item, const [
+    final rawType = _value(item, const [
       'se_type',
       'type_call',
       'call_type',
       'type',
     ]);
-    final date = _value(item, const [
+    final dateRaw = _value(item, const [
       'se_date',
       'date',
       'created_at',
       'start_at',
     ]);
-    final status = _value(item, const ['se_status', 'status', 'state']);
-    final duration =
-        _value(item, const ['se_duration', 'duration', 'call_duration']).isEmpty
-        ? '30 min'
-        : _value(item, const ['se_duration', 'duration', 'call_duration']);
+    final rawStatus = _value(item, const ['se_status', 'status', 'state']);
+    final normalizedType = normalizeSessionType(rawType);
+    final normalizedStatus = _canonicalStatus(rawStatus.toLowerCase());
+    final date = _formatHistoryDate(dateRaw);
+    final durationValue = _value(item, const [
+      'se_duration',
+      'duration',
+      'call_duration',
+    ]);
+    final duration = durationValue.isEmpty ? '--' : durationValue;
     final counterpart = _value(item, const [
       'co_fullname',
       'co_name',
@@ -394,17 +401,23 @@ class _SessionCard extends ConsumerWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: _statusGradient(status),
+                  gradient: _typeGradient(normalizedType),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: _statusColor(status).withValues(alpha: 0.3),
+                      color: _statusColor(
+                        normalizedStatus,
+                      ).withValues(alpha: 0.22),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Icon(_statusIcon(status), color: Colors.white, size: 26),
+                child: Icon(
+                  _typeIcon(normalizedType),
+                  color: Colors.white,
+                  size: 26,
+                ),
               ),
               const SizedBox(width: 16),
               // Content
@@ -413,7 +426,11 @@ class _SessionCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _localizedSessionType(type.isEmpty ? 'session' : type, t),
+                      _localizedSessionType(
+                        normalizedType ??
+                            (rawType.isEmpty ? 'session' : rawType),
+                        t,
+                      ),
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -460,18 +477,20 @@ class _SessionCard extends ConsumerWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withValues(alpha: 0.15),
+                  color: _statusColor(normalizedStatus).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _statusColor(status).withValues(alpha: 0.3),
+                    color: _statusColor(
+                      normalizedStatus,
+                    ).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
-                  _localizedStatus(status, t),
+                  _localizedStatus(normalizedStatus, t),
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _statusColor(status),
+                    color: _statusColor(normalizedStatus),
                   ),
                 ),
               ),
@@ -536,31 +555,49 @@ class _SessionCard extends ConsumerWidget {
     }
   }
 
-  IconData _statusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Icons.check_circle;
-      case 'inprogress':
-      case 'accepted':
-      case 'calling':
-        return Icons.sensors;
-      case 'cancelled':
-      case 'canceled':
-        return Icons.cancel;
-      case 'pending':
-        return Icons.hourglass_empty;
+  IconData _typeIcon(String? type) {
+    switch (type) {
+      case 'phone':
+        return Icons.phone_in_talk;
+      case 'chat':
+        return Icons.chat_bubble_outline;
+      case 'video':
       default:
         return Icons.videocam;
     }
   }
 
-  LinearGradient _statusGradient(String status) {
-    final color = _statusColor(status);
-    return LinearGradient(
-      colors: [color, color.withValues(alpha: 0.7)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
+  LinearGradient _typeGradient(String? type) {
+    switch (type) {
+      case 'phone':
+        return LinearGradient(
+          colors: [
+            AppColors.mediumPurple.withValues(alpha: 0.9),
+            AppColors.mediumPurple.withValues(alpha: 0.55),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'chat':
+        return LinearGradient(
+          colors: [
+            AppColors.rosePink.withValues(alpha: 0.9),
+            AppColors.rosePink.withValues(alpha: 0.6),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'video':
+      default:
+        return LinearGradient(
+          colors: [
+            AppColors.textMuted.withValues(alpha: 0.9),
+            AppColors.textMuted.withValues(alpha: 0.6),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+    }
   }
 }
 
@@ -625,8 +662,41 @@ String _localizedStatus(String status, dynamic t) {
     case 'inprogress':
       return t.sessionStatusInProgressLabel;
     default:
-      return status;
+      return t.unknown;
   }
+}
+
+String _canonicalStatus(String value) {
+  if (value.isEmpty) return '';
+  if (value == 'completed' ||
+      value == 'done' ||
+      value == 'finished' ||
+      value == 'closed' ||
+      value == 'success') {
+    return 'completed';
+  }
+  if (value == 'cancelled' || value == 'canceled' || value == 'rejected') {
+    return 'cancelled';
+  }
+  if (value == 'pending' || value == 'waiting') return 'pending';
+  if (value == 'inprogress' || value == 'in_progress' || value == 'active') {
+    return 'inprogress';
+  }
+  if (value == 'calling') return 'calling';
+  if (value == 'accepted') return 'accepted';
+  return value;
+}
+
+String _formatHistoryDate(String raw) {
+  if (raw.isEmpty) return raw;
+  final normalized = raw.replaceFirst(' ', 'T');
+  final parsed = DateTime.tryParse(normalized);
+  if (parsed == null) return raw;
+  final mm = parsed.month.toString().padLeft(2, '0');
+  final dd = parsed.day.toString().padLeft(2, '0');
+  final hh = parsed.hour.toString().padLeft(2, '0');
+  final min = parsed.minute.toString().padLeft(2, '0');
+  return '${parsed.year}-$mm-$dd $hh:$min';
 }
 
 class _HistoryStat extends StatelessWidget {

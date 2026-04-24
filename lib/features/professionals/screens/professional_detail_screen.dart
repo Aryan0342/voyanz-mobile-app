@@ -279,9 +279,19 @@ class _ProfessionalDetailScreenState
     if (!mounted) return;
     final t = ref.read(translationsProvider);
     Navigator.of(dialogContext).pop(); // Close dialog only
+    final normalizedType = normalizeSessionType(type);
+    if (normalizedType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.chooseSessionType),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     try {
-      final normalizedType = normalizeSessionType(type) ?? 'video';
       final seId = await ref
           .read(sessionsRepositoryProvider)
           .createSessionCall(
@@ -310,15 +320,17 @@ class _ProfessionalDetailScreenState
 
       // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
       if (e.isDuplicateSessionWithDetails) {
-        final fallbackType = normalizeSessionType(type) ?? 'video';
-        context.push('/session/wait/$fallbackType/${e.sessionId}/${pro.coId}');
+        context.push(
+          '/session/wait/$normalizedType/${e.sessionId}/${pro.coId}',
+        );
         return;
       }
 
       // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume) {
-        final fallbackType = normalizeSessionType(type) ?? 'video';
-        context.push('/session/wait/$fallbackType/${e.sessionId}/${pro.coId}');
+        context.push(
+          '/session/wait/$normalizedType/${e.sessionId}/${pro.coId}',
+        );
         return;
       }
 
@@ -330,9 +342,8 @@ class _ProfessionalDetailScreenState
         final recoveredSeId = await _recoverRecentSessionId();
         if (!mounted) return;
         if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
-          final fallbackType = normalizeSessionType(type) ?? 'video';
           context.push(
-            '/session/wait/$fallbackType/$recoveredSeId/${pro.coId}',
+            '/session/wait/$normalizedType/$recoveredSeId/${pro.coId}',
           );
           return;
         }

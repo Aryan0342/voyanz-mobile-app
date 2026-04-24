@@ -274,7 +274,12 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
   }
 
   void _navigateToSession(BuildContext context) {
-    final resolvedType = normalizeSessionType(widget.type) ?? 'video';
+    final resolvedType = normalizeSessionType(widget.type);
+
+    if (resolvedType == null) {
+      context.pushReplacement('/home');
+      return;
+    }
 
     if (resolvedType == 'video') {
       context.pushReplacement('/video/${widget.seId}/${widget.coId}');
@@ -296,7 +301,19 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
 
   Future<void> _rebookSession() async {
     try {
-      final resolvedType = normalizeSessionType(widget.type) ?? 'video';
+      final resolvedType = normalizeSessionType(widget.type);
+      if (resolvedType == null) {
+        if (!mounted) return;
+        final t = ref.read(translationsProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.chooseSessionType),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
       final newSeId = await ref
           .read(sessionsRepositoryProvider)
           .createSessionCall(typeCall: resolvedType, coId: widget.coId);
