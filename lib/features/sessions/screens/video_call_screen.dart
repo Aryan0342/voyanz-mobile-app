@@ -209,6 +209,15 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final engine = _engine;
     _engine = null;
 
+    if (mounted) {
+      setState(() {
+        _engineInitialized = false;
+        _joined = false;
+        _remoteUid = null;
+        _channelId = null;
+      });
+    }
+
     if (engine == null) return;
     try {
       await engine.leaveChannel();
@@ -217,14 +226,6 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     try {
       await engine.release();
     } catch (_) {}
-
-    if (!mounted) return;
-    setState(() {
-      _engineInitialized = false;
-      _joined = false;
-      _remoteUid = null;
-      _channelId = null;
-    });
   }
 
   Future<void> _toggleMic() async {
@@ -269,6 +270,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
     );
+    final localEngine = _engine;
 
     ref.listen<AsyncValue<VideoToken>>(
       videoTokenProvider((seId: widget.seId, coId: widget.coId)),
@@ -435,7 +437,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                           fit: StackFit.expand,
                           children: [
                             _buildRemoteView(t),
-                            if (_engineInitialized)
+                            if (_engineInitialized && localEngine != null)
                               Positioned(
                                 right: 12,
                                 top: 12,
@@ -452,7 +454,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                                     child: _cameraEnabled
                                         ? AgoraVideoView(
                                             controller: VideoViewController(
-                                              rtcEngine: _engine!,
+                                              rtcEngine: localEngine,
                                               canvas: const VideoCanvas(uid: 0),
                                             ),
                                           )
@@ -569,10 +571,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
       );
     }
 
-    if (_remoteUid != null && _engine != null && _channelId != null) {
+    final engine = _engine;
+    if (_remoteUid != null && engine != null && _channelId != null) {
       return AgoraVideoView(
         controller: VideoViewController.remote(
-          rtcEngine: _engine!,
+          rtcEngine: engine,
           canvas: VideoCanvas(uid: _remoteUid),
           connection: RtcConnection(channelId: _channelId!),
         ),

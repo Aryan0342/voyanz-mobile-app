@@ -26,6 +26,27 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
   String? _selectedPricingKey;
   final _promoCtrl = TextEditingController();
 
+  bool _isResumableStatus(String? rawStatus) {
+    final status = (rawStatus ?? '').toLowerCase().replaceAll(
+      RegExp(r'[^a-z]'),
+      '',
+    );
+    return status == 'inprogress' ||
+        status == 'calling' ||
+        status == 'accepted' ||
+        status == 'pending' ||
+        status == 'active' ||
+        status == 'started';
+  }
+
+  bool _isProfessionalBusyError(String rawMessage) {
+    final message = rawMessage.toLowerCase();
+    return message.contains('currently in consultation') ||
+        message.contains('actuellement en consultation') ||
+        message.contains('prenez un rendez-vous') ||
+        message.contains('take an appointment');
+  }
+
   @override
   void dispose() {
     _promoCtrl.dispose();
@@ -313,6 +334,13 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return;
     }
 
+    final activeSeId = await _recoverRecentSessionId(expectedCoId: widget.coId);
+    if (!mounted) return;
+    if (activeSeId != null && activeSeId.isNotEmpty) {
+      context.push('/session/wait/$normalizedType/$activeSeId/${widget.coId!}');
+      return;
+    }
+
     try {
       final seId = await ref
           .read(sessionsRepositoryProvider)
@@ -334,20 +362,51 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
 
-      // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
-      if (e.isDuplicateSessionWithDetails) {
-        context.push(
-          '/session/wait/$normalizedType/${e.sessionId}/${widget.coId!}',
+      if (_isProfessionalBusyError(e.toString())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.professionalBusyMessage),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         return;
       }
 
+      Future<bool> canJoinSession(String seId) async {
+        try {
+          final status = await ref
+              .read(sessionsRepositoryProvider)
+              .getSessionStatus(seId);
+          return !status.isTerminal;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      Future<void> openWait(String seId) async {
+        if (!mounted) return;
+        context.push('/session/wait/$normalizedType/$seId/${widget.coId!}');
+      }
+
+      Future<bool> tryOpenIfJoinable(String? seId) async {
+        if (seId == null || seId.isEmpty) return false;
+        final joinable = await canJoinSession(seId);
+        if (!mounted) return true;
+        if (!joinable) return false;
+        await openWait(seId);
+        return true;
+      }
+
+      // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
+      if (e.isDuplicateSessionWithDetails && _isResumableStatus(e.seStatus)) {
+        if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
+      }
+
       // Fallback 1: canResume if session ID present (old format, for backward compat)
-      if (e.canResume) {
-        context.push(
-          '/session/wait/$normalizedType/${e.sessionId}/${widget.coId!}',
-        );
-        return;
+      if (e.canResume &&
+          (e.seStatus == null || _isResumableStatus(e.seStatus))) {
+        if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
       }
 
       // Fallback 2: Search history if 409 but no details in exception
@@ -355,13 +414,62 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           e.statusCode == 409 ||
           e.toString().toLowerCase().contains('session_already_launched');
       if (isDuplicateLaunch) {
-        final recoveredSeId = await _recoverRecentSessionId();
+        if (e.canResume) {
+          if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
+        }
+
+        final recoveredSeId = await _recoverRecentSessionId(
+          expectedCoId: widget.coId,
+        );
         if (!mounted) return;
-        if (recoveredSeId != null && recoveredSeId.isNotEmpty) {
-          context.push(
-            '/session/wait/$normalizedType/$recoveredSeId/${widget.coId!}',
-          );
+        if (await tryOpenIfJoinable(recoveredSeId)) return;
+
+        try {
+          final freshSeId = await ref
+              .read(sessionsRepositoryProvider)
+              .createSessionCall(typeCall: normalizedType, coId: widget.coId!);
+          if (!mounted) return;
+          await openWait(freshSeId);
           return;
+        } on SessionLaunchException catch (retryError) {
+          // Backend can keep a short-lived lock after session termination.
+          // Retry once after a brief delay before surfacing the error.
+          await Future<void>.delayed(const Duration(milliseconds: 1200));
+          if (!mounted) return;
+
+          try {
+            final retriedSeId = await ref
+                .read(sessionsRepositoryProvider)
+                .createSessionCall(
+                  typeCall: normalizedType,
+                  coId: widget.coId!,
+                );
+            if (!mounted) return;
+            await openWait(retriedSeId);
+            return;
+          } on SessionLaunchException catch (secondError) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(t.errorMessage(secondError.toString())),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            return;
+          } catch (_) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(t.errorMessage(retryError.toString())),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            return;
+          }
+        } catch (_) {
+          // Fall through to generic error handling below.
         }
       }
 
@@ -386,36 +494,77 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
   }
 
-  Future<String?> _recoverRecentSessionId() async {
+  Future<String?> _recoverRecentSessionId({String? expectedCoId}) async {
+    String normalize(String? value) =>
+        (value ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+
+    bool isTerminalStatus(String normalizedStatus) {
+      return normalizedStatus == 'completed' ||
+          normalizedStatus == 'rejected' ||
+          normalizedStatus == 'canceled' ||
+          normalizedStatus == 'cancelled' ||
+          normalizedStatus == 'ended' ||
+          normalizedStatus == 'closed' ||
+          normalizedStatus == 'expired' ||
+          normalizedStatus == 'failed' ||
+          normalizedStatus == 'timeout';
+    }
+
     try {
       final history = await ref.read(customerHistoryProvider.future);
       for (final item in history) {
         if (item is! Map<String, dynamic>) continue;
-        final type = item['type']?.toString().toLowerCase() ?? '';
-        if (type != 'session') continue;
+        final nestedSession = item['session'];
+        final session = nestedSession is Map<String, dynamic>
+            ? nestedSession
+            : const <String, dynamic>{};
 
-        final status =
-            item['se_status']?.toString().toLowerCase() ??
-            item['status']?.toString().toLowerCase() ??
-            item['state']?.toString().toLowerCase() ??
-            '';
-        final seId = item['se_id']?.toString() ?? item['id']?.toString();
+        final seId =
+            item['se_id']?.toString() ??
+            session['se_id']?.toString() ??
+            item['session_id']?.toString() ??
+            item['id']?.toString();
         if (seId == null || seId.isEmpty) continue;
 
-        if (status == 'inprogress' ||
-            status == 'calling' ||
-            status == 'accepted' ||
-            status == 'pending') {
-          return seId;
+        final rowCoId =
+            item['co_id']?.toString() ??
+            session['co_id']?.toString() ??
+            item['customer_id']?.toString() ??
+            item['professional_id']?.toString();
+        if (expectedCoId != null &&
+            expectedCoId.isNotEmpty &&
+            rowCoId != null &&
+            rowCoId.isNotEmpty &&
+            rowCoId != expectedCoId) {
+          continue;
         }
-      }
 
-      for (final item in history) {
-        if (item is! Map<String, dynamic>) continue;
-        final type = item['type']?.toString().toLowerCase() ?? '';
-        if (type != 'session') continue;
-        final seId = item['se_id']?.toString() ?? item['id']?.toString();
-        if (seId != null && seId.isNotEmpty) return seId;
+        final rawStatus =
+            item['se_status']?.toString() ??
+            session['se_status']?.toString() ??
+            item['session_status']?.toString() ??
+            item['status']?.toString() ??
+            item['state']?.toString() ??
+            '';
+        final status = normalize(rawStatus);
+
+        if (status.isNotEmpty && isTerminalStatus(status)) {
+          continue;
+        }
+
+        try {
+          final liveStatus = await ref
+              .read(sessionsRepositoryProvider)
+              .getSessionStatus(seId);
+          if (!liveStatus.isTerminal) {
+            return seId;
+          }
+        } catch (_) {
+          // If live status fails, only trust explicit non-terminal history status.
+          if (status.isNotEmpty && !isTerminalStatus(status)) {
+            return seId;
+          }
+        }
       }
     } catch (_) {}
 

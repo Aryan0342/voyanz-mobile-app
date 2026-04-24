@@ -31,8 +31,29 @@ class SessionLaunchException implements Exception {
       seType != null &&
       seRoom != null;
 
+  String? get resolvedSessionId {
+    final direct = sessionId?.trim();
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    final fromKeyedPattern = RegExp(
+      r'(?:se[_-]?id|session[_-]?id)\D*([A-Za-z0-9-]{3,})',
+      caseSensitive: false,
+    ).firstMatch(message);
+    final keyedId = fromKeyedPattern?.group(1)?.trim();
+    if (keyedId != null && keyedId.isNotEmpty) return keyedId;
+
+    final fromPathPattern = RegExp(
+      r'/session/(?:wait|status|call)/([A-Za-z0-9-]{3,})',
+      caseSensitive: false,
+    ).firstMatch(message);
+    final pathId = fromPathPattern?.group(1)?.trim();
+    if (pathId != null && pathId.isNotEmpty) return pathId;
+
+    return null;
+  }
+
   /// Legacy canResume for backward compatibility.
-  bool get canResume => sessionId != null && sessionId!.isNotEmpty;
+  bool get canResume => resolvedSessionId != null;
 
   @override
   String toString() => message;
@@ -329,28 +350,84 @@ class SessionsDataSource {
     String? seRoom;
     String? chgrId;
 
+    String? firstNonEmpty(List<String?> values) {
+      for (final value in values) {
+        if (value != null && value.trim().isNotEmpty) return value;
+      }
+      return null;
+    }
+
     if (data is Map<String, dynamic>) {
       sessionId = _extractSessionId(data);
+
+      final dataPayload = data['data'];
+      final nestedData = dataPayload is Map<String, dynamic>
+          ? dataPayload
+          : null;
 
       final sessionPayload = data['session'];
       final nestedSession = sessionPayload is Map<String, dynamic>
           ? sessionPayload
           : null;
 
+      final nestedDataSessionPayload = nestedData?['session'];
+      final nestedDataSession = nestedDataSessionPayload is Map<String, dynamic>
+          ? nestedDataSessionPayload
+          : null;
+
+      final errPayload = data['err'];
+      final nestedErr = errPayload is Map<String, dynamic> ? errPayload : null;
+
+      final errDataPayload = nestedErr?['data'];
+      final nestedErrData = errDataPayload is Map<String, dynamic>
+          ? errDataPayload
+          : null;
+
+      final errSessionPayload = nestedErrData?['session'];
+      final nestedErrSession = errSessionPayload is Map<String, dynamic>
+          ? errSessionPayload
+          : null;
+
+      sessionId = firstNonEmpty([
+        sessionId,
+        nestedData == null ? null : _extractSessionId(nestedData),
+        nestedErrData == null ? null : _extractSessionId(nestedErrData),
+      ]);
+
       // Extract 409-specific fields from duplicate-session responses.
       if (statusCode == 409) {
-        seType =
-            data['se_type']?.toString() ??
-            nestedSession?['se_type']?.toString();
-        seStatus =
-            data['se_status']?.toString() ??
-            nestedSession?['se_status']?.toString();
-        seRoom =
-            data['se_room']?.toString() ??
-            nestedSession?['se_room']?.toString();
-        chgrId =
-            data['chgr_id']?.toString() ??
-            nestedSession?['chgr_id']?.toString();
+        seType = firstNonEmpty([
+          data['se_type']?.toString(),
+          nestedSession?['se_type']?.toString(),
+          nestedData?['se_type']?.toString(),
+          nestedDataSession?['se_type']?.toString(),
+          nestedErrData?['se_type']?.toString(),
+          nestedErrSession?['se_type']?.toString(),
+        ]);
+        seStatus = firstNonEmpty([
+          data['se_status']?.toString(),
+          nestedSession?['se_status']?.toString(),
+          nestedData?['se_status']?.toString(),
+          nestedDataSession?['se_status']?.toString(),
+          nestedErrData?['se_status']?.toString(),
+          nestedErrSession?['se_status']?.toString(),
+        ]);
+        seRoom = firstNonEmpty([
+          data['se_room']?.toString(),
+          nestedSession?['se_room']?.toString(),
+          nestedData?['se_room']?.toString(),
+          nestedDataSession?['se_room']?.toString(),
+          nestedErrData?['se_room']?.toString(),
+          nestedErrSession?['se_room']?.toString(),
+        ]);
+        chgrId = firstNonEmpty([
+          data['chgr_id']?.toString(),
+          nestedSession?['chgr_id']?.toString(),
+          nestedData?['chgr_id']?.toString(),
+          nestedDataSession?['chgr_id']?.toString(),
+          nestedErrData?['chgr_id']?.toString(),
+          nestedErrSession?['chgr_id']?.toString(),
+        ]);
       }
 
       final err = data['err'];

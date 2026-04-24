@@ -82,6 +82,9 @@ class AppTranslations {
       : 'Failed to create account: $err';
   String loginFailed(String err) =>
       _fr ? 'Échec de la connexion : $err' : 'Login failed: $err';
+  String get invalidLoginCredentials => _fr
+      ? 'E-mail ou mot de passe incorrect.'
+      : 'Incorrect email or password.';
   String get alreadyHaveAccount =>
       _fr ? 'Vous avez déjà un compte ? ' : 'Already have an account? ';
 
@@ -507,6 +510,9 @@ class AppTranslations {
   String get sessionAlreadyStarted => _fr
       ? 'La session est déjà lancée. Veuillez patienter.'
       : 'The session is already started. Please wait.';
+  String get professionalBusyMessage => _fr
+      ? 'Ce professionnel est actuellement en consultation. Veuillez réessayer dans quelques minutes, ou prenez un rendez-vous.'
+      : 'This professional is currently in consultation. Please try again in a few minutes, or book a session.';
   String get rebookSessionFailed => _fr
       ? 'Impossible de créer une nouvelle demande de session. Veuillez réessayer.'
       : 'Could not create a new session request. Please try again.';

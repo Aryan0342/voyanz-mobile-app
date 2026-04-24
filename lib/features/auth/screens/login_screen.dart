@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -56,6 +57,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         .login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
   }
 
+  String _friendlyLoginError(Object? error, AppTranslations t) {
+    final message = error.toString();
+    final normalized = message.toLowerCase();
+
+    if (normalized.contains('mauvais mot de passe') ||
+        normalized.contains('mot de passe incorrect') ||
+        normalized.contains('wrong password') ||
+        normalized.contains('invalid credentials') ||
+        normalized.contains('incorrect email or password') ||
+        normalized.contains('bad credentials')) {
+      return t.invalidLoginCredentials;
+    }
+
+    return message
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .trim();
+  }
+
   Color _parseHexColor(String? value, Color fallback) {
     if (value == null || value.trim().isEmpty) return fallback;
     final cleaned = value.trim().replaceAll('#', '');
@@ -91,8 +110,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         context.go('/home');
       }
       if (next.hasError) {
+        final rawError = next.error;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.loginFailed(next.error.toString()))),
+          SnackBar(
+            content: Text(t.loginFailed(_friendlyLoginError(rawError, t))),
+          ),
         );
       }
     });
