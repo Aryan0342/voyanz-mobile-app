@@ -129,7 +129,24 @@ class HomeShell extends ConsumerWidget {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: child,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Container(
+                  height: 146,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceHeader,
+                  ),
+                ),
+              ),
+            ),
+            child,
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
@@ -159,7 +176,7 @@ class HomeShell extends ConsumerWidget {
             navigationBarTheme: NavigationBarThemeData(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              indicatorColor: AppColors.rosePink.withValues(alpha: 0.2),
+              indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.16),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 final selected = states.contains(WidgetState.selected);
                 return GoogleFonts.manrope(
@@ -172,7 +189,7 @@ class HomeShell extends ConsumerWidget {
                 final selected = states.contains(WidgetState.selected);
                 if (selected) {
                   return const IconThemeData(
-                    color: AppColors.rosePink,
+                    color: AppColors.mediumPurple,
                     size: 24,
                   );
                 }
@@ -855,7 +872,7 @@ void _showAboutDialog(
             style: GoogleFonts.montserrat(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.rosePink,
+              color: AppColors.mediumPurple,
             ),
           ),
         ),
@@ -881,7 +898,7 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.rosePink, size: 24),
+          Icon(icon, color: AppColors.mediumPurple, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
@@ -1155,7 +1172,7 @@ class _ProfileTile extends StatelessWidget {
                 gradient: AppGradients.accent.scale(0.3),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: AppColors.rosePink, size: 22),
+              child: Icon(icon, color: AppColors.mediumPurple, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(

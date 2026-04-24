@@ -209,7 +209,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 8),

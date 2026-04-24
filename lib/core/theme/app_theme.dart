@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 
-/// Voyanz custom ThemeData — premium dark, minimal, and polished.
+/// Voyanz custom ThemeData — light foundation with brand accents.
 abstract final class AppTheme {
   static ThemeData get dark {
-    final baseText = GoogleFonts.manropeTextTheme(ThemeData.dark().textTheme);
+    final baseText = GoogleFonts.manropeTextTheme(ThemeData.light().textTheme);
 
     final textTheme = baseText.copyWith(
       displayLarge: GoogleFonts.jost(
@@ -84,8 +84,8 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.deepIndigo,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.surfaceDark,
       textTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -100,45 +100,45 @@ abstract final class AppTheme {
       ),
 
       // ── Color scheme ──
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.rosePink,
-        onPrimary: AppColors.deepIndigo,
+        onPrimary: Colors.white,
         secondary: AppColors.mediumPurple,
-        onSecondary: AppColors.textPrimary,
+        onSecondary: Colors.white,
         tertiary: AppColors.magentaRose,
-        surface: AppColors.surfaceDark,
+        surface: AppColors.surfaceCard,
         onSurface: AppColors.textPrimary,
         surfaceContainerHighest: AppColors.surfaceElevated,
         error: AppColors.error,
-        onError: AppColors.textPrimary,
+        onError: Colors.white,
       ),
 
       // ── AppBar ──
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.surfaceHeader,
         elevation: 0,
-        scrolledUnderElevation: 0,
+        scrolledUnderElevation: 0.5,
         centerTitle: true,
         titleTextStyle: GoogleFonts.jost(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.deepIndigo),
         surfaceTintColor: Colors.transparent,
       ),
 
       // ── Bottom NavigationBar ──
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.82),
-        indicatorColor: AppColors.rosePink.withValues(alpha: 0.2),
+        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
+        indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.17),
         elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return GoogleFonts.manrope(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.rosePink,
+              color: AppColors.deepIndigo,
             );
           }
           return GoogleFonts.manrope(
@@ -149,7 +149,7 @@ abstract final class AppTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.rosePink, size: 23);
+            return const IconThemeData(color: AppColors.mediumPurple, size: 23);
           }
           return const IconThemeData(color: AppColors.textMuted, size: 23);
         }),
@@ -157,9 +157,9 @@ abstract final class AppTheme {
 
       // ── Cards ──
       cardTheme: CardThemeData(
-        color: AppColors.surfaceCard.withValues(alpha: 0.88),
+        color: AppColors.surfaceCard,
         elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.24),
+        shadowColor: AppColors.mediumPurple.withValues(alpha: 0.08),
         margin: const EdgeInsets.all(0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -172,7 +172,7 @@ abstract final class AppTheme {
       // ── Input fields ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevated.withValues(alpha: 0.84),
+        fillColor: AppColors.surfaceElevated,
         hintStyle: GoogleFonts.manrope(
           color: AppColors.textMuted,
           fontSize: 14,
@@ -197,14 +197,14 @@ abstract final class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: AppColors.borderSubtle.withValues(alpha: 0.55),
+            color: AppColors.borderSubtle.withValues(alpha: 0.8),
             width: 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: AppColors.borderSubtle.withValues(alpha: 0.55),
+            color: AppColors.borderSubtle.withValues(alpha: 0.8),
             width: 1,
           ),
         ),
@@ -226,7 +226,7 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.rosePink,
-          foregroundColor: AppColors.deepIndigo,
+          foregroundColor: Colors.white,
           textStyle: GoogleFonts.manrope(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -265,7 +265,7 @@ abstract final class AppTheme {
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.rosePink,
-        foregroundColor: AppColors.deepIndigo,
+        foregroundColor: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
@@ -335,9 +335,9 @@ abstract final class AppTheme {
 
       // ── Snackbar ──
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceElevated,
+        backgroundColor: AppColors.deepIndigo,
         contentTextStyle: GoogleFonts.manrope(
-          color: AppColors.textPrimary,
+          color: Colors.white,
           fontSize: 14,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -346,7 +346,7 @@ abstract final class AppTheme {
       ),
 
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
+        backgroundColor: AppColors.surfaceCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         titleTextStyle: GoogleFonts.jost(
           color: AppColors.textPrimary,

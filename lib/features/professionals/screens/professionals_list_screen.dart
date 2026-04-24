@@ -240,7 +240,7 @@ class _ProfessionalsListScreenState
       ),
       body: professionalsAsync.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.rosePink),
+          child: CircularProgressIndicator(color: AppColors.mediumPurple),
         ),
         error: (e, _) => Center(
           child: Padding(
@@ -312,7 +312,7 @@ class _ProfessionalsListScreenState
           }
 
           return RefreshIndicator(
-            color: AppColors.rosePink,
+            color: AppColors.mediumPurple,
             onRefresh: () async {
               ref.invalidate(professionalsListProvider);
               await ref.read(professionalsListProvider.future);
@@ -756,7 +756,7 @@ class _FilterPanel extends ConsumerWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.rosePink.withValues(alpha: 0.2),
+                    color: AppColors.mediumPurple.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
@@ -764,7 +764,7 @@ class _FilterPanel extends ConsumerWidget {
                     style: GoogleFonts.montserrat(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.rosePink,
+                      color: AppColors.deepIndigo,
                     ),
                   ),
                 ),
@@ -953,7 +953,7 @@ class _FilterPanel extends ConsumerWidget {
                     Switch(
                       value: favoritesOnly,
                       onChanged: onFavoritesChanged,
-                      activeThumbColor: AppColors.rosePink,
+                      activeThumbColor: AppColors.mediumPurple,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1132,7 +1132,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                       const Icon(
                         Icons.star_rounded,
                         size: 14,
-                        color: AppColors.rosePink,
+                        color: AppColors.mediumPurple,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -1353,7 +1353,7 @@ class _ProfessionalCard extends StatelessWidget {
                           return Icon(
                             i < value ? Icons.star : Icons.star_outline,
                             size: 14,
-                            color: AppColors.rosePink,
+                            color: AppColors.mediumPurple,
                           );
                         }),
                         const SizedBox(width: 6),
@@ -1377,7 +1377,7 @@ class _ProfessionalCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.rosePink.withValues(alpha: 0.12),
+                    color: AppColors.mediumPurple.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1385,7 +1385,7 @@ class _ProfessionalCard extends StatelessWidget {
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.rosePink,
+                      color: AppColors.mediumPurple,
                     ),
                   ),
                 ),

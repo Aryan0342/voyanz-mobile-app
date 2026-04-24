@@ -216,7 +216,45 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                 .toList();
 
             if (validItems.isEmpty) {
-              return _EmptyState(isProfessional: widget.isProfessional);
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.isProfessional ? t.myReviews : t.reviews,
+                              style: GoogleFonts.jost(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              t.nReviews(0),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.manrope(
+                                fontSize: 12,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EmptyState(isProfessional: widget.isProfessional),
+                  ),
+                ],
+              );
             }
 
             final filteredItems = _selectedFilter == 'All'
@@ -258,16 +296,16 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                     child: _RevealIn(
                       delayMs: 20,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               widget.isProfessional ? t.myReviews : t.reviews,
                               style: GoogleFonts.jost(
-                                fontSize: 32,
+                                fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -599,37 +637,59 @@ class _EmptyState extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.star_border_rounded,
-            size: 64,
-            color: AppColors.textMuted,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
+      child: Center(
+        child: GlassCard(
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 94,
+                height: 94,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.mediumPurple.withValues(alpha: 0.22),
+                      AppColors.rosePink.withValues(alpha: 0.18),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.star_border_rounded,
+                  size: 46,
+                  color: AppColors.deepIndigo,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                t.noReviewsYet,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.jost(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isProfessional
+                    ? t.reviewsFromClientsWillAppear
+                    : t.reviewsFromConsultationsWillAppear,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            t.noReviewsYet,
-            style: GoogleFonts.jost(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isProfessional
-                ? t.reviewsFromClientsWillAppear
-                : t.reviewsFromConsultationsWillAppear,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 13,
-              color: AppColors.textMuted,
-              height: 1.4,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -3,11 +3,11 @@ import 'package:voyanz/core/theme/app_colors.dart';
 
 /// Reusable gradient definitions matching voyanz.com.
 abstract final class AppGradients {
-  /// Hero section gradient — refined dark purple.
+  /// Hero section gradient.
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF120E5A), AppColors.darkPurple],
+    colors: [Color(0xFFF8F5FD), Color(0xFFF2ECFB)],
   );
 
   /// Primary accent gradient — rose pink to medium purple.
@@ -17,11 +17,19 @@ abstract final class AppGradients {
     colors: [AppColors.rosePink, Color(0xFFB18AE8)],
   );
 
-  /// Subtle dark background gradient for screens.
+  /// Subtle light background gradient for screens.
   static const background = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0C0948), Color(0xFF1A1447), Color(0xFF130E35)],
+    colors: [Color(0xFFFFFDFF), Color(0xFFF8F4FD), Color(0xFFF3EEFA)],
+    stops: [0.0, 0.55, 1.0],
+  );
+
+  /// Header tint used behind top titles/app bars on light screens.
+  static const headerTint = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0x1F9370DB), Color(0x14F5A8C4), Color(0x00FFFFFF)],
     stops: [0.0, 0.55, 1.0],
   );
 
@@ -29,14 +37,14 @@ abstract final class AppGradients {
   static const card = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF241C59), Color(0xFF1D164A)],
+    colors: [Color(0xFFFFFFFF), Color(0xFFF9F6FE)],
   );
 
   /// Surface glow accent for chips/pills/active states.
   static const surfaceGlow = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0x33F5A8C4), Color(0x269370DB)],
+    colors: [Color(0x1FF5A8C4), Color(0x1A9370DB)],
   );
 
   /// CTA gradient variant used for primary hero actions.

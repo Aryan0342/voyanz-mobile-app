@@ -54,7 +54,45 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
           ),
           data: (groups) {
             if (groups.isEmpty) {
-              return _EmptyState();
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              t.messages,
+                              style: GoogleFonts.jost(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              t.searchConversations,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 13,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EmptyState(),
+                  ),
+                ],
+              );
             }
 
             final searchQuery = _searchCtrl.text.toLowerCase();
@@ -77,13 +115,13 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                     child: _RevealIn(
                       delayMs: 20,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
                         child: Text(
                           t.messages,
                           style: GoogleFonts.jost(
-                            fontSize: 32,
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -323,46 +361,57 @@ class _EmptyState extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.accent.scale(0.3),
-            ),
-            child: const Icon(
-              Icons.chat_bubble_outline,
-              size: 56,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            t.noConversationsYet,
-            style: GoogleFonts.jost(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(
-              t.startChatExplore,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: AppColors.textMuted,
-                height: 1.5,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
+      child: Center(
+        child: GlassCard(
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 94,
+                height: 94,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.mediumPurple.withValues(alpha: 0.22),
+                      AppColors.rosePink.withValues(alpha: 0.18),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 42,
+                  color: AppColors.deepIndigo,
+                ),
               ),
-            ),
+              const SizedBox(height: 20),
+              Text(
+                t.noConversationsYet,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.jost(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                t.startChatExplore,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
