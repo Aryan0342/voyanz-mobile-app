@@ -20,11 +20,49 @@ class HistoryScreen extends ConsumerStatefulWidget {
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   String _selectedFilter = 'All';
 
-  String _normalizedStatus(Map<String, dynamic> item) {
-    final raw = (item['se_status'] ?? item['status'] ?? item['state'] ?? '')
+  String _resolvedStatus(Map<String, dynamic> item) {
+    final primary =
+        (item['se_status'] ??
+                item['seStatus'] ??
+                item['session_status'] ??
+                item['status'] ??
+                item['state'] ??
+                item['se_state'] ??
+                item['session']?['se_status'] ??
+                item['session']?['status'] ??
+                '')
+            .toString();
+
+    final normalized = _canonicalStatus(primary);
+    if (_isKnownHistoryStatus(normalized)) return normalized;
+
+    final duration = (item['se_duration'] ?? item['duration'] ?? '')
         .toString()
-        .toLowerCase();
-    return _canonicalStatus(raw);
+        .trim();
+    final uiDuration = (item['timef'] ?? '').toString().trim();
+    final endedAt =
+        (item['ended_at'] ?? item['end_at'] ?? item['se_end_at'] ?? '')
+            .toString()
+            .trim();
+    final date = (item['se_date'] ?? item['date'] ?? '').toString().trim();
+    final type = (item['type'] ?? '').toString().trim().toLowerCase();
+    final price = (item['pricef'] ?? item['price'] ?? '').toString().trim();
+    final isEnded = item['is_ended'] == true || item['ended'] == true;
+
+    if (isEnded ||
+        endedAt.isNotEmpty ||
+        (duration.isNotEmpty && duration != '--') ||
+        (uiDuration.isNotEmpty && uiDuration != '--') ||
+        (type == 'session' && date.isNotEmpty) ||
+        (type == 'session' && price.startsWith('-'))) {
+      return 'completed';
+    }
+
+    return 'pending';
+  }
+
+  String _normalizedStatus(Map<String, dynamic> item) {
+    return _resolvedStatus(item);
   }
 
   bool _isSessionItem(Map<String, dynamic> item) {
@@ -220,7 +258,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     child: _RevealIn(
                       delayMs: 70,
                       child: SizedBox(
-                        height: 50,
+                        height: 56,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -325,7 +363,10 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        constraints: const BoxConstraints(minWidth: 118),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: isSelected ? AppGradients.accent : null,
           color: isSelected
@@ -340,6 +381,7 @@ class _FilterChip extends StatelessWidget {
         ),
         child: Text(
           label,
+          textAlign: TextAlign.center,
           style: GoogleFonts.montserrat(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -373,6 +415,7 @@ class _SessionCard extends ConsumerWidget {
       'se_type',
       'type_call',
       'call_type',
+      'subtype',
       'type',
     ]);
     final dateRaw = _value(item, const [
@@ -381,21 +424,43 @@ class _SessionCard extends ConsumerWidget {
       'created_at',
       'start_at',
     ]);
-    final rawStatus = _value(item, const ['se_status', 'status', 'state']);
-    final normalizedType = normalizeSessionType(rawType);
-    final normalizedStatus = _canonicalStatus(rawStatus.toLowerCase());
-    final date = _formatHistoryDate(dateRaw);
+    final rawStatus = _value(item, const [
+      'se_status',
+      'seStatus',
+      'session_status',
+      'status',
+      'state',
+      'se_state',
+    ]);
     final durationValue = _value(item, const [
       'se_duration',
       'duration',
       'call_duration',
+      'timef',
     ]);
+    final normalizedType = normalizeSessionType(rawType);
+    final nestedRawStatus = rawStatus.isEmpty
+        ? (item['session']?['se_status'] ?? item['session']?['status'] ?? '')
+              .toString()
+        : rawStatus;
+    var normalizedStatus = _canonicalStatus(nestedRawStatus);
+    if (!_isKnownHistoryStatus(normalizedStatus)) {
+      final durationLooksReal =
+          durationValue.isNotEmpty && durationValue != '--';
+      final endedAt = _value(item, const ['ended_at', 'end_at', 'se_end_at']);
+      final isEnded = item['is_ended'] == true || item['ended'] == true;
+      normalizedStatus = (isEnded || endedAt.isNotEmpty || durationLooksReal)
+          ? 'completed'
+          : 'pending';
+    }
+    final date = _formatHistoryDate(dateRaw);
     final duration = durationValue.isEmpty ? '--' : durationValue;
     final counterpart = _value(item, const [
       'co_fullname',
       'co_name',
       'name',
       'customer_name',
+      'comment',
     ]);
     final sessionId = _value(item, const ['se_id', 'id']);
 
@@ -703,23 +768,69 @@ String _localizedStatus(String status, dynamic t) {
 
 String _canonicalStatus(String value) {
   if (value.isEmpty) return '';
-  if (value == 'completed' ||
-      value == 'done' ||
-      value == 'finished' ||
-      value == 'closed' ||
-      value == 'success') {
+
+  final raw = value.toLowerCase().trim();
+  final compact = raw
+      .replaceAll(RegExp(r'[\s_\-]+'), '')
+      .replaceAll('é', 'e')
+      .replaceAll('è', 'e')
+      .replaceAll('ê', 'e')
+      .replaceAll('ë', 'e')
+      .replaceAll('à', 'a')
+      .replaceAll('â', 'a')
+      .replaceAll('î', 'i')
+      .replaceAll('ï', 'i')
+      .replaceAll('ô', 'o')
+      .replaceAll('ö', 'o')
+      .replaceAll('ù', 'u')
+      .replaceAll('û', 'u')
+      .replaceAll('ü', 'u');
+
+  if (compact == 'completed' ||
+      compact == 'complete' ||
+      compact == 'done' ||
+      compact == 'finished' ||
+      compact == 'close' ||
+      compact == 'closed' ||
+      compact == 'success' ||
+      compact == 'terminee' ||
+      compact == 'termine') {
     return 'completed';
   }
-  if (value == 'cancelled' || value == 'canceled' || value == 'rejected') {
+  if (compact == 'cancelled' ||
+      compact == 'canceled' ||
+      compact == 'rejected' ||
+      compact == 'annulee' ||
+      compact == 'annule') {
     return 'cancelled';
   }
-  if (value == 'pending' || value == 'waiting') return 'pending';
-  if (value == 'inprogress' || value == 'in_progress' || value == 'active') {
+  if (compact == 'pending' ||
+      compact == 'waiting' ||
+      compact == 'queued' ||
+      compact == 'enattente') {
+    return 'pending';
+  }
+  if (compact == 'inprogress' ||
+      compact == 'active' ||
+      compact == 'ongoing' ||
+      compact == 'encours') {
     return 'inprogress';
   }
-  if (value == 'calling') return 'calling';
-  if (value == 'accepted') return 'accepted';
-  return value;
+  if (compact == 'calling' || compact == 'appelencours') return 'calling';
+  if (compact == 'accepted' || compact == 'acceptee' || compact == 'accepte') {
+    return 'accepted';
+  }
+  return compact;
+}
+
+bool _isKnownHistoryStatus(String status) {
+  return status == 'completed' ||
+      status == 'cancelled' ||
+      status == 'canceled' ||
+      status == 'pending' ||
+      status == 'accepted' ||
+      status == 'calling' ||
+      status == 'inprogress';
 }
 
 String _formatHistoryDate(String raw) {
