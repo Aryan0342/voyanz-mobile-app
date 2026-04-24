@@ -59,7 +59,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                   children: [
                     Text(
                       t.yourRating,
-                      style: GoogleFonts.montserrat(
+                      style: GoogleFonts.manrope(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -71,7 +71,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                           .map(
                             (v) => DropdownMenuItem<double>(
                               value: v.toDouble(),
-                              child: Text('$v ⭐'),
+                              child: Text('$v star'),
                             ),
                           )
                           .toList(),
@@ -180,59 +180,36 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.rosePink),
           ),
-          error: (e, st) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppColors.error,
+          error: (e, st) => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  t.failedLoadReviews,
+                  style: GoogleFonts.manrope(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t.failedLoadReviews,
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textSecondary,
-                      fontSize: 16,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  t.errorMessage(e.toString()),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.manrope(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    t.errorMessage(e.toString()),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ref.invalidate(
-                        widget.isProfessional
-                            ? professionalReviewsProvider
-                            : customerReviewsProvider,
-                      );
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: Text(t.retry),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.rosePink,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+                ),
+              ],
+            ),
+          ),
           data: (items) {
-            // Filter items safely, excluding non-Map items
             final validItems = items
                 .where((item) => item is Map<String, dynamic>)
                 .cast<Map<String, dynamic>>()
@@ -252,7 +229,6 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                     return rating.round() == filterValue;
                   }).toList();
 
-            // Calculate statistics
             final totalReviews = validItems.length;
             final avgRating = totalReviews > 0
                 ? validItems.fold<double>(
@@ -278,109 +254,106 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
               },
               child: CustomScrollView(
                 slivers: [
-                  // ── Header with stats ──
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.isProfessional ? t.myReviews : t.reviews,
-                            style: GoogleFonts.jost(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.isProfessional ? t.myReviews : t.reviews,
+                              style: GoogleFonts.jost(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            t.nReviews(totalReviews),
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
+                            const SizedBox(height: 8),
+                            Text(
+                              t.nReviews(totalReviews),
+                              style: GoogleFonts.manrope(
+                                fontSize: 13,
+                                color: AppColors.textMuted,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          _RatingOverviewCard(
-                            avgRating: avgRating.toDouble(),
-                            totalReviews: totalReviews,
-                            breakdown: breakdown,
-                          ),
-                        ],
+                            const SizedBox(height: 20),
+                            _RatingOverviewCard(
+                              avgRating: avgRating.toDouble(),
+                              totalReviews: totalReviews,
+                              breakdown: breakdown,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  // ── Filter chips ──
                   SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 50,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        children: [
-                          _FilterChip(
-                            label: t.all,
-                            isSelected: _selectedFilter == 'All',
-                            onTap: () =>
-                                setState(() => _selectedFilter = 'All'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: '5 ⭐',
-                            isSelected: _selectedFilter == '5',
-                            onTap: () => setState(() => _selectedFilter = '5'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: '4 ⭐',
-                            isSelected: _selectedFilter == '4',
-                            onTap: () => setState(() => _selectedFilter = '4'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: '3 ⭐',
-                            isSelected: _selectedFilter == '3',
-                            onTap: () => setState(() => _selectedFilter = '3'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: '2 ⭐',
-                            isSelected: _selectedFilter == '2',
-                            onTap: () => setState(() => _selectedFilter = '2'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: '1 ⭐',
-                            isSelected: _selectedFilter == '1',
-                            onTap: () => setState(() => _selectedFilter = '1'),
-                          ),
-                        ],
+                    child: _RevealIn(
+                      delayMs: 70,
+                      child: SizedBox(
+                        height: 50,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          children: [
+                            _FilterChip(
+                              label: t.all,
+                              isSelected: _selectedFilter == 'All',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = 'All'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: '5 star',
+                              isSelected: _selectedFilter == '5',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = '5'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: '4 star',
+                              isSelected: _selectedFilter == '4',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = '4'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: '3 star',
+                              isSelected: _selectedFilter == '3',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = '3'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: '2 star',
+                              isSelected: _selectedFilter == '2',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = '2'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: '1 star',
+                              isSelected: _selectedFilter == '1',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = '1'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                  // ── Reviews list ──
                   if (filteredItems.isEmpty)
                     SliverFillRemaining(
                       child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.filter_list_off,
-                              size: 56,
-                              color: AppColors.textMuted.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              t.noReviewsFound,
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.textMuted,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          t.noReviewsFound,
+                          style: GoogleFonts.manrope(
+                            color: AppColors.textMuted,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                     )
@@ -390,10 +363,13 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                       sliver: SliverList.builder(
                         itemCount: filteredItems.length,
                         itemBuilder: (context, i) {
-                          final r = filteredItems[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ReviewCard(review: r),
+                          final review = filteredItems[i];
+                          return _RevealIn(
+                            delayMs: 110 + (i * 24),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ReviewCard(review: review),
+                            ),
                           );
                         },
                       ),
@@ -422,95 +398,40 @@ class _RatingOverviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppGradients.accent,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.rosePink.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Row(
+    return GlassCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
         children: [
-          // Big rating number
-          Column(
+          Row(
             children: [
               Text(
                 avgRating.toStringAsFixed(1),
                 style: GoogleFonts.jost(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => Icon(
-                    Icons.star,
-                    size: 16,
-                    color: Colors.white.withValues(alpha: 0.9),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  t.nReviews(totalReviews),
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
                   ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                t.nReviews(totalReviews),
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 32),
-          // Star breakdown (placeholder)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _RatingBar(
-                  label: '5',
-                  value: totalReviews == 0
-                      ? 0
-                      : (breakdown[5] ?? 0) / totalReviews,
-                ),
-                const SizedBox(height: 6),
-                _RatingBar(
-                  label: '4',
-                  value: totalReviews == 0
-                      ? 0
-                      : (breakdown[4] ?? 0) / totalReviews,
-                ),
-                const SizedBox(height: 6),
-                _RatingBar(
-                  label: '3',
-                  value: totalReviews == 0
-                      ? 0
-                      : (breakdown[3] ?? 0) / totalReviews,
-                ),
-                const SizedBox(height: 6),
-                _RatingBar(
-                  label: '2',
-                  value: totalReviews == 0
-                      ? 0
-                      : (breakdown[2] ?? 0) / totalReviews,
-                ),
-                const SizedBox(height: 6),
-                _RatingBar(
-                  label: '1',
-                  value: totalReviews == 0
-                      ? 0
-                      : (breakdown[1] ?? 0) / totalReviews,
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 10),
+          ...[5, 4, 3, 2, 1].map((v) {
+            final count = breakdown[v] ?? 0;
+            final ratio = totalReviews == 0
+                ? 0.0
+                : count.toDouble() / totalReviews;
+            return _RatingBar(label: '$v', value: ratio);
+          }),
         ],
       ),
     );
@@ -525,33 +446,36 @@ class _RatingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.9),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(width: 6),
-        const Icon(Icons.star, size: 12, color: Colors.white70),
-        const SizedBox(width: 8),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation(
-                Colors.white.withValues(alpha: 0.9),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 42,
+            child: Text(
+              '$label star',
+              style: GoogleFonts.manrope(
+                fontSize: 11,
+                color: AppColors.textSecondary,
               ),
-              minHeight: 6,
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                minHeight: 7,
+                value: value,
+                backgroundColor: AppColors.surfaceElevated,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.rosePink,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -587,9 +511,9 @@ class _FilterChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: GoogleFonts.montserrat(
+          style: GoogleFonts.manrope(
             fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
@@ -605,118 +529,59 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = ProviderScope.containerOf(
-      context,
-      listen: false,
-    ).read(translationsProvider);
     final rating = double.tryParse(review['re_rating']?.toString() ?? '') ?? 0;
     final comment = review['re_comment']?.toString() ?? '';
+    final author =
+        review['co_fullname']?.toString() ??
+        review['co_name']?.toString() ??
+        review['name']?.toString() ??
+        'Anonymous';
     final date = review['re_date']?.toString() ?? '';
-    final reviewerName = review['reviewer_name']?.toString() ?? t.anonymous;
 
     return GlassCard(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              // Avatar
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppGradients.accent,
-                ),
-                child: Center(
-                  child: Text(
-                    reviewerName.isNotEmpty
-                        ? reviewerName[0].toUpperCase()
-                        : '?',
-                    style: GoogleFonts.jost(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+              Expanded(
+                child: Text(
+                  author,
+                  style: GoogleFonts.jost(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              // Name & date
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      reviewerName,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      date,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Rating
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  gradient: AppGradients.accent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.rosePink.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, size: 16, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating.toStringAsFixed(1),
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+              Text(
+                rating.toStringAsFixed(1),
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.rosePink,
                 ),
               ),
             ],
           ),
-          if (comment.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.deepIndigo.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 6),
+          if (comment.isNotEmpty)
+            Text(
+              comment,
+              style: GoogleFonts.manrope(
+                fontSize: 13,
+                height: 1.4,
+                color: AppColors.textSecondary,
               ),
-              child: Text(
-                comment,
-                style: GoogleFonts.lora(
-                  fontSize: 14,
-                  height: 1.6,
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
+            ),
+          if (date.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              date,
+              style: GoogleFonts.manrope(
+                fontSize: 11,
+                color: AppColors.textMuted,
               ),
             ),
           ],
@@ -738,45 +603,60 @@ class _EmptyState extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.accent.scale(0.3),
-            ),
-            child: const Icon(
-              Icons.star_outline,
-              size: 56,
-              color: Colors.white,
-            ),
+          const Icon(
+            Icons.star_border_rounded,
+            size: 64,
+            color: AppColors.textMuted,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           Text(
             t.noReviewsYet,
             style: GoogleFonts.jost(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(
-              isProfessional
-                  ? t.reviewsFromClientsWillAppear
-                  : t.reviewsFromConsultationsWillAppear,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: AppColors.textMuted,
-                height: 1.5,
-              ),
+          Text(
+            isProfessional
+                ? t.reviewsFromClientsWillAppear
+                : t.reviewsFromConsultationsWillAppear,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              color: AppColors.textMuted,
+              height: 1.4,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 340 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

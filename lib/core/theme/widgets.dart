@@ -24,40 +24,50 @@ class GradientButton extends StatelessWidget {
     final radius = borderRadius ?? BorderRadius.circular(18);
     final enabled = onPressed != null;
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: enabled
-              ? AppGradients.accent
-              : const LinearGradient(
-                  colors: [AppColors.surfaceCard, AppColors.surfaceCard],
-                ),
-          borderRadius: radius,
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: AppColors.rosePink.withValues(alpha: 0.14),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 180),
+      opacity: enabled ? 1 : 0.64,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: enabled
+                ? AppGradients.cta
+                : const LinearGradient(
+                    colors: [AppColors.surfaceCard, AppColors.surfaceCard],
                   ),
-                ]
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPressed,
             borderRadius: radius,
-            child: Center(
-              child: DefaultTextStyle.merge(
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
+            border: Border.all(
+              color: AppColors.borderSubtle.withValues(
+                alpha: enabled ? 0.2 : 0.5,
+              ),
+            ),
+            boxShadow: enabled
+                ? [
+                    BoxShadow(
+                      color: AppColors.rosePink.withValues(alpha: 0.16),
+                      blurRadius: 22,
+                      offset: const Offset(0, 7),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: radius,
+              child: Center(
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    letterSpacing: 0.2,
+                  ),
+                  child: child,
                 ),
-                child: child,
               ),
             ),
           ),
@@ -87,17 +97,22 @@ class GlassCard extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard.withValues(alpha: 0.92),
+        gradient: AppGradients.card,
         borderRadius: radius,
         border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.55),
+          color: AppColors.borderSubtle.withValues(alpha: 0.66),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 26,
+            offset: const Offset(0, 11),
+          ),
+          BoxShadow(
+            color: AppColors.mediumPurple.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -133,17 +148,17 @@ class GradientScaffold extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              top: -120,
-              right: -80,
+              top: -140,
+              right: -70,
               child: IgnorePointer(
                 child: Container(
-                  width: 240,
-                  height: 240,
+                  width: 270,
+                  height: 270,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.rosePink.withValues(alpha: 0.16),
+                        AppColors.rosePink.withValues(alpha: 0.2),
                         Colors.transparent,
                       ],
                     ),
@@ -152,17 +167,36 @@ class GradientScaffold extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: -120,
-              left: -90,
+              bottom: -140,
+              left: -95,
               child: IgnorePointer(
                 child: Container(
-                  width: 260,
-                  height: 260,
+                  width: 290,
+                  height: 290,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.mediumPurple.withValues(alpha: 0.12),
+                        AppColors.mediumPurple.withValues(alpha: 0.15),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 140,
+              left: -120,
+              child: IgnorePointer(
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.info.withValues(alpha: 0.08),
                         Colors.transparent,
                       ],
                     ),

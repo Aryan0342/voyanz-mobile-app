@@ -88,6 +88,16 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.deepIndigo,
       textTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
 
       // ── Color scheme ──
       colorScheme: const ColorScheme.dark(
@@ -115,12 +125,13 @@ abstract final class AppTheme {
           color: AppColors.textPrimary,
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        surfaceTintColor: Colors.transparent,
       ),
 
       // ── Bottom NavigationBar ──
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.92),
-        indicatorColor: AppColors.rosePink.withValues(alpha: 0.18),
+        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.82),
+        indicatorColor: AppColors.rosePink.withValues(alpha: 0.2),
         elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -146,8 +157,10 @@ abstract final class AppTheme {
 
       // ── Cards ──
       cardTheme: CardThemeData(
-        color: AppColors.surfaceCard.withValues(alpha: 0.92),
+        color: AppColors.surfaceCard.withValues(alpha: 0.88),
         elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.24),
+        margin: const EdgeInsets.all(0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
@@ -159,7 +172,7 @@ abstract final class AppTheme {
       // ── Input fields ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevated.withValues(alpha: 0.9),
+        fillColor: AppColors.surfaceElevated.withValues(alpha: 0.84),
         hintStyle: GoogleFonts.manrope(
           color: AppColors.textMuted,
           fontSize: 14,
@@ -179,7 +192,7 @@ abstract final class AppTheme {
         suffixIconColor: AppColors.textMuted,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
-          vertical: 17,
+          vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -223,6 +236,7 @@ abstract final class AppTheme {
             borderRadius: BorderRadius.circular(18),
           ),
           elevation: 0,
+          shadowColor: AppColors.rosePink.withValues(alpha: 0.24),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -247,6 +261,13 @@ abstract final class AppTheme {
             fontWeight: FontWeight.w700,
           ),
         ),
+      ),
+
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppColors.rosePink,
+        foregroundColor: AppColors.deepIndigo,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
 
       // ── Chips / SegmentedButton ──
@@ -321,6 +342,70 @@ abstract final class AppTheme {
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         behavior: SnackBarBehavior.floating,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        titleTextStyle: GoogleFonts.jost(
+          color: AppColors.textPrimary,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: GoogleFonts.manrope(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+          height: 1.4,
+        ),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.98),
+        modalBackgroundColor: AppColors.surfaceCard.withValues(alpha: 0.98),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.textMuted,
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.rosePink,
+        linearTrackColor: AppColors.surfaceElevated,
+      ),
+
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.rosePink,
+        selectionColor: AppColors.rosePink.withValues(alpha: 0.28),
+        selectionHandleColor: AppColors.rosePink,
+      ),
+
+      switchTheme: SwitchThemeData(
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.rosePink.withValues(alpha: 0.34);
+          }
+          return AppColors.surfaceElevated;
+        }),
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.rosePink;
+          }
+          return AppColors.textMuted;
+        }),
+      ),
+
+      checkboxTheme: CheckboxThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        side: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.8)),
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.rosePink;
+          }
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStateProperty.all(AppColors.deepIndigo),
       ),
 
       // ── Divider ──

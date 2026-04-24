@@ -151,74 +151,95 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isWaiting
-                    ? AppColors.mediumPurple.withValues(alpha: 0.2)
-                    : AppColors.error.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                status.localizedLabel(t),
-                style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.w700,
-                  color: isWaiting ? AppColors.mediumPurple : AppColors.error,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceCard.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.mediumPurple.withValues(alpha: 0.2),
-            ),
-          ),
+        _RevealIn(
+          delayMs: 20,
           child: Row(
             children: [
-              Expanded(
-                child: _MetaStat(
-                  label: t.session,
-                  value: '#${widget.seId}',
-                  icon: Icons.badge_outlined,
-                ),
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MetaStat(
-                  label: t.sessionStatusPendingLabel,
-                  value: elapsedText,
-                  icon: Icons.timer_outlined,
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isWaiting
+                      ? AppColors.mediumPurple.withValues(alpha: 0.2)
+                      : AppColors.error.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status.localizedLabel(t),
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w700,
+                    color: isWaiting ? AppColors.mediumPurple : AppColors.error,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const Spacer(),
-        Container(
-          width: 120,
-          height: 120,
-          margin: const EdgeInsets.symmetric(horizontal: 100),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AppGradients.accent,
+        const SizedBox(height: 14),
+        _RevealIn(
+          delayMs: 70,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.surfaceCard.withValues(alpha: 0.9),
+                  AppColors.surfaceElevated.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.mediumPurple.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _MetaStat(
+                    label: t.session,
+                    value: '#${widget.seId}',
+                    icon: Icons.badge_outlined,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MetaStat(
+                    label: t.sessionStatusPendingLabel,
+                    value: elapsedText,
+                    icon: Icons.timer_outlined,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Icon(
-            isWaiting ? Icons.hourglass_top_rounded : Icons.event_busy_outlined,
-            color: Colors.white,
-            size: 52,
+        ),
+        const Spacer(),
+        _RevealIn(
+          delayMs: 120,
+          child: Container(
+            width: 120,
+            height: 120,
+            margin: const EdgeInsets.symmetric(horizontal: 100),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppGradients.accent,
+            ),
+            child: Icon(
+              isWaiting
+                  ? Icons.hourglass_top_rounded
+                  : Icons.event_busy_outlined,
+              color: Colors.white,
+              size: 52,
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -393,6 +414,32 @@ class _MetaStat extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 320 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

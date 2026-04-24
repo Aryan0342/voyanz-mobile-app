@@ -132,15 +132,25 @@ class HomeShell extends ConsumerWidget {
         child: child,
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.surfaceCard.withValues(alpha: 0.9),
+              AppColors.surfaceElevated.withValues(alpha: 0.86),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(
+            color: AppColors.borderSubtle.withValues(alpha: 0.52),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
+              color: Colors.black.withValues(alpha: 0.22),
               blurRadius: 24,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -149,12 +159,26 @@ class HomeShell extends ConsumerWidget {
             navigationBarTheme: NavigationBarThemeData(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              indicatorColor: AppColors.rosePink.withValues(alpha: 0.14),
+              indicatorColor: AppColors.rosePink.withValues(alpha: 0.2),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 final selected = states.contains(WidgetState.selected);
                 return GoogleFonts.manrope(
-                  fontSize: 10,
+                  fontSize: 10.5,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: 0.2,
+                );
+              }),
+              iconTheme: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                if (selected) {
+                  return const IconThemeData(
+                    color: AppColors.rosePink,
+                    size: 24,
+                  );
+                }
+                return const IconThemeData(
+                  color: AppColors.textMuted,
+                  size: 22,
                 );
               }),
             ),
@@ -163,7 +187,7 @@ class HomeShell extends ConsumerWidget {
             selectedIndex: currentIdx,
             onDestinationSelected: (i) => onTap(context, i),
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            height: 74,
+            height: 76,
             destinations: tabs
                 .map(
                   (t) => NavigationDestination(

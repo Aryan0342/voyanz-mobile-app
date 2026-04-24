@@ -307,12 +307,15 @@ class _ProfessionalAvailabilityScreenState
           return ListView(
             padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
             children: [
-              Text(
-                'Computed availability',
-                style: GoogleFonts.jost(
-                  color: AppColors.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+              _RevealIn(
+                delayMs: 20,
+                child: Text(
+                  'Computed availability',
+                  style: GoogleFonts.jost(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -336,89 +339,96 @@ class _ProfessionalAvailabilityScreenState
                 ),
               ...rows.map((row) {
                 final dayRange = _summarizeDayRange(row.slots);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.surfaceCard.withValues(alpha: 0.90),
-                          AppColors.surfaceCard.withValues(alpha: 0.65),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.surfaceDark.withValues(alpha: 0.18),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.rosePink,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _formatDayTitle(row.day, t),
-                              style: GoogleFonts.jost(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
+                return _RevealIn(
+                  delayMs: 70 + (rows.indexOf(row) * 24),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.surfaceCard.withValues(alpha: 0.90),
+                            AppColors.surfaceCard.withValues(alpha: 0.65),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.borderSubtle.withValues(alpha: 0.35),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
                             color: AppColors.surfaceDark.withValues(
-                              alpha: 0.28,
+                              alpha: 0.18,
                             ),
-                            border: Border.all(
-                              color: AppColors.borderSubtle.withValues(
-                                alpha: 0.30,
-                              ),
-                            ),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
                           ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.rosePink,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatDayTitle(row.day, t),
+                                style: GoogleFonts.jost(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: AppColors.rosePink.withValues(alpha: 0.20),
+                              borderRadius: BorderRadius.circular(14),
+                              color: AppColors.surfaceDark.withValues(
+                                alpha: 0.28,
+                              ),
+                              border: Border.all(
+                                color: AppColors.borderSubtle.withValues(
+                                  alpha: 0.30,
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              dayRange,
-                              style: GoogleFonts.jost(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: AppColors.rosePink.withValues(
+                                  alpha: 0.20,
+                                ),
+                              ),
+                              child: Text(
+                                dayRange,
+                                style: GoogleFonts.jost(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -577,6 +587,32 @@ class _AvailabilityRow {
   final List<_AvailabilitySlot> slots;
 
   const _AvailabilityRow({required this.day, required this.slots});
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 320 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
 }
 
 class _AvailabilitySlot {

@@ -321,41 +321,50 @@ class _ProfessionalsListScreenState
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                    child: _ExploreHero(totalCount: pros.length),
+                  child: _RevealIn(
+                    delayMs: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      child: _ExploreHero(totalCount: pros.length),
+                    ),
                   ),
                 ),
 
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                    child: TextField(
-                      controller: _searchCtrl,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: t.searchAdvisor,
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchCtrl.text.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchCtrl.clear();
-                                  setState(() {});
-                                },
-                                icon: const Icon(Icons.close),
-                              )
-                            : null,
+                  child: _RevealIn(
+                    delayMs: 70,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText: t.searchAdvisor,
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchCtrl.text.isNotEmpty
+                              ? IconButton(
+                                  onPressed: () {
+                                    _searchCtrl.clear();
+                                    setState(() {});
+                                  },
+                                  icon: const Icon(Icons.close),
+                                )
+                              : null,
+                        ),
                       ),
                     ),
                   ),
                 ),
 
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: _SectionTitle(
-                      title: t.featuredAdvisors,
-                      subtitle: t.topProsReadyNow,
+                  child: _RevealIn(
+                    delayMs: 120,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: _SectionTitle(
+                        title: t.featuredAdvisors,
+                        subtitle: t.topProsReadyNow,
+                      ),
                     ),
                   ),
                 ),
@@ -376,10 +385,13 @@ class _ProfessionalsListScreenState
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                         itemBuilder: (_, i) {
                           final pro = featuredPros[i];
-                          return _FeaturedProfessionalCard(
-                            professional: pro,
-                            onTap: () =>
-                                context.push('/professional/${pro.coId}'),
+                          return _RevealIn(
+                            delayMs: 160 + (i * 35),
+                            child: _FeaturedProfessionalCard(
+                              professional: pro,
+                              onTap: () =>
+                                  context.push('/professional/${pro.coId}'),
+                            ),
                           );
                         },
                         separatorBuilder: (context, index) =>
@@ -390,11 +402,14 @@ class _ProfessionalsListScreenState
                   ),
 
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                    child: _SectionTitle(
-                      title: t.allAdvisors,
-                      subtitle: t.nResults(filteredPros.length),
+                  child: _RevealIn(
+                    delayMs: 180,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                      child: _SectionTitle(
+                        title: t.allAdvisors,
+                        subtitle: t.nResults(filteredPros.length),
+                      ),
                     ),
                   ),
                 ),
@@ -411,23 +426,26 @@ class _ProfessionalsListScreenState
                     itemCount: filteredPros.length,
                     itemBuilder: (_, i) {
                       final pro = filteredPros[i];
-                      return Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          20,
-                          i == 0 ? 12 : 10,
-                          20,
-                          i == filteredPros.length - 1 ? 24 : 0,
-                        ),
-                        child: _ProfessionalCard(
-                          coId: pro.coId,
-                          name: pro.displayName,
-                          specialty: pro.specialty,
-                          avatarUrl: pro.avatar,
-                          isOnline: pro.isAvailableNow,
-                          rating: pro.rating,
-                          pricePerMinute: pro.pricePerMinute,
-                          onTap: () =>
-                              context.push('/professional/${pro.coId}'),
+                      return _RevealIn(
+                        delayMs: 210 + (i * 24),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            i == 0 ? 12 : 10,
+                            20,
+                            i == filteredPros.length - 1 ? 24 : 0,
+                          ),
+                          child: _ProfessionalCard(
+                            coId: pro.coId,
+                            name: pro.displayName,
+                            specialty: pro.specialty,
+                            avatarUrl: pro.avatar,
+                            isOnline: pro.isAvailableNow,
+                            rating: pro.rating,
+                            pricePerMinute: pro.pricePerMinute,
+                            onTap: () =>
+                                context.push('/professional/${pro.coId}'),
+                          ),
                         ),
                       );
                     },
@@ -600,13 +618,27 @@ class _ExploreHero extends ConsumerWidget {
     final t = ref.watch(translationsProvider);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
-        gradient: AppGradients.hero,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.mediumPurple.withValues(alpha: 0.2),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.surfaceCard.withValues(alpha: 0.95),
+            AppColors.surfaceElevated.withValues(alpha: 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.mediumPurple.withValues(alpha: 0.22),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -627,8 +659,8 @@ class _ExploreHero extends ConsumerWidget {
                 Text(
                   t.discoverYourGuide,
                   style: GoogleFonts.jost(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -1025,16 +1057,30 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: 220,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard.withValues(alpha: 0.75),
-          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.surfaceCard.withValues(alpha: 0.92),
+              AppColors.surfaceElevated.withValues(alpha: 0.82),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: AppColors.mediumPurple.withValues(alpha: 0.15),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -1216,11 +1262,25 @@ class _ProfessionalCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [
+                AppColors.surfaceCard.withValues(alpha: 0.88),
+                AppColors.surfaceElevated.withValues(alpha: 0.74),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: AppColors.mediumPurple.withValues(alpha: 0.12),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -1352,6 +1412,32 @@ class _ProfessionalCard extends StatelessWidget {
           color: Colors.white,
         ),
       ),
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 360 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 16 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -9,11 +10,18 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
-class ProfessionalDashboardScreen extends ConsumerWidget {
+class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
   const ProfessionalDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfessionalDashboardScreen> createState() =>
+      _ProfessionalDashboardScreenState();
+}
+
+class _ProfessionalDashboardScreenState
+    extends ConsumerState<ProfessionalDashboardScreen> {
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).valueOrNull;
     // Fetch professional history (sessions)
     final historyAsync = ref.watch(professionalHistoryProvider);
@@ -30,9 +38,9 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
         actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
         title: Text(
           t.dashboard,
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+          style: GoogleFonts.jost(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
@@ -42,122 +50,120 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
           slivers: [
             // ── Welcome section ──
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.welcomeBackName(name),
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      t.yourProDashboard,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+              child: _RevealIn(
+                delayMs: 20,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: _DashboardHeroCard(
+                    name: name,
+                    subtitle: t.yourProDashboard,
+                    onOpenSlots: () => context.go('/availability'),
+                    onOpenChat: () => context.go('/chat'),
+                  ),
                 ),
               ),
             ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
             // ── Stats section ──
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        title: t.totalSessions,
-                        value: historyAsync.when(
-                          data: (items) => '${_validSessions(items).length}',
-                          loading: () => '-',
-                          error: (_, __) => '0',
+              child: _RevealIn(
+                delayMs: 80,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          title: t.totalSessions,
+                          value: historyAsync.when(
+                            data: (items) => '${_validSessions(items).length}',
+                            loading: () => '-',
+                            error: (_, __) => '0',
+                          ),
+                          icon: Icons.videocam_outlined,
                         ),
-                        icon: Icons.videocam_outlined,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        title: t.avgRating,
-                        value: reviewsAsync.when(
-                          data: (items) {
-                            final validItems = items
-                                .whereType<Map<String, dynamic>>()
-                                .toList();
-                            if (validItems.isEmpty) return '0.0';
-                            final totalRating = validItems.fold<double>(
-                              0,
-                              (sum, item) =>
-                                  sum +
-                                  (double.tryParse(
-                                        item['re_rating']?.toString() ?? '',
-                                      ) ??
-                                      0),
-                            );
-                            final avg = (totalRating / validItems.length)
-                                .toStringAsFixed(1);
-                            return avg;
-                          },
-                          loading: () => '-',
-                          error: (_, __) => '0.0',
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          title: t.avgRating,
+                          value: reviewsAsync.when(
+                            data: (items) {
+                              final validItems = items
+                                  .whereType<Map<String, dynamic>>()
+                                  .toList();
+                              if (validItems.isEmpty) return '0.0';
+                              final totalRating = validItems.fold<double>(
+                                0,
+                                (sum, item) =>
+                                    sum +
+                                    (double.tryParse(
+                                          item['re_rating']?.toString() ?? '',
+                                        ) ??
+                                        0),
+                              );
+                              final avg = (totalRating / validItems.length)
+                                  .toStringAsFixed(1);
+                              return avg;
+                            },
+                            loading: () => '-',
+                            error: (_, __) => '0.0',
+                          ),
+                          icon: Icons.star_outline,
                         ),
-                        icon: Icons.star_outlined,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _StatCard(
-                  title: t.upcomingSessions,
-                  value: historyAsync.when(
-                    data: (items) {
-                      final upcoming = _validSessions(items).where((s) {
-                        final status = (s['se_status']?.toString() ?? '')
-                            .toLowerCase();
-                        return status == 'pending' ||
-                            status == 'calling' ||
-                            status == 'inprogress';
-                      }).length;
-                      return '$upcoming';
-                    },
-                    loading: () => '-',
-                    error: (_, __) => '0',
+              child: _RevealIn(
+                delayMs: 130,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _StatCard(
+                    title: t.upcomingSessions,
+                    value: historyAsync.when(
+                      data: (items) {
+                        final upcoming = _validSessions(items).where((s) {
+                          final status = (s['se_status']?.toString() ?? '')
+                              .toLowerCase();
+                          return status == 'pending' ||
+                              status == 'calling' ||
+                              status == 'inprogress';
+                        }).length;
+                        return '$upcoming';
+                      },
+                      loading: () => '-',
+                      error: (_, __) => '0',
+                    ),
+                    icon: Icons.schedule,
                   ),
-                  icon: Icons.schedule,
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
             // ── Upcoming Sessions ──
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  t.recentSessions,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+              child: _RevealIn(
+                delayMs: 180,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    t.recentSessions,
+                    style: GoogleFonts.jost(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -170,17 +176,17 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                 if (items.isEmpty) {
                   return SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: AppColors.borderSubtle.withValues(
                               alpha: 0.3,
                             ),
                           ),
-                          color: AppColors.surfaceDark.withValues(alpha: 0.5),
+                          color: AppColors.surfaceDark.withValues(alpha: 0.62),
                         ),
                         child: Column(
                           children: [
@@ -192,9 +198,9 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             Text(
                               t.noSessionsYet,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.manrope(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -229,109 +235,117 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                             ?.toString() ??
                         '';
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.borderSubtle.withValues(
-                              alpha: 0.3,
+                    return _RevealIn(
+                      delayMs: 220 + (idx * 40),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 7,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.borderSubtle.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                            color: AppColors.surfaceDark.withValues(
+                              alpha: 0.58,
                             ),
                           ),
-                          color: AppColors.surfaceDark.withValues(alpha: 0.5),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        clientName,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        sessionType,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(6),
-                                    color:
-                                        rawStatus.toLowerCase() == 'completed'
-                                        ? Colors.green.withValues(alpha: 0.2)
-                                        : rawStatus.toLowerCase() == 'cancelled'
-                                        ? Colors.red.withValues(alpha: 0.2)
-                                        : AppColors.rosePink.withValues(
-                                            alpha: 0.2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          clientName,
+                                          style: GoogleFonts.manrope(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
                                           ),
-                                  ),
-                                  child: Text(
-                                    localizedStatus,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                          rawStatus.toLowerCase() == 'completed'
-                                          ? Colors.green
-                                          : rawStatus.toLowerCase() ==
-                                                'cancelled'
-                                          ? Colors.red
-                                          : AppColors.rosePink,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          sessionType,
+                                          style: GoogleFonts.manrope(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            if (sessionDate.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.calendar_today_outlined,
-                                    size: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    sessionDate,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.textSecondary,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(999),
+                                      color:
+                                          rawStatus.toLowerCase() == 'completed'
+                                          ? Colors.green.withValues(alpha: 0.2)
+                                          : rawStatus.toLowerCase() ==
+                                                'cancelled'
+                                          ? Colors.red.withValues(alpha: 0.2)
+                                          : AppColors.rosePink.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                    ),
+                                    child: Text(
+                                      localizedStatus,
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color:
+                                            rawStatus.toLowerCase() ==
+                                                'completed'
+                                            ? Colors.green
+                                            : rawStatus.toLowerCase() ==
+                                                  'cancelled'
+                                            ? Colors.red
+                                            : AppColors.rosePink,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
+                              if (sessionDate.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      sessionDate,
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     );
@@ -357,9 +371,9 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Text(
                         t.failedLoadSessions,
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.manrope(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -373,6 +387,135 @@ class ProfessionalDashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _DashboardHeroCard extends StatelessWidget {
+  final String name;
+  final String subtitle;
+  final VoidCallback onOpenSlots;
+  final VoidCallback onOpenChat;
+
+  const _DashboardHeroCard({
+    required this.name,
+    required this.subtitle,
+    required this.onOpenSlots,
+    required this.onOpenChat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.surfaceCard.withValues(alpha: 0.95),
+            AppColors.surfaceElevated.withValues(alpha: 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: AppColors.borderSubtle.withValues(alpha: 0.6),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Welcome back, $name',
+            style: GoogleFonts.jost(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              height: 1.35,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onOpenSlots,
+                  icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                  label: const Text('Manage Slots'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.rosePink,
+                    foregroundColor: AppColors.deepIndigo,
+                    textStyle: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onOpenChat,
+                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                  label: const Text('Messages'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: BorderSide(
+                      color: AppColors.borderSubtle.withValues(alpha: 0.85),
+                    ),
+                    textStyle: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 380 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 18 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
@@ -447,11 +590,18 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.surfaceCard.withValues(alpha: 0.86),
+            AppColors.surfaceElevated.withValues(alpha: 0.74),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         border: Border.all(
           color: AppColors.borderSubtle.withValues(alpha: 0.3),
         ),
-        color: AppColors.surfaceDark.withValues(alpha: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,21 +613,29 @@ class _StatCard extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.manrope(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(icon, size: 16, color: AppColors.textSecondary),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.rosePink.withValues(alpha: 0.18),
+                ),
+                child: Icon(icon, size: 14, color: AppColors.rosePink),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.jost(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: Colors.white,

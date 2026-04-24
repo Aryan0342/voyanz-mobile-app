@@ -74,63 +74,69 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                 slivers: [
                   // ── Header with title ──
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                      child: Text(
-                        t.messages,
-                        style: GoogleFonts.jost(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                        child: Text(
+                          t.messages,
+                          style: GoogleFonts.jost(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   // ── Search bar ──
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                      child: TextField(
-                        controller: _searchCtrl,
-                        style: GoogleFonts.montserrat(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: t.searchConversations,
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: AppColors.textMuted,
+                    child: _RevealIn(
+                      delayMs: 70,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                        child: TextField(
+                          controller: _searchCtrl,
+                          style: GoogleFonts.montserrat(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
                           ),
-                          filled: true,
-                          fillColor: AppColors.surfaceCard.withValues(
-                            alpha: 0.6,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 14,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: AppColors.mediumPurple.withValues(
-                                alpha: 0.15,
+                          decoration: InputDecoration(
+                            hintText: t.searchConversations,
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: AppColors.textMuted,
+                            ),
+                            filled: true,
+                            fillColor: AppColors.surfaceCard.withValues(
+                              alpha: 0.6,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: AppColors.mediumPurple.withValues(
+                                  alpha: 0.15,
+                                ),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: AppColors.rosePink,
+                                width: 1.5,
                               ),
                             ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(
-                              color: AppColors.rosePink,
-                              width: 1.5,
-                            ),
-                          ),
+                          onChanged: (_) => setState(() {}),
                         ),
-                        onChanged: (_) => setState(() {}),
                       ),
                     ),
                   ),
@@ -165,11 +171,14 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                         itemCount: filtered.length,
                         itemBuilder: (context, i) {
                           final g = filtered[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ConversationCard(
-                              group: g,
-                              onTap: () => context.push('/chat/${g.chgrId}'),
+                          return _RevealIn(
+                            delayMs: 120 + (i * 35),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ConversationCard(
+                                group: g,
+                                onTap: () => context.push('/chat/${g.chgrId}'),
+                              ),
                             ),
                           );
                         },
@@ -280,6 +289,32 @@ class _ConversationCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 320 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 14 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

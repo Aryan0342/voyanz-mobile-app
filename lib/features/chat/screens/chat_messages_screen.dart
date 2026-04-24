@@ -88,16 +88,17 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                 children: [
                   Text(
                     t.conversation,
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.jost(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
                   Text(
                     t.activeNow,
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.manrope(
                       fontSize: 11,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.success,
                     ),
                   ),
@@ -190,9 +191,12 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                     itemBuilder: (_, i) {
                       final msg = messages[messages.length - 1 - i];
                       final isMe = msg.senderName == 'You'; // Mock check
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _MessageBubble(message: msg, isMe: isMe),
+                      return _RevealIn(
+                        delayMs: i * 18,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _MessageBubble(message: msg, isMe: isMe),
+                        ),
                       );
                     },
                   );
@@ -203,7 +207,14 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
               decoration: BoxDecoration(
-                color: AppColors.deepIndigo.withValues(alpha: 0.95),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.surfaceCard.withValues(alpha: 0.86),
+                    AppColors.surfaceElevated.withValues(alpha: 0.92),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 border: Border(
                   top: BorderSide(
                     color: AppColors.mediumPurple.withValues(alpha: 0.2),
@@ -232,13 +243,13 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                           controller: _msgCtrl,
                           maxLines: null,
                           textInputAction: TextInputAction.newline,
-                          style: GoogleFonts.montserrat(
+                          style: GoogleFonts.manrope(
                             color: AppColors.textPrimary,
                             fontSize: 15,
                           ),
                           decoration: InputDecoration(
                             hintText: t.typeMessage,
-                            hintStyle: GoogleFonts.montserrat(
+                            hintStyle: GoogleFonts.manrope(
                               color: AppColors.textMuted,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -436,6 +447,32 @@ class _MessageBubble extends ConsumerWidget {
         if (isMe) const SizedBox(width: 40),
         if (!isMe) const SizedBox(width: 40),
       ],
+    );
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 280 + delayMs),
+      curve: Curves.easeOut,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

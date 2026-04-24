@@ -159,95 +159,101 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 slivers: [
                   // ── Header ──
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.sessionHistory,
-                            style: GoogleFonts.jost(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              t.sessionHistory,
+                              style: GoogleFonts.jost(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            t.pastConsultations,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              color: AppColors.textMuted,
+                            const SizedBox(height: 8),
+                            Text(
+                              t.pastConsultations,
+                              style: GoogleFonts.manrope(
+                                fontSize: 14,
+                                color: AppColors.textMuted,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          GlassCard(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                _HistoryStat(
-                                  label: t.totalSessions,
-                                  value: '${validItems.length}',
-                                  color: AppColors.mediumPurple,
-                                  icon: Icons.history,
-                                ),
-                                const SizedBox(width: 10),
-                                _HistoryStat(
-                                  label: t.completed,
-                                  value: '${counts['completed'] ?? 0}',
-                                  color: AppColors.success,
-                                  icon: Icons.check_circle_outline,
-                                ),
-                                const SizedBox(width: 10),
-                                _HistoryStat(
-                                  label: t.pending,
-                                  value: '${counts['pending'] ?? 0}',
-                                  color: AppColors.warning,
-                                  icon: Icons.schedule,
-                                ),
-                              ],
+                            const SizedBox(height: 16),
+                            GlassCard(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  _HistoryStat(
+                                    label: t.totalSessions,
+                                    value: '${validItems.length}',
+                                    color: AppColors.mediumPurple,
+                                    icon: Icons.history,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _HistoryStat(
+                                    label: t.completed,
+                                    value: '${counts['completed'] ?? 0}',
+                                    color: AppColors.success,
+                                    icon: Icons.check_circle_outline,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _HistoryStat(
+                                    label: t.pending,
+                                    value: '${counts['pending'] ?? 0}',
+                                    color: AppColors.warning,
+                                    icon: Icons.schedule,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   // ── Filter chips ──
                   SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 50,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        children: [
-                          _FilterChip(
-                            label: t.all,
-                            isSelected: _selectedFilter == 'All',
-                            onTap: () =>
-                                setState(() => _selectedFilter = 'All'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: t.completed,
-                            isSelected: _selectedFilter == 'Completed',
-                            onTap: () =>
-                                setState(() => _selectedFilter = 'Completed'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: t.cancelled,
-                            isSelected: _selectedFilter == 'Cancelled',
-                            onTap: () =>
-                                setState(() => _selectedFilter = 'Cancelled'),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: t.pending,
-                            isSelected: _selectedFilter == 'Pending',
-                            onTap: () =>
-                                setState(() => _selectedFilter = 'Pending'),
-                          ),
-                        ],
+                    child: _RevealIn(
+                      delayMs: 70,
+                      child: SizedBox(
+                        height: 50,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          children: [
+                            _FilterChip(
+                              label: t.all,
+                              isSelected: _selectedFilter == 'All',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = 'All'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: t.completed,
+                              isSelected: _selectedFilter == 'Completed',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = 'Completed'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: t.cancelled,
+                              isSelected: _selectedFilter == 'Cancelled',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = 'Cancelled'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: t.pending,
+                              isSelected: _selectedFilter == 'Pending',
+                              onTap: () =>
+                                  setState(() => _selectedFilter = 'Pending'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -283,9 +289,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         itemCount: filteredItems.length,
                         itemBuilder: (context, i) {
                           final item = filteredItems[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _SessionCard(item: item),
+                          return _RevealIn(
+                            delayMs: 110 + (i * 28),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _SessionCard(item: item),
+                            ),
                           );
                         },
                       ),
@@ -598,6 +607,32 @@ class _SessionCard extends ConsumerWidget {
           end: Alignment.bottomRight,
         );
     }
+  }
+}
+
+class _RevealIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _RevealIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 340 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, builtChild) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - value)),
+            child: builtChild,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 
