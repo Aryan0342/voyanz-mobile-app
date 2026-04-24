@@ -22,6 +22,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _obscure = true;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
@@ -45,6 +47,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
@@ -252,6 +256,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 ),
                                 const SizedBox(height: 20),
                                 TextFormField(
+                                  focusNode: _emailFocusNode,
                                   controller: _emailCtrl,
                                   decoration: InputDecoration(
                                     labelText: t.email,
@@ -261,12 +266,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction: TextInputAction.next,
+                                  autocorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization: TextCapitalization.none,
                                   validator: (v) => (v == null || v.isEmpty)
                                       ? t.emailRequired
                                       : null,
                                 ),
                                 const SizedBox(height: 16),
                                 TextFormField(
+                                  focusNode: _passwordFocusNode,
                                   controller: _passwordCtrl,
                                   decoration: InputDecoration(
                                     labelText: t.password,
@@ -283,6 +292,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   obscureText: _obscure,
                                   textInputAction: TextInputAction.done,
+                                  autocorrect: false,
+                                  enableSuggestions: false,
                                   validator: (v) => (v == null || v.isEmpty)
                                       ? t.passwordRequired
                                       : null,

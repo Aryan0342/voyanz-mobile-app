@@ -27,6 +27,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  final _firstNameFocusNode = FocusNode();
+  final _lastNameFocusNode = FocusNode();
+  final _displayNameFocusNode = FocusNode();
+  final _mobileFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
   String _role = 'customer';
   String _gender = 'other';
   bool _acceptCgu = false;
@@ -49,6 +56,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _firstNameFocusNode.dispose();
+    _lastNameFocusNode.dispose();
+    _displayNameFocusNode.dispose();
+    _mobileFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _displayNameCtrl.dispose();
@@ -277,11 +291,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 children: [
                                   Expanded(
                                     child: TextFormField(
+                                      focusNode: _firstNameFocusNode,
                                       controller: _firstNameCtrl,
                                       decoration: InputDecoration(
                                         labelText: t.firstName,
                                       ),
                                       textInputAction: TextInputAction.next,
+                                      autocorrect: false,
+                                      enableSuggestions: false,
+                                      textCapitalization:
+                                          TextCapitalization.words,
                                       validator: (v) => (v == null || v.isEmpty)
                                           ? t.required
                                           : null,
@@ -290,11 +309,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: TextFormField(
+                                      focusNode: _lastNameFocusNode,
                                       controller: _lastNameCtrl,
                                       decoration: InputDecoration(
                                         labelText: t.lastName,
                                       ),
                                       textInputAction: TextInputAction.next,
+                                      autocorrect: false,
+                                      enableSuggestions: false,
+                                      textCapitalization:
+                                          TextCapitalization.words,
                                       validator: (v) => (v == null || v.isEmpty)
                                           ? t.required
                                           : null,
@@ -304,12 +328,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
+                                focusNode: _displayNameFocusNode,
                                 controller: _displayNameCtrl,
                                 decoration: InputDecoration(
                                   labelText: t.displayName,
                                   prefixIcon: const Icon(Icons.badge_outlined),
                                 ),
                                 textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                textCapitalization: TextCapitalization.words,
                                 validator: (v) => (v == null || v.isEmpty)
                                     ? t.required
                                     : null,
@@ -356,6 +384,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
+                                focusNode: _mobileFocusNode,
                                 controller: _mobileCtrl,
                                 decoration: InputDecoration(
                                   labelText: t.mobile,
@@ -363,12 +392,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                                 keyboardType: TextInputType.phone,
                                 textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
                                 validator: (v) => (v == null || v.isEmpty)
                                     ? t.required
                                     : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
+                                focusNode: _emailFocusNode,
                                 controller: _emailCtrl,
                                 decoration: InputDecoration(
                                   labelText: t.email,
@@ -376,12 +408,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                textCapitalization: TextCapitalization.none,
                                 validator: (v) => (v == null || v.isEmpty)
                                     ? t.required
                                     : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
+                                focusNode: _passwordFocusNode,
                                 controller: _passwordCtrl,
                                 decoration: InputDecoration(
                                   labelText: t.password,
@@ -389,12 +425,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                                 obscureText: true,
                                 textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
                                 validator: (v) => (v != null && v.length >= 6)
                                     ? null
                                     : t.min6Chars,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
+                                focusNode: _confirmPasswordFocusNode,
                                 controller: _confirmPasswordCtrl,
                                 decoration: InputDecoration(
                                   labelText: t.confirmPassword,
@@ -402,6 +441,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                                 obscureText: true,
                                 textInputAction: TextInputAction.done,
+                                autocorrect: false,
+                                enableSuggestions: false,
                                 validator: (v) => v == _passwordCtrl.text
                                     ? null
                                     : t.passwordsNoMatch,
