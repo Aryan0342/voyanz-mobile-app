@@ -30,6 +30,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
   Duration _elapsed = Duration.zero;
   bool _sessionEndedHandled = false;
+  bool _heartbeatActive = false;
 
   RtcEngine? _engine;
   bool _engineInitializing = false;
@@ -71,8 +72,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   @override
   void initState() {
     super.initState();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       unawaited(() async {
+        if (!mounted || !_heartbeatActive) return;
         try {
           await ref.read(sessionsRepositoryProvider).sendHeartbeat(widget.seId);
         } catch (_) {}
@@ -134,6 +136,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
               _connectionState = ConnectionStateType.connectionStateConnected;
               _connectionError = null;
             });
+            _heartbeatActive = true;
           },
           onUserJoined: (connection, remoteUid, elapsed) {
             if (!mounted) return;
@@ -202,6 +205,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   }
 
   Future<void> _disposeEngine() async {
+    _heartbeatActive = false;
     final engine = _engine;
     _engine = null;
 

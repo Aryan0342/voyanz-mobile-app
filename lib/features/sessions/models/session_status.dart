@@ -32,14 +32,27 @@ class SessionStatus {
 
   bool get isCalling => normalizedStatus == 'calling';
 
+  bool get isAccepted => normalizedStatus == 'accepted';
+
+  bool get isPending => normalizedStatus == 'pending';
+
   bool get isInProgress => normalizedStatus == 'inprogress';
 
   bool get isCompleted => normalizedStatus == 'completed';
 
   bool get isRejected => normalizedStatus == 'rejected';
 
+  bool get isCanceled =>
+      normalizedStatus == 'canceled' || normalizedStatus == 'cancelled';
+
   bool get isKnownSpecStatus =>
-      isCalling || isInProgress || isCompleted || isRejected;
+      isCalling ||
+      isAccepted ||
+      isPending ||
+      isInProgress ||
+      isCompleted ||
+      isRejected ||
+      isCanceled;
 
   bool get isActive {
     return isInProgress;
@@ -63,19 +76,29 @@ class SessionStatus {
     }
   }
 
-  bool get isWaiting => isCalling || (!isActive && !isTerminal);
+  bool get isWaiting =>
+      isCalling || isAccepted || isPending || (!isActive && !isTerminal);
 
   String localizedLabel(AppTranslations t) {
     if (isCalling) return t.sessionStatusCallingLabel;
+    if (isAccepted) return t.sessionStatusAcceptedLabel;
+    if (isPending) return t.sessionStatusPendingLabel;
     if (isInProgress) return t.sessionStatusInProgressLabel;
     if (isCompleted) return t.sessionStatusCompletedLabel;
     if (isRejected) return t.sessionStatusRejectedLabel;
+    if (isCanceled) return t.sessionStatusCanceledLabel;
     return t.sessionStatusUnknownLabel(status);
   }
 
   String localizedMessage(AppTranslations t, {required bool isProfessional}) {
     if (isCalling) {
       return t.sessionStatusCallingMessage(isProfessional: isProfessional);
+    }
+    if (isAccepted) {
+      return t.sessionStatusAcceptedMessage(isProfessional: isProfessional);
+    }
+    if (isPending) {
+      return t.sessionStatusPendingMessage(isProfessional: isProfessional);
     }
     if (isInProgress) {
       return t.sessionStatusInProgressMessage(isProfessional: isProfessional);
@@ -85,6 +108,9 @@ class SessionStatus {
     }
     if (isRejected) {
       return t.sessionStatusRejectedMessage;
+    }
+    if (isCanceled) {
+      return t.sessionStatusCanceledMessage;
     }
     return t.sessionStatusChangedMessage(status);
   }

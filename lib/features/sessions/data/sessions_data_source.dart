@@ -331,12 +331,45 @@ class SessionsDataSource {
 
     if (data is Map<String, dynamic>) {
       sessionId = _extractSessionId(data);
-      // Extract 409-specific fields from duplicate-session response
+
+      final sessionPayload = data['session'];
+      final nestedSession = sessionPayload is Map<String, dynamic>
+          ? sessionPayload
+          : null;
+
+      // Extract 409-specific fields from duplicate-session responses.
       if (statusCode == 409) {
-        seType = data['se_type']?.toString();
-        seStatus = data['se_status']?.toString();
-        seRoom = data['se_room']?.toString();
-        chgrId = data['chgr_id']?.toString();
+        seType =
+            data['se_type']?.toString() ??
+            nestedSession?['se_type']?.toString();
+        seStatus =
+            data['se_status']?.toString() ??
+            nestedSession?['se_status']?.toString();
+        seRoom =
+            data['se_room']?.toString() ??
+            nestedSession?['se_room']?.toString();
+        chgrId =
+            data['chgr_id']?.toString() ??
+            nestedSession?['chgr_id']?.toString();
+      }
+
+      final err = data['err'];
+      if (err is Map<String, dynamic>) {
+        final nestedMessage =
+            err['message']?.toString() ??
+            err['key']?.toString() ??
+            err['code']?.toString();
+        if (nestedMessage != null && nestedMessage.trim().isNotEmpty) {
+          return SessionLaunchException(
+            nestedMessage,
+            sessionId: sessionId,
+            statusCode: statusCode,
+            seType: seType,
+            seStatus: seStatus,
+            seRoom: seRoom,
+            chgrId: chgrId,
+          );
+        }
       }
     }
 

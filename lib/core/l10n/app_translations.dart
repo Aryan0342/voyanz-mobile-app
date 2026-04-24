@@ -436,9 +436,12 @@ class AppTranslations {
       _fr ? 'Ouvrir les conversations' : 'Open conversations';
   String get endSession => _fr ? 'Terminer la session' : 'End Session';
   String get sessionStatusCallingLabel => _fr ? 'Appel en cours' : 'Calling';
+  String get sessionStatusAcceptedLabel => _fr ? 'Acceptée' : 'Accepted';
+  String get sessionStatusPendingLabel => _fr ? 'En attente' : 'Pending';
   String get sessionStatusInProgressLabel => _fr ? 'En cours' : 'In progress';
   String get sessionStatusCompletedLabel => _fr ? 'Terminée' : 'Completed';
   String get sessionStatusRejectedLabel => _fr ? 'Refusée' : 'Rejected';
+  String get sessionStatusCanceledLabel => _fr ? 'Annulée' : 'Canceled';
   String sessionStatusUnknownLabel(String rawStatus) => _fr
       ? (rawStatus.isEmpty ? 'Inconnu' : rawStatus)
       : (rawStatus.isEmpty ? 'Unknown' : rawStatus);
@@ -449,6 +452,20 @@ class AppTranslations {
       : (isProfessional
             ? 'The customer is being connected. Please stay on this screen.'
             : 'The professional is being connected. Please stay on this screen.');
+  String sessionStatusAcceptedMessage({required bool isProfessional}) => _fr
+      ? (isProfessional
+            ? 'La demande a été acceptée. La connexion est en cours.'
+            : 'La demande a été acceptée. La connexion est en cours.')
+      : (isProfessional
+            ? 'The request was accepted. The connection is in progress.'
+            : 'The request was accepted. The connection is in progress.');
+  String sessionStatusPendingMessage({required bool isProfessional}) => _fr
+      ? (isProfessional
+            ? 'La session est en attente de confirmation.'
+            : 'La session est en attente de confirmation.')
+      : (isProfessional
+            ? 'The session is waiting for confirmation.'
+            : 'The session is waiting for confirmation.');
   String sessionStatusInProgressMessage({required bool isProfessional}) => _fr
       ? (isProfessional
             ? 'La session est active. Vous êtes en consultation avec votre client.'
@@ -461,6 +478,8 @@ class AppTranslations {
   String get sessionStatusRejectedMessage => _fr
       ? 'Cette session a été refusée et ne peut pas être rejointe.'
       : 'This session was rejected and cannot be joined.';
+  String get sessionStatusCanceledMessage =>
+      _fr ? 'Cette session a été annulée.' : 'This session was canceled.';
   String sessionStatusChangedMessage(String rawStatus) => _fr
       ? 'Le statut de la session a changé : ${rawStatus.isEmpty ? 'inconnu' : rawStatus}.'
       : 'Session status changed: ${rawStatus.isEmpty ? 'unknown' : rawStatus}.';
