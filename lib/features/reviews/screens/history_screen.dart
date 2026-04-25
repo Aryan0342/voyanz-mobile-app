@@ -209,7 +209,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               t.pastConsultations,
                               style: GoogleFonts.manrope(
                                 fontSize: 14,
-                                color: AppColors.textMuted,
+                                color: Colors.white70,
                               ),
                             ),
                             const SizedBox(height: 16),

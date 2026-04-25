@@ -155,9 +155,9 @@ class GradientScaffold extends StatelessWidget {
                 child: Container(
                   height: 146,
                   decoration: const BoxDecoration(
-                    color: AppColors.surfaceHeader,
+                    gradient: AppGradients.headerNavbar,
                     border: Border(
-                      bottom: BorderSide(color: Color(0x33D9D0EC), width: 1),
+                      bottom: BorderSide(color: Color(0x26FFFFFF), width: 1),
                     ),
                   ),
                 ),

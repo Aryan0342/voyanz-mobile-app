@@ -33,6 +33,13 @@ abstract final class AppGradients {
     stops: [0.0, 0.55, 1.0],
   );
 
+  /// Website-like navbar/header gradient from voyanz.com.
+  static const headerNavbar = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [Color(0xFF240046), Color(0xFF0D1124)],
+  );
+
   /// Card shimmer gradient.
   static const card = LinearGradient(
     begin: Alignment.topLeft,

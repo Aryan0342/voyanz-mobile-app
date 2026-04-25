@@ -115,16 +115,16 @@ abstract final class AppTheme {
 
       // ── AppBar ──
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceHeader,
+        backgroundColor: AppColors.darkOverlay,
         elevation: 0,
         scrolledUnderElevation: 0.5,
         centerTitle: true,
         titleTextStyle: GoogleFonts.jost(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: Colors.white,
         ),
-        iconTheme: const IconThemeData(color: AppColors.deepIndigo),
+        iconTheme: const IconThemeData(color: Colors.white),
         surfaceTintColor: Colors.transparent,
       ),
 

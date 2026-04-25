@@ -139,7 +139,7 @@ class HomeShell extends ConsumerWidget {
                 child: Container(
                   height: 146,
                   decoration: const BoxDecoration(
-                    color: AppColors.surfaceHeader,
+                    gradient: AppGradients.headerNavbar,
                   ),
                 ),
               ),

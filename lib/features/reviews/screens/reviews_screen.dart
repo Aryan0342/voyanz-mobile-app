@@ -231,7 +231,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -241,7 +241,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.manrope(
                                 fontSize: 12,
-                                color: AppColors.textMuted,
+                                color: Colors.white70,
                               ),
                             ),
                           ],
@@ -305,7 +305,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -313,7 +313,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                               t.nReviews(totalReviews),
                               style: GoogleFonts.manrope(
                                 fontSize: 13,
-                                color: AppColors.textMuted,
+                                color: Colors.white70,
                               ),
                             ),
                             const SizedBox(height: 20),
