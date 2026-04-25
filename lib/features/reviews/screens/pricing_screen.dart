@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/appointments/providers/appointments_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
@@ -587,11 +588,17 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       );
       final listAsync = ref.watch(professionalsListProvider);
 
-      return Scaffold(
+      return GradientScaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           title: Text(
             t.sessionPricing,
-            style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
+            style: GoogleFonts.jost(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
         body: professionalAsync.when(
@@ -646,11 +653,17 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       // Original customer pricing screen
       final pricingAsync = ref.watch(customerPricingProvider);
 
-      return Scaffold(
+      return GradientScaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           title: Text(
             t.pricing,
-            style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
+            style: GoogleFonts.jost(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
         body: pricingAsync.when(

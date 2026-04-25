@@ -227,12 +227,15 @@ class _ProfessionalAvailabilityScreenState
 
     return GradientScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.surfaceDark,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.25),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         title: Text(
           t.manageSlots,
-          style: GoogleFonts.jost(fontWeight: FontWeight.w600),
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
