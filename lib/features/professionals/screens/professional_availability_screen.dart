@@ -226,24 +226,23 @@ class _ProfessionalAvailabilityScreenState
         MediaQuery.of(context).padding.top + kToolbarHeight + 16;
 
     return GradientScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        shadowColor: Colors.transparent,
+      appBar: VoyanzAppBar(
         title: Text(
           t.manageSlots,
           style: GoogleFonts.jost(
-            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
         actions: [
-          IconButton(
+          VoyanzAppBarIconButton(
+            icon: Icons.refresh,
             onPressed: () =>
                 ref.invalidate(professionalDisponibilitiesPayloadProvider),
-            icon: const Icon(Icons.refresh),
             tooltip: t.refresh,
           ),
+          const SizedBox(width: 12),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

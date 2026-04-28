@@ -115,17 +115,20 @@ abstract final class AppTheme {
 
       // ── AppBar ──
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.darkOverlay,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
+        toolbarHeight: kToolbarHeight,
         titleTextStyle: GoogleFonts.jost(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
         iconTheme: const IconThemeData(color: Colors.white),
-        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
       ),
 
       // ── Bottom NavigationBar ──

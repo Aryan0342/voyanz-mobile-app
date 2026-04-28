@@ -5,6 +5,7 @@ import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 
 String _resolveMediaUrl(String raw) {
@@ -67,9 +68,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: AppColors.deepIndigo.withValues(alpha: 0.95),
-        elevation: 0,
+      appBar: VoyanzAppBar(
+        showBackButton: true,
+        onBackPressed: () => Navigator.of(context).pop(),
         title: Row(
           children: [
             Container(
@@ -82,37 +83,32 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
               child: const Icon(Icons.person, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.conversation,
-                    style: GoogleFonts.jost(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.conversation,
+                  style: GoogleFonts.jost(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-                  Text(
-                    t.activeNow,
-                    style: GoogleFonts.manrope(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.success,
-                    ),
+                ),
+                Text(
+                  t.activeNow,
+                  style: GoogleFonts.manrope(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.success,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         actions: [
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          VoyanzAppBarIconButton(icon: Icons.more_vert, onPressed: () {}),
+          const SizedBox(width: 12),
         ],
       ),
       body: Container(

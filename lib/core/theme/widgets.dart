@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 
@@ -118,6 +121,139 @@ class GlassCard extends StatelessWidget {
       ),
       child: child,
     );
+  }
+}
+
+/// Shared app bar shell used across feature screens.
+class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final Widget? title;
+  final Widget? subtitle;
+  final Widget? leading;
+  final List<Widget>? actions;
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+  final bool centerTitle;
+  final double toolbarHeight;
+
+  const VoyanzAppBar({
+    super.key,
+    this.title,
+    this.subtitle,
+    this.leading,
+    this.actions,
+    this.showBackButton = false,
+    this.onBackPressed,
+    this.centerTitle = false,
+    this.toolbarHeight = kToolbarHeight,
+  });
+
+  @override
+  Size get preferredSize => Size.fromHeight(toolbarHeight);
+
+  void _handleBack(BuildContext context) {
+    if (onBackPressed != null) {
+      onBackPressed!();
+      return;
+    }
+
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveTitle = title == null
+        ? null
+        : subtitle == null
+        ? title
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [title!, const SizedBox(height: 2), subtitle!],
+          );
+
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      shadowColor: Colors.transparent,
+      centerTitle: centerTitle,
+      toolbarHeight: toolbarHeight,
+      titleSpacing: 0,
+      leadingWidth: showBackButton ? 68 : null,
+      leading:
+          leading ??
+          (showBackButton
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: VoyanzAppBarIconButton(
+                    icon: Icons.arrow_back_ios_new,
+                    onPressed: () => _handleBack(context),
+                    iconSize: 18,
+                  ),
+                )
+              : null),
+      title: effectiveTitle,
+      actions: actions,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: AppGradients.headerNavbar,
+              border: Border(
+                bottom: BorderSide(color: Color(0x26FFFFFF), width: 1),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular icon button used in shared app bars.
+class VoyanzAppBarIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final double iconSize;
+  final EdgeInsetsGeometry padding;
+
+  const VoyanzAppBarIconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.iconSize = 20,
+    this.padding = const EdgeInsets.all(10),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Material(
+      color: AppColors.surfaceCard.withValues(alpha: 0.16),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: padding,
+          child: Icon(icon, size: iconSize, color: Colors.white),
+        ),
+      ),
+    );
+
+    if (tooltip == null) {
+      return button;
+    }
+
+    return Tooltip(message: tooltip!, child: button);
   }
 }
 

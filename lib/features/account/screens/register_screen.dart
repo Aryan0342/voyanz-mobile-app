@@ -155,12 +155,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final t = ref.watch(translationsProvider);
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => context.pop(),
-        ),
+      appBar: VoyanzAppBar(
+        showBackButton: true,
+        onBackPressed: () => context.pop(),
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),

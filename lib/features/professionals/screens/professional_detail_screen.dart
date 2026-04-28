@@ -588,41 +588,21 @@ class _ProfessionalDetailScreenState
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard.withValues(alpha: 0.9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 18),
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      appBar: VoyanzAppBar(
+        showBackButton: true,
+        onBackPressed: () => Navigator.of(context).pop(),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: ScaleTransition(
               scale: _favoriteScale,
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCard.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isMarkedFavorite
-                        ? AppColors.rosePink
-                        : AppColors.textMuted,
-                    size: 22,
-                  ),
-                ),
+              child: VoyanzAppBarIconButton(
+                icon: isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
+                iconSize: 22,
                 onPressed: _toggleFavorite,
+                tooltip: isMarkedFavorite
+                    ? t.removedFavorites
+                    : t.addedFavorites,
               ),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
@@ -231,12 +232,12 @@ class _ProfessionalsListScreenState
 
     final t = ref.watch(translationsProvider);
     return Scaffold(
-      appBar: AppBar(
-        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
+      appBar: VoyanzAppBar(
         title: Text(
           t.explore,
-          style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w600),
+          style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w700),
         ),
+        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
       ),
       body: professionalsAsync.when(
         loading: () => const Center(

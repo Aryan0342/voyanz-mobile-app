@@ -32,10 +32,7 @@ class _ProfessionalDashboardScreenState
     final name = _displayName(user, professionalFallback: t.professional);
 
     return GradientScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
+      appBar: VoyanzAppBar(
         title: Text(
           t.dashboard,
           style: GoogleFonts.jost(
@@ -44,6 +41,7 @@ class _ProfessionalDashboardScreenState
             color: Colors.white,
           ),
         ),
+        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
       ),
       body: SafeArea(
         child: CustomScrollView(
