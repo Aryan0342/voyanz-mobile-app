@@ -619,62 +619,164 @@ class _ExploreHero extends ConsumerWidget {
     final t = ref.watch(translationsProvider);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.surfaceCard.withValues(alpha: 0.95),
-            AppColors.surfaceElevated.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.92),
+            AppColors.surfaceElevated.withValues(alpha: 0.92),
+            AppColors.mediumPurple.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.mediumPurple.withValues(alpha: 0.22),
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7B61FF), Color(0xFFA78BFA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.mediumPurple.withValues(alpha: 0.16),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.explore, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.discoverYourGuide,
+                      style: GoogleFonts.jost(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      t.nAdvisorsAvailable(totalCount),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _HeroTag(
+                icon: Icons.bolt_rounded,
+                label: t.online,
+                tone: AppColors.online,
+              ),
+              _HeroTag(
+                icon: Icons.videocam_rounded,
+                label: t.videoCall,
+                tone: AppColors.mediumPurple,
+              ),
+              _HeroTag(
+                icon: Icons.chat_bubble_rounded,
+                label: t.textChat,
+                tone: AppColors.rosePink,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(
+                    color: AppColors.borderSubtle.withValues(alpha: 0.55),
+                  ),
+                ),
+                child: Text(
+                  '${totalCount.toString()} live',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.deepIndigo,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroTag extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color tone;
+
+  const _HeroTag({required this.icon, required this.label, required this.tone});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: tone.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: tone.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              gradient: AppGradients.accent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.explore, color: Colors.white),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.discoverYourGuide,
-                  style: GoogleFonts.jost(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  t.nAdvisorsAvailable(totalCount),
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+          Icon(icon, size: 12, color: tone),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -730,26 +832,33 @@ class _FilterPanel extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.mediumPurple.withValues(alpha: 0.15),
-        ),
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 t.filters,
                 style: GoogleFonts.jost(
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(width: 8),
               if (activeFiltersCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -757,7 +866,7 @@ class _FilterPanel extends ConsumerWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.18),
+                    color: AppColors.mediumPurple.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
@@ -769,7 +878,6 @@ class _FilterPanel extends ConsumerWidget {
                     ),
                   ),
                 ),
-              const Spacer(),
               TextButton.icon(
                 onPressed: onReset,
                 icon: const Icon(Icons.refresh, size: 16),
@@ -863,13 +971,7 @@ class _FilterPanel extends ConsumerWidget {
                         .take(8)
                         .map(
                           (value) => ChoiceChip(
-                            label: Text(
-                              value == 'All'
-                                  ? t.all
-                                  : value == 'Online'
-                                  ? t.online
-                                  : t.recommended,
-                            ),
+                            label: Text(value == 'All' ? t.all : value),
                             selected: selectedSpecialty == value,
                             onSelected: (_) => onSpecialtyChanged(value),
                           ),
@@ -1065,21 +1167,21 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.surfaceCard.withValues(alpha: 0.92),
-              AppColors.surfaceElevated.withValues(alpha: 0.82),
+              AppColors.surfaceCard.withValues(alpha: 0.96),
+              AppColors.surfaceElevated.withValues(alpha: 0.90),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: AppColors.mediumPurple.withValues(alpha: 0.15),
+            color: AppColors.borderSubtle.withValues(alpha: 0.45),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              color: AppColors.mediumPurple.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -1265,21 +1367,19 @@ class _ProfessionalCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.surfaceCard.withValues(alpha: 0.88),
-                AppColors.surfaceElevated.withValues(alpha: 0.74),
+                Colors.white.withValues(alpha: 0.92),
+                AppColors.surfaceElevated.withValues(alpha: 0.86),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: AppColors.mediumPurple.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 10,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
             ],
           ),

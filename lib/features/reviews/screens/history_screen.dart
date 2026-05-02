@@ -209,7 +209,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               t.pastConsultations,
                               style: GoogleFonts.manrope(
                                 fontSize: 14,
-                                color: Colors.white70,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -891,7 +891,7 @@ class _HistoryStat extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.montserrat(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
               ),
             ),
           ],

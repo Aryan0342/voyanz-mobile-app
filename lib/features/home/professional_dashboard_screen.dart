@@ -38,7 +38,7 @@ class _ProfessionalDashboardScreenState
           style: GoogleFonts.jost(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
@@ -57,6 +57,54 @@ class _ProfessionalDashboardScreenState
                     subtitle: t.yourProDashboard,
                     onOpenSlots: () => context.go('/availability'),
                     onOpenChat: () => context.go('/chat'),
+                  ),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+            SliverToBoxAdapter(
+              child: _RevealIn(
+                delayMs: 50,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.rosePink.withValues(alpha: 0.14),
+                          AppColors.mediumPurple.withValues(alpha: 0.12),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.mediumPurple.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.campaign_rounded,
+                          color: AppColors.rosePink,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Fresh UI loaded: new hero, stronger cards, and a clearer navigation shell.',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -160,7 +208,7 @@ class _ProfessionalDashboardScreenState
                     style: GoogleFonts.jost(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -270,7 +318,7 @@ class _ProfessionalDashboardScreenState
                                           style: GoogleFonts.manrope(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.white,
+                                            color: AppColors.textPrimary,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -614,7 +662,7 @@ class _StatCard extends StatelessWidget {
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -636,7 +684,7 @@ class _StatCard extends StatelessWidget {
             style: GoogleFonts.jost(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: AppColors.textPrimary,
             ),
           ),
         ],

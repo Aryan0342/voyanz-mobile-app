@@ -69,7 +69,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               style: GoogleFonts.jost(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -79,7 +79,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.montserrat(
                                 fontSize: 13,
-                                color: Colors.white70,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -121,7 +121,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                           style: GoogleFonts.jost(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),

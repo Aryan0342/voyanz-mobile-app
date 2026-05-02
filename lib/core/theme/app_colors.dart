@@ -13,17 +13,17 @@ abstract final class AppColors {
   static const magentaRose = Color(0xFF9B3366);
 
   // ── Light surface / card shades ──
-  static const surfaceDark = Color(0xFFF4F1FA);
+  static const surfaceDark = Color(0xFFF8F9FC);
   static const surfaceCard = Color(0xFFFFFFFF);
-  static const surfaceElevated = Color(0xFFF8F6FD);
-  static const surfaceLight = Color(0xFFF2EEFA);
-  static const surfaceHeader = Color(0xFFD5C5FB);
-  static const borderSubtle = Color(0xFFD9D0EC);
+  static const surfaceElevated = Color(0xFFFCFCFE);
+  static const surfaceLight = Color(0xFFF5F6FA);
+  static const surfaceHeader = Color(0xF4FFFFFF);
+  static const borderSubtle = Color(0x22C7CDE0);
 
   // ── Text on light surfaces ──
   static const textPrimary = Color(0xFF19142C);
-  static const textSecondary = Color(0xFF5F547E);
-  static const textMuted = Color(0xFF867AA7);
+  static const textSecondary = Color(0xFF5A5F73);
+  static const textMuted = Color(0xFF7D8397);
 
   // ── Semantic ──
   static const success = Color(0xFF16A34A);

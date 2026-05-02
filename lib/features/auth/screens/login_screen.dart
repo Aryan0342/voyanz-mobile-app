@@ -126,229 +126,289 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: SlideTransition(
-                    position: _slideAnim,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        GlassCard(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 54,
-                                    height: 54,
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      gradient: AppGradients.accent,
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    child: (logo != null && logo.isNotEmpty)
-                                        ? Image.network(
-                                            logo,
-                                            fit: BoxFit.contain,
-                                            errorBuilder: (_, __, ___) =>
-                                                Image.asset(
-                                                  'assets/images/voyanz-logo.png',
-                                                  fit: BoxFit.contain,
-                                                ),
-                                          )
-                                        : Image.asset(
-                                            'assets/images/voyanz-logo.png',
-                                            fit: BoxFit.contain,
-                                          ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          (agencyName != null &&
-                                                  agencyName.isNotEmpty)
-                                              ? agencyName
-                                              : 'Voyanz',
-                                          style: GoogleFonts.jost(
-                                            fontSize: 26,
-                                            fontWeight: FontWeight.w700,
-                                            color: brandPrimary,
-                                          ),
-                                        ),
-                                        Text(
-                                          agencyTag,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.manrope(
-                                            fontSize: 12,
-                                            color: AppColors.textMuted,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                t.welcomeBack,
-                                style: GoogleFonts.jost(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                t.tagline,
-                                style: GoogleFonts.manrope(
-                                  fontSize: 14,
-                                  height: 1.5,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: const [
-                                  _FeaturePill(label: 'Secure access'),
-                                  _FeaturePill(label: 'Live sessions'),
-                                  _FeaturePill(label: 'Agency branding'),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        GlassCard(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  t.logIn,
-                                  style: GoogleFonts.jost(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Use your account credentials to continue.',
-                                  style: GoogleFonts.manrope(
-                                    fontSize: 13,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  focusNode: _emailFocusNode,
-                                  controller: _emailCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: t.email,
-                                    prefixIcon: const Icon(
-                                      Icons.email_outlined,
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction: TextInputAction.next,
-                                  autocorrect: false,
-                                  enableSuggestions: false,
-                                  textCapitalization: TextCapitalization.none,
-                                  validator: (v) => (v == null || v.isEmpty)
-                                      ? t.emailRequired
-                                      : null,
-                                ),
-                                const SizedBox(height: 16),
-                                TextFormField(
-                                  focusNode: _passwordFocusNode,
-                                  controller: _passwordCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: t.password,
-                                    prefixIcon: const Icon(Icons.lock_outline),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                      ),
-                                      onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
-                                    ),
-                                  ),
-                                  obscureText: _obscure,
-                                  textInputAction: TextInputAction.done,
-                                  autocorrect: false,
-                                  enableSuggestions: false,
-                                  validator: (v) => (v == null || v.isEmpty)
-                                      ? t.passwordRequired
-                                      : null,
-                                  onFieldSubmitted: (_) => _submit(),
-                                ),
-                                const SizedBox(height: 24),
-                                GradientButton(
-                                  onPressed: authState.isLoading
-                                      ? null
-                                      : _submit,
-                                  width: double.infinity,
-                                  child: authState.isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Text(t.logIn),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextButton(
-                          onPressed: () => context.push('/register'),
-                          child: Text.rich(
-                            TextSpan(
-                              text: t.noAccount,
-                              style: GoogleFonts.manrope(
-                                color: AppColors.textMuted,
-                                fontSize: 14,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: t.signUp,
-                                  style: GoogleFonts.manrope(
-                                    color: AppColors.rosePink,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -70,
+              left: -40,
+              child: IgnorePointer(
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.rosePink.withValues(alpha: 0.20),
+                        Colors.transparent,
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+            Positioned(
+              bottom: 18,
+              right: -30,
+              child: IgnorePointer(
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.mediumPurple.withValues(alpha: 0.18),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: FadeTransition(
+                      opacity: _fadeAnim,
+                      child: SlideTransition(
+                        position: _slideAnim,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            GlassCard(
+                              padding: const EdgeInsets.all(28),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        padding: const EdgeInsets.all(11),
+                                        decoration: BoxDecoration(
+                                          gradient: AppGradients.accent,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: brandPrimary.withValues(
+                                                alpha: 0.24,
+                                              ),
+                                              blurRadius: 18,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ],
+                                        ),
+                                        child: (logo != null && logo.isNotEmpty)
+                                            ? Image.network(
+                                                logo,
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Image.asset(
+                                                      'assets/images/voyanz-logo.png',
+                                                      fit: BoxFit.contain,
+                                                    ),
+                                              )
+                                            : Image.asset(
+                                                'assets/images/voyanz-logo.png',
+                                                fit: BoxFit.contain,
+                                              ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              (agencyName != null &&
+                                                      agencyName.isNotEmpty)
+                                                  ? agencyName
+                                                  : 'Voyanz',
+                                              style: GoogleFonts.jost(
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.w700,
+                                                color: brandPrimary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              agencyTag,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.manrope(
+                                                fontSize: 12,
+                                                color: AppColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 22),
+                                  Text(
+                                    t.welcomeBack,
+                                    style: GoogleFonts.jost(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    t.tagline,
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 14,
+                                      height: 1.5,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: const [
+                                      _FeaturePill(label: 'Secure access'),
+                                      _FeaturePill(label: 'Live sessions'),
+                                      _FeaturePill(label: 'Agency branding'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            GlassCard(
+                              padding: const EdgeInsets.all(24),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      t.logIn,
+                                      style: GoogleFonts.jost(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Use your account credentials to continue.',
+                                      style: GoogleFonts.manrope(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextFormField(
+                                      focusNode: _emailFocusNode,
+                                      controller: _emailCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: t.email,
+                                        prefixIcon: const Icon(
+                                          Icons.email_outlined,
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.next,
+                                      autocorrect: false,
+                                      enableSuggestions: false,
+                                      textCapitalization:
+                                          TextCapitalization.none,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? t.emailRequired
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      focusNode: _passwordFocusNode,
+                                      controller: _passwordCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: t.password,
+                                        prefixIcon: const Icon(
+                                          Icons.lock_outline,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscure
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                          ),
+                                          onPressed: () => setState(
+                                            () => _obscure = !_obscure,
+                                          ),
+                                        ),
+                                      ),
+                                      obscureText: _obscure,
+                                      textInputAction: TextInputAction.done,
+                                      autocorrect: false,
+                                      enableSuggestions: false,
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? t.passwordRequired
+                                          : null,
+                                      onFieldSubmitted: (_) => _submit(),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    GradientButton(
+                                      onPressed: authState.isLoading
+                                          ? null
+                                          : _submit,
+                                      width: double.infinity,
+                                      child: authState.isLoading
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : Text(t.logIn),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            TextButton(
+                              onPressed: () => context.push('/register'),
+                              child: Text.rich(
+                                TextSpan(
+                                  text: t.noAccount,
+                                  style: GoogleFonts.manrope(
+                                    color: AppColors.textMuted,
+                                    fontSize: 14,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: t.signUp,
+                                      style: GoogleFonts.manrope(
+                                        color: AppColors.rosePink,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

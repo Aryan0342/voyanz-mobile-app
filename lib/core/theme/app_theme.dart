@@ -85,7 +85,7 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.surfaceDark,
+      scaffoldBackgroundColor: Colors.white,
       textTheme: textTheme,
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -125,16 +125,16 @@ abstract final class AppTheme {
         titleTextStyle: GoogleFonts.jost(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: AppColors.textPrimary,
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         shadowColor: Colors.transparent,
       ),
 
       // ── Bottom NavigationBar ──
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
-        indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.17),
+        backgroundColor: Colors.white.withValues(alpha: 0.68),
+        indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.12),
         elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -162,10 +162,10 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceCard,
         elevation: 0,
-        shadowColor: AppColors.mediumPurple.withValues(alpha: 0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.06),
         margin: const EdgeInsets.all(0),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           side: BorderSide(
             color: AppColors.borderSubtle.withValues(alpha: 0.6),
           ),
@@ -175,7 +175,7 @@ abstract final class AppTheme {
       // ── Input fields ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevated,
+        fillColor: Colors.white.withValues(alpha: 0.82),
         hintStyle: GoogleFonts.manrope(
           color: AppColors.textMuted,
           fontSize: 14,
@@ -195,32 +195,32 @@ abstract final class AppTheme {
         suffixIconColor: AppColors.textMuted,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
-          vertical: 16,
+          vertical: 15,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
-            color: AppColors.borderSubtle.withValues(alpha: 0.8),
+            color: AppColors.borderSubtle.withValues(alpha: 0.55),
             width: 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
-            color: AppColors.borderSubtle.withValues(alpha: 0.8),
+            color: AppColors.borderSubtle.withValues(alpha: 0.55),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: AppColors.rosePink, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
       ),
@@ -228,7 +228,7 @@ abstract final class AppTheme {
       // ── Buttons ──
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.rosePink,
+          backgroundColor: AppColors.mediumPurple,
           foregroundColor: Colors.white,
           textStyle: GoogleFonts.manrope(
             fontSize: 15,
@@ -236,7 +236,7 @@ abstract final class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
           ),
           elevation: 0,
           shadowColor: AppColors.rosePink.withValues(alpha: 0.24),
@@ -244,15 +244,18 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.rosePink,
-          side: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
+          foregroundColor: AppColors.deepIndigo,
+          side: BorderSide(
+            color: AppColors.borderSubtle.withValues(alpha: 0.65),
+            width: 1,
+          ),
           textStyle: GoogleFonts.manrope(
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
           ),
         ),
       ),
@@ -267,16 +270,16 @@ abstract final class AppTheme {
       ),
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.rosePink,
+        backgroundColor: AppColors.mediumPurple,
         foregroundColor: Colors.white,
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
 
       // ── Chips / SegmentedButton ──
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.7),
-        selectedColor: AppColors.rosePink.withValues(alpha: 0.16),
+        backgroundColor: Colors.white.withValues(alpha: 0.86),
+        selectedColor: AppColors.mediumPurple.withValues(alpha: 0.12),
         disabledColor: AppColors.surfaceCard.withValues(alpha: 0.35),
         labelStyle: GoogleFonts.manrope(
           fontSize: 13,
@@ -290,10 +293,10 @@ abstract final class AppTheme {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         side: BorderSide(
-          color: AppColors.borderSubtle.withValues(alpha: 0.55),
+          color: AppColors.borderSubtle.withValues(alpha: 0.65),
           width: 1,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
@@ -310,10 +313,10 @@ abstract final class AppTheme {
             return AppColors.textMuted;
           }),
           side: WidgetStateProperty.all(
-            BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.55)),
+            BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.65)),
           ),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           textStyle: WidgetStateProperty.all(
             GoogleFonts.manrope(fontSize: 13, fontWeight: FontWeight.w700),

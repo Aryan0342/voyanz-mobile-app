@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -137,9 +139,17 @@ class HomeShell extends ConsumerWidget {
               right: 0,
               child: IgnorePointer(
                 child: Container(
-                  height: 146,
-                  decoration: const BoxDecoration(
-                    gradient: AppGradients.headerNavbar,
+                  height: 188,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.surfaceHeader.withValues(alpha: 0.9),
+                        AppColors.surfaceElevated.withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 ),
               ),
@@ -149,71 +159,74 @@ class HomeShell extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.surfaceCard.withValues(alpha: 0.9),
-              AppColors.surfaceElevated.withValues(alpha: 0.86),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: AppColors.borderSubtle.withValues(alpha: 0.52),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.22),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            navigationBarTheme: NavigationBarThemeData(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.16),
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return GoogleFonts.manrope(
-                  fontSize: 10.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  letterSpacing: 0.2,
-                );
-              }),
-              iconTheme: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                if (selected) {
-                  return const IconThemeData(
-                    color: AppColors.mediumPurple,
-                    size: 24,
-                  );
-                }
-                return const IconThemeData(
-                  color: AppColors.textMuted,
-                  size: 22,
-                );
-              }),
-            ),
-          ),
-          child: NavigationBar(
-            selectedIndex: currentIdx,
-            onDestinationSelected: (i) => onTap(context, i),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            height: 76,
-            destinations: tabs
-                .map(
-                  (t) => NavigationDestination(
-                    icon: Icon(t.icon),
-                    selectedIcon: Icon(t.activeIcon),
-                    label: t.label,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 30,
+                    offset: const Offset(0, 14),
                   ),
-                )
-                .toList(),
+                ],
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  navigationBarTheme: NavigationBarThemeData(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    indicatorColor: AppColors.mediumPurple.withValues(
+                      alpha: 0.12,
+                    ),
+                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      return GoogleFonts.manrope(
+                        fontSize: 10.5,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        letterSpacing: 0.2,
+                      );
+                    }),
+                    iconTheme: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      if (selected) {
+                        return const IconThemeData(
+                          color: AppColors.mediumPurple,
+                          size: 23,
+                        );
+                      }
+                      return const IconThemeData(
+                        color: AppColors.textMuted,
+                        size: 22,
+                      );
+                    }),
+                  ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: currentIdx,
+                  onDestinationSelected: (i) => onTap(context, i),
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  height: 74,
+                  destinations: tabs
+                      .map(
+                        (t) => NavigationDestination(
+                          icon: Icon(t.icon),
+                          selectedIcon: Icon(t.activeIcon),
+                          label: t.label,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -397,7 +410,7 @@ class ProfileScreen extends ConsumerWidget {
                           style: GoogleFonts.jost(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -432,6 +445,69 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.rosePink.withValues(alpha: 0.12),
+                            AppColors.mediumPurple.withValues(alpha: 0.10),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: AppColors.mediumPurple.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.72),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: AppColors.mediumPurple,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isProfessional
+                                      ? 'Professional Studio'
+                                      : 'New Voyanz look',
+                                  style: GoogleFonts.jost(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  isProfessional
+                                      ? 'Track clients, slots, and reviews from one refreshed dashboard.'
+                                      : 'A brighter explorer, refreshed cards, and a more polished bottom bar.',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -781,9 +857,9 @@ class ProfileScreen extends ConsumerWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.logout,
-                              color: Colors.white,
+                              color: AppColors.surfaceCard,
                               size: 22,
                             ),
                             const SizedBox(width: 12),
@@ -792,7 +868,7 @@ class ProfileScreen extends ConsumerWidget {
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: AppColors.surfaceCard,
                               ),
                             ),
                           ],
@@ -895,25 +971,33 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.mediumPurple, size: 24),
-          const SizedBox(height: 8),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: AppGradients.accent.scale(0.22),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: AppColors.mediumPurple, size: 22),
+          ),
+          const SizedBox(height: 10),
           Text(
             value,
             style: GoogleFonts.jost(
-              fontSize: 20,
+              fontSize: 21,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             label,
             style: GoogleFonts.montserrat(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -1166,11 +1250,18 @@ class _ProfileTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                gradient: AppGradients.accent.scale(0.3),
-                borderRadius: BorderRadius.circular(14),
+                gradient: AppGradients.accent.scale(0.28),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.mediumPurple.withValues(alpha: 0.12),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Icon(icon, color: AppColors.mediumPurple, size: 22),
             ),
@@ -1183,12 +1274,12 @@ class _ProfileTile extends StatelessWidget {
                     title,
                     style: GoogleFonts.montserrat(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       subtitle!,
                       style: GoogleFonts.montserrat(

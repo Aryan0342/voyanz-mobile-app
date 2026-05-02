@@ -7,7 +7,7 @@ abstract final class AppGradients {
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFF8F5FD), Color(0xFFF2ECFB)],
+    colors: [Color(0xFFFDFDFF), Color(0xFFF7F5FF)],
   );
 
   /// Primary accent gradient — rose pink to medium purple.
@@ -21,15 +21,15 @@ abstract final class AppGradients {
   static const background = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFFFDFF), Color(0xFFF8F4FD), Color(0xFFF3EEFA)],
-    stops: [0.0, 0.55, 1.0],
+    colors: [Color(0xFFFFFFFF), Color(0xFFFDFDFF), Color(0xFFF8F7FC)],
+    stops: [0.0, 0.58, 1.0],
   );
 
   /// Header tint used behind top titles/app bars on light screens.
   static const headerTint = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0x1F9370DB), Color(0x14F5A8C4), Color(0x00FFFFFF)],
+    colors: [Color(0x0D7B61FF), Color(0x08A78BFA), Color(0x00FFFFFF)],
     stops: [0.0, 0.55, 1.0],
   );
 
@@ -37,27 +37,27 @@ abstract final class AppGradients {
   static const headerNavbar = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [Color(0xFF240046), Color(0xFF0D1124)],
+    colors: [Color(0xEFFFFFFF), Color(0xDFFFFFFF)],
   );
 
   /// Card shimmer gradient.
   static const card = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFFFFFF), Color(0xFFF9F6FE)],
+    colors: [Color(0xCCFFFFFF), Color(0xF7FAFBFF)],
   );
 
   /// Surface glow accent for chips/pills/active states.
   static const surfaceGlow = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0x1FF5A8C4), Color(0x1A9370DB)],
+    colors: [Color(0x147B61FF), Color(0x10A78BFA)],
   );
 
   /// CTA gradient variant used for primary hero actions.
   static const cta = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [Color(0xFFF3A6C3), Color(0xFFB78FEA)],
+    colors: [Color(0xFF7B61FF), Color(0xFFA78BFA)],
   );
 }

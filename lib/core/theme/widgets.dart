@@ -97,29 +97,35 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.circular(22);
 
-    return Container(
-      padding: padding ?? const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: AppGradients.card,
-        borderRadius: radius,
-        border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.9),
-          width: 1,
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.72),
+            borderRadius: radius,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.7),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: AppColors.mediumPurple.withValues(alpha: 0.05),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: child,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.mediumPurple.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: AppColors.rosePink.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: child,
     );
   }
 }
@@ -202,12 +208,15 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions,
       flexibleSpace: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: AppGradients.headerNavbar,
               border: Border(
-                bottom: BorderSide(color: Color(0x26FFFFFF), width: 1),
+                bottom: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.48),
+                  width: 1,
+                ),
               ),
             ),
           ),
@@ -237,14 +246,14 @@ class VoyanzAppBarIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final button = Material(
-      color: AppColors.surfaceCard.withValues(alpha: 0.16),
+      color: Colors.white.withValues(alpha: 0.40),
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onPressed,
         customBorder: const CircleBorder(),
         child: Padding(
           padding: padding,
-          child: Icon(icon, size: iconSize, color: Colors.white),
+          child: Icon(icon, size: iconSize, color: AppColors.textPrimary),
         ),
       ),
     );
@@ -280,7 +289,7 @@ class GradientScaffold extends StatelessWidget {
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
       body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.background),
+        decoration: const BoxDecoration(color: Colors.white),
         child: Stack(
           children: [
             Positioned(
@@ -289,12 +298,9 @@ class GradientScaffold extends StatelessWidget {
               right: 0,
               child: IgnorePointer(
                 child: Container(
-                  height: 146,
+                  height: 170,
                   decoration: const BoxDecoration(
-                    gradient: AppGradients.headerNavbar,
-                    border: Border(
-                      bottom: BorderSide(color: Color(0x26FFFFFF), width: 1),
-                    ),
+                    gradient: AppGradients.headerTint,
                   ),
                 ),
               ),
@@ -310,7 +316,7 @@ class GradientScaffold extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.rosePink.withValues(alpha: 0.14),
+                        AppColors.rosePink.withValues(alpha: 0.09),
                         Colors.transparent,
                       ],
                     ),
@@ -329,7 +335,7 @@ class GradientScaffold extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.mediumPurple.withValues(alpha: 0.12),
+                        AppColors.mediumPurple.withValues(alpha: 0.08),
                         Colors.transparent,
                       ],
                     ),
@@ -348,7 +354,7 @@ class GradientScaffold extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.info.withValues(alpha: 0.06),
+                        AppColors.info.withValues(alpha: 0.04),
                         Colors.transparent,
                       ],
                     ),

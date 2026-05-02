@@ -91,7 +91,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                   style: GoogleFonts.jost(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
