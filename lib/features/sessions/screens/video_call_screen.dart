@@ -261,11 +261,17 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
+    final currentUserCoId = ref.watch(authStateProvider).valueOrNull?.coId;
     final isProfessional =
         ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
 
+    final videoCoId =
+        currentUserCoId != null && currentUserCoId.trim().isNotEmpty
+        ? currentUserCoId.trim()
+        : widget.coId;
+
     final tokenAsync = ref.watch(
-      videoTokenProvider((seId: widget.seId, coId: widget.coId)),
+      videoTokenProvider((seId: widget.seId, coId: videoCoId)),
     );
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
@@ -273,7 +279,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final localEngine = _engine;
 
     ref.listen<AsyncValue<VideoToken>>(
-      videoTokenProvider((seId: widget.seId, coId: widget.coId)),
+      videoTokenProvider((seId: widget.seId, coId: videoCoId)),
       (_, next) {
         next.whenData((token) {
           unawaited(_ensureAgoraJoined(token));
