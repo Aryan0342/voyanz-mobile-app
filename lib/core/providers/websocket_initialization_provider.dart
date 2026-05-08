@@ -8,7 +8,7 @@ import 'package:voyanz/core/providers/websocket_provider.dart';
 final webSocketInitializationProvider = FutureProvider<void>((ref) async {
   // Get the WebSocket service and connect
   final ws = ref.watch(webSocketServiceProvider);
-  
+
   // Start connection
   await ws.connect();
 });

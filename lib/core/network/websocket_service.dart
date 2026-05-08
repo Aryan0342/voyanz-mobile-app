@@ -61,10 +61,21 @@ class WebSocketService {
         // Fallback candidates (try common paths and ports)
         final base = EnvConfig.current.baseUrl;
         final wsCandidates = <String>[
-          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://'),
-          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + '/ws',
-          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + '/socket',
-          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + ':5277',
+          base
+              .replaceFirst('https://', 'wss://')
+              .replaceFirst('http://', 'ws://'),
+          base
+                  .replaceFirst('https://', 'wss://')
+                  .replaceFirst('http://', 'ws://') +
+              '/ws',
+          base
+                  .replaceFirst('https://', 'wss://')
+                  .replaceFirst('http://', 'ws://') +
+              '/socket',
+          base
+                  .replaceFirst('https://', 'wss://')
+                  .replaceFirst('http://', 'ws://') +
+              ':5277',
         ];
 
         for (final candidate in wsCandidates) {
@@ -89,22 +100,14 @@ class WebSocketService {
 
       // Send join immediately
       _channel!.sink.add(
-        jsonEncode({
-          'action': 'join',
-          'token': token,
-          'group': '',
-        }),
+        jsonEncode({'action': 'join', 'token': token, 'group': ''}),
       );
 
       _reconnectAttempt = 0;
       _logger.i('WebSocket: join sent');
 
       // Listen for messages
-      _channel!.stream.listen(
-        _onMessage,
-        onError: _onError,
-        onDone: _onDone,
-      );
+      _channel!.stream.listen(_onMessage, onError: _onError, onDone: _onDone);
 
       // Start heartbeat watchdog
       _startHeartbeatWatchdog();
@@ -165,8 +168,9 @@ class WebSocketService {
   void _scheduleReconnect() {
     if (_disposed || _reconnectTimer != null) return;
 
-    final idx =
-        _reconnectAttempt < _backoffDurations.length - 1 ? _reconnectAttempt : _backoffDurations.length - 1;
+    final idx = _reconnectAttempt < _backoffDurations.length - 1
+        ? _reconnectAttempt
+        : _backoffDurations.length - 1;
     final delay = _backoffDurations[idx];
 
     _logger.i('WebSocket: reconnect in ${delay.inMilliseconds}ms');

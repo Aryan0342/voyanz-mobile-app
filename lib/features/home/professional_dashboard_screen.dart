@@ -51,7 +51,8 @@ class _ProfessionalDashboardScreenState
 
     // Listen for incoming calls and show dialog
     ref.listen(incomingCallProvider, (previous, next) {
-      if (next != null && (previous == null || previous.customerId != next.customerId)) {
+      if (next != null &&
+          (previous == null || previous.customerId != next.customerId)) {
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -473,10 +474,7 @@ class _ProfessionalDashboardScreenState
     );
   }
 
-  void _navigateToSession(
-    BuildContext context,
-    SessionStartedEvent event,
-  ) {
+  void _navigateToSession(BuildContext context, SessionStartedEvent event) {
     final seId = event.seId;
     final coId = event.coIdProfessional;
     final seType = event.seType.toLowerCase();

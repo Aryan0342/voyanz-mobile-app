@@ -117,7 +117,8 @@ class IncomingCall {
     if (appointmentId != null) 'appointmentId': appointmentId,
     'isProfessionalAI': isProfessionalAI,
     'avatar': avatar,
-    if (recordingReplayOption != null) 'recordingReplayOption': recordingReplayOption,
+    if (recordingReplayOption != null)
+      'recordingReplayOption': recordingReplayOption,
   };
 }
 
@@ -164,13 +165,13 @@ class SessionStartedNotifier extends StateNotifier<SessionStartedEvent?> {
 /// Incoming call provider
 final incomingCallProvider =
     StateNotifierProvider<IncomingCallNotifier, IncomingCall?>((ref) {
-  final ws = ref.watch(webSocketServiceProvider);
-  return IncomingCallNotifier(ws);
-});
+      final ws = ref.watch(webSocketServiceProvider);
+      return IncomingCallNotifier(ws);
+    });
 
 /// Session started event provider
 final sessionStartedProvider =
     StateNotifierProvider<SessionStartedNotifier, SessionStartedEvent?>((ref) {
-  final ws = ref.watch(webSocketServiceProvider);
-  return SessionStartedNotifier(ws);
-});
+      final ws = ref.watch(webSocketServiceProvider);
+      return SessionStartedNotifier(ws);
+    });

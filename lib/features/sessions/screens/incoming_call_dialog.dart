@@ -29,8 +29,8 @@ class IncomingCallDialog extends ConsumerWidget {
               incomingCall.type == 'video'
                   ? Icons.videocam
                   : incomingCall.type == 'phone'
-                      ? Icons.phone
-                      : Icons.chat,
+                  ? Icons.phone
+                  : Icons.chat,
               size: 48,
               color: Colors.blue,
             ),
@@ -44,18 +44,18 @@ class IncomingCallDialog extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             incomingCall.customerFullname ?? 'Customer',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
           if (incomingCall.tool != null) ...[
             const SizedBox(height: 4),
             Text(
               incomingCall.tool!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade500,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
           ],
