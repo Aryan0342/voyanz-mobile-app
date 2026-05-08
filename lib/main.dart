@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/routing/router.dart';
 import 'package:voyanz/core/theme/app_theme.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,17 @@ class VoyanzApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
+    // Listen for auth state changes and initialize WebSocket when user logs in
+    ref.listen(authStateProvider, (previous, next) {
+      if (next.valueOrNull != null && previous?.valueOrNull == null) {
+        // User just logged in
+        ref.read(webSocketServiceProvider).connect();
+      } else if (next.valueOrNull == null && previous?.valueOrNull != null) {
+        // User just logged out
+        ref.read(webSocketServiceProvider).disconnect();
+      }
+    });
 
     return MaterialApp.router(
       title: 'Voyanz',

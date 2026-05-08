@@ -8,6 +8,8 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
+import 'package:voyanz/features/sessions/screens/incoming_call_dialog.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
 class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
@@ -21,6 +23,22 @@ class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
 class _ProfessionalDashboardScreenState
     extends ConsumerState<ProfessionalDashboardScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Initialize WebSocket connection when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(webSocketServiceProvider).connect();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Clean up WebSocket when leaving the screen
+    // Note: Don't disconnect here; keep it alive for background notifications
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).valueOrNull;
     // Fetch professional history (sessions)
@@ -30,6 +48,25 @@ class _ProfessionalDashboardScreenState
     final reviewsAsync = ref.watch(professionalReviewsProvider);
     final t = ref.watch(translationsProvider);
     final name = _displayName(user, professionalFallback: t.professional);
+
+    // Listen for incoming calls and show dialog
+    ref.listen(incomingCallProvider, (previous, next) {
+      if (next != null && (previous == null || previous.customerId != next.customerId)) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const IncomingCallDialog(),
+        );
+      }
+    });
+
+    // Listen for session started event and navigate to session
+    ref.listen(sessionStartedProvider, (previous, next) {
+      if (next != null) {
+        _navigateToSession(context, next);
+        ref.read(sessionStartedProvider.notifier).clear();
+      }
+    });
 
     return GradientScaffold(
       appBar: VoyanzAppBar(
@@ -434,6 +471,24 @@ class _ProfessionalDashboardScreenState
         ),
       ),
     );
+  }
+
+  void _navigateToSession(
+    BuildContext context,
+    SessionStartedEvent event,
+  ) {
+    final seId = event.seId;
+    final coId = event.coIdProfessional;
+    final seType = event.seType.toLowerCase();
+
+    // Navigate based on session type
+    if (seType == 'video') {
+      context.push('/video/$seId/$coId');
+    } else if (seType == 'phone') {
+      context.push('/session/phone/$seId/$coId');
+    } else if (seType == 'chat') {
+      context.push('/session/chat/$seId/$coId');
+    }
   }
 }
 

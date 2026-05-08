@@ -1,0 +1,215 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:logger/logger.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/storage/token_storage.dart';
+
+final _logger = Logger(printer: PrettyPrinter(methodCount: 0));
+
+typedef WebSocketEventHandler = void Function(Map<String, dynamic> event);
+
+class WebSocketService {
+  final TokenStorage _tokenStorage;
+  WebSocketChannel? _channel;
+  Timer? _reconnectTimer;
+  Timer? _heartbeatWatchdog;
+  bool _disposed = false;
+
+  int _reconnectAttempt = 0;
+  static const List<Duration> _backoffDurations = [
+    Duration(milliseconds: 500),
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+    Duration(seconds: 8),
+    Duration(seconds: 10),
+  ];
+
+  final Map<String, List<WebSocketEventHandler>> _listeners = {};
+
+  WebSocketService(this._tokenStorage);
+
+  Future<void> connect() async {
+    if (_disposed || _channel != null) return;
+
+    try {
+      final token = await _tokenStorage.accessToken;
+      if (token == null || token.isEmpty) {
+        _logger.w('WebSocket: no access token available');
+        return;
+      }
+
+      // If an explicit websocketUrl is set in EnvConfig, prefer it.
+      final explicit = EnvConfig.current.websocketUrl;
+      Uri? connectedUri;
+
+      if (explicit != null && explicit.isNotEmpty) {
+        try {
+          _logger.i('WebSocket: connecting to explicit websocketUrl $explicit');
+          final uri = Uri.parse(explicit);
+          _channel = WebSocketChannel.connect(uri);
+          connectedUri = uri;
+        } catch (e) {
+          _logger.w('WebSocket: explicit websocketUrl failed: $e');
+          _channel = null;
+        }
+      }
+
+      if (_channel == null) {
+        // Fallback candidates (try common paths and ports)
+        final base = EnvConfig.current.baseUrl;
+        final wsCandidates = <String>[
+          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://'),
+          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + '/ws',
+          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + '/socket',
+          base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') + ':5277',
+        ];
+
+        for (final candidate in wsCandidates) {
+          try {
+            _logger.i('WebSocket: trying $candidate');
+            final uri = Uri.parse(candidate);
+            final channel = WebSocketChannel.connect(uri);
+            _channel = channel;
+            connectedUri = uri;
+            break;
+          } catch (e) {
+            _logger.w('WebSocket: connect attempt failed for $candidate: $e');
+          }
+        }
+      }
+
+      if (_channel == null) {
+        throw Exception('WebSocket: could not connect to any candidate URI');
+      }
+
+      _logger.i('WebSocket: connected to ${connectedUri ?? "<unknown>"}');
+
+      // Send join immediately
+      _channel!.sink.add(
+        jsonEncode({
+          'action': 'join',
+          'token': token,
+          'group': '',
+        }),
+      );
+
+      _reconnectAttempt = 0;
+      _logger.i('WebSocket: join sent');
+
+      // Listen for messages
+      _channel!.stream.listen(
+        _onMessage,
+        onError: _onError,
+        onDone: _onDone,
+      );
+
+      // Start heartbeat watchdog
+      _startHeartbeatWatchdog();
+    } catch (e) {
+      _logger.e('WebSocket: connection error: $e');
+      _scheduleReconnect();
+    }
+  }
+
+  void _startHeartbeatWatchdog() {
+    _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = Timer(const Duration(seconds: 30), () {
+      _logger.w('WebSocket: no message for 30s, reconnecting');
+      disconnect();
+      connect();
+    });
+  }
+
+  void _onMessage(dynamic raw) {
+    try {
+      _heartbeatWatchdog?.cancel();
+      _startHeartbeatWatchdog();
+
+      if (raw is! String) return;
+      final msg = jsonDecode(raw) as Map<String, dynamic>;
+      final action = msg['action'] as String?;
+
+      _logger.d('WebSocket: received $action');
+
+      if (action != null) {
+        final handlers = _listeners[action] ?? [];
+        for (final handler in handlers) {
+          try {
+            handler(msg);
+          } catch (e) {
+            _logger.e('WebSocket: handler error for $action: $e');
+          }
+        }
+      }
+    } catch (e) {
+      _logger.e('WebSocket: message parse error: $e');
+    }
+  }
+
+  void _onError(dynamic err) {
+    _logger.e('WebSocket: error: $err');
+    _scheduleReconnect();
+  }
+
+  void _onDone() {
+    _logger.w('WebSocket: closed');
+    _channel = null;
+    if (!_disposed) {
+      _scheduleReconnect();
+    }
+  }
+
+  void _scheduleReconnect() {
+    if (_disposed || _reconnectTimer != null) return;
+
+    final idx =
+        _reconnectAttempt < _backoffDurations.length - 1 ? _reconnectAttempt : _backoffDurations.length - 1;
+    final delay = _backoffDurations[idx];
+
+    _logger.i('WebSocket: reconnect in ${delay.inMilliseconds}ms');
+    _reconnectAttempt++;
+
+    _reconnectTimer = Timer(delay, () {
+      _reconnectTimer = null;
+      if (!_disposed) {
+        connect();
+      }
+    });
+  }
+
+  void send(String action, Map<String, dynamic> data) {
+    if (_channel == null) {
+      _logger.w('WebSocket: not connected, cannot send $action');
+      return;
+    }
+
+    try {
+      final msg = jsonEncode({'action': action, 'data': data});
+      _channel!.sink.add(msg);
+      _logger.d('WebSocket: sent $action');
+    } catch (e) {
+      _logger.e('WebSocket: send error: $e');
+    }
+  }
+
+  void on(String action, WebSocketEventHandler handler) {
+    _listeners.putIfAbsent(action, () => []).add(handler);
+  }
+
+  void off(String action, WebSocketEventHandler handler) {
+    _listeners[action]?.remove(handler);
+  }
+
+  void disconnect() {
+    _disposed = true;
+    _reconnectTimer?.cancel();
+    _heartbeatWatchdog?.cancel();
+    _channel?.sink.close();
+    _channel = null;
+  }
+
+  bool get isConnected => _channel != null;
+}
