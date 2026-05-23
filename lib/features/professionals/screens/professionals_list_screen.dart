@@ -325,7 +325,7 @@ class _ProfessionalsListScreenState
                   child: _RevealIn(
                     delayMs: 20,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
                       child: _ExploreHero(totalCount: pros.length),
                     ),
                   ),
@@ -335,7 +335,7 @@ class _ProfessionalsListScreenState
                   child: _RevealIn(
                     delayMs: 70,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
                       child: TextField(
                         controller: _searchCtrl,
                         onChanged: (_) => setState(() {}),
@@ -361,7 +361,7 @@ class _ProfessionalsListScreenState
                   child: _RevealIn(
                     delayMs: 120,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                       child: _SectionTitle(
                         title: t.featuredAdvisors,
                         subtitle: t.topProsReadyNow,
@@ -373,7 +373,7 @@ class _ProfessionalsListScreenState
                 if (featuredPros.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                       child: _EmptyState(message: t.noFeaturedAdvisors),
                     ),
                   )
@@ -383,7 +383,7 @@ class _ProfessionalsListScreenState
                       height: 170,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                         itemBuilder: (_, i) {
                           final pro = featuredPros[i];
                           return _RevealIn(
@@ -406,7 +406,7 @@ class _ProfessionalsListScreenState
                   child: _RevealIn(
                     delayMs: 180,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
                       child: _SectionTitle(
                         title: t.allAdvisors,
                         subtitle: t.nResults(filteredPros.length),
@@ -418,7 +418,7 @@ class _ProfessionalsListScreenState
                 if (filteredPros.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                       child: _EmptyState(message: t.noAdvisorsMatch),
                     ),
                   )

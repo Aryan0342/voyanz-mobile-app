@@ -190,7 +190,7 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
       shadowColor: Colors.transparent,
       centerTitle: centerTitle,
       toolbarHeight: toolbarHeight,
-      titleSpacing: 0,
+      titleSpacing: 16,
       leadingWidth: showBackButton ? 68 : null,
       leading:
           leading ??
