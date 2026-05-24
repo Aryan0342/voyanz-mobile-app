@@ -7,6 +7,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
+import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
 
 String _resolveMediaUrl(String raw) {
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
@@ -41,10 +42,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
     setState(() => _sending = true);
     try {
       await ref
-          .read(chatRepositoryProvider)
-          .sendMessage(chgrId: widget.chgrId, content: text);
+          .read(chatMessagesNotifierProvider(widget.chgrId).notifier)
+          .sendMessage(text);
       _msgCtrl.clear();
-      ref.invalidate(chatMessagesProvider(widget.chgrId));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +63,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(chatMessagesProvider(widget.chgrId));
+    final messagesAsync = ref.watch(
+      chatMessagesNotifierProvider(widget.chgrId),
+    );
     final t = ref.watch(translationsProvider);
 
     return Scaffold(
@@ -405,7 +407,7 @@ class _MessageBubble extends ConsumerWidget {
                           fit: BoxFit.cover,
                           width: 220,
                           height: 160,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (context, error, stack) => Container(
                             width: 220,
                             height: 120,
                             alignment: Alignment.center,
