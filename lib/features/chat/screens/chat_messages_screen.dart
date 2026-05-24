@@ -7,6 +7,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
 
 String _resolveMediaUrl(String raw) {
@@ -188,7 +189,12 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                     itemCount: messages.length,
                     itemBuilder: (_, i) {
                       final msg = messages[messages.length - 1 - i];
-                      final isMe = msg.senderName == 'You'; // Mock check
+                      final currentUser = ref
+                          .watch(authStateProvider)
+                          .valueOrNull;
+                      final isMe =
+                          (msg.senderCoId != null &&
+                          msg.senderCoId == currentUser?.coId);
                       return _RevealIn(
                         delayMs: i * 18,
                         child: Padding(
@@ -331,6 +337,9 @@ class _MessageBubble extends ConsumerWidget {
       }
     }
 
+    final isPending =
+        (message.chmeId?.toString().startsWith('local-') ?? false);
+
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -365,6 +374,8 @@ class _MessageBubble extends ConsumerWidget {
                     ),
                   ),
                 ),
+
+              // Optimistic marker handled above
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -436,6 +447,24 @@ class _MessageBubble extends ConsumerWidget {
                           height: 1.4,
                         ),
                       ),
+
+                    // Pending indicator row (timestamp optional)
+                    if (isPending) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              color: isMe ? Colors.white : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
