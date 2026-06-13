@@ -388,7 +388,7 @@ class _HeroSection extends StatelessWidget {
                         border: Border.all(color: GlassTheme.borderLight),
                       ),
                       child: Text(
-                        'iOS 26 crystal UI',
+                        'Voyanz',
                         style: GlassTheme.captionSmall.copyWith(
                           color: GlassTheme.purpleDark,
                         ),
@@ -396,12 +396,12 @@ class _HeroSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'A premium\nmobile landing\nwith crystal depth',
+                      'Live guidance\nwith trusted professionals',
                       style: GlassTheme.displayMedium,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'A white-first experience with frosted panels, soft purple glow and layered glass cards designed for quick scanning.',
+                      'Connect with the right expert, start a session, and keep every conversation in one calm workspace.',
                       style: GlassTheme.bodyLarge,
                     ),
                     const SizedBox(height: 18),

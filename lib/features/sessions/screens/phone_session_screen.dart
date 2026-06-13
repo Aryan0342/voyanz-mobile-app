@@ -126,8 +126,11 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.online.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
+                        color: AppColors.success.withValues(alpha: 0.11),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.success.withValues(alpha: 0.24),
+                        ),
                       ),
                       child: Text(
                         _formatDuration(_elapsed),
@@ -149,11 +152,9 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceCard.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.mediumPurple.withValues(alpha: 0.2),
-                    ),
+                    color: AppColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.borderSubtle),
                   ),
                   child: Row(
                     children: [
@@ -180,7 +181,7 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                   width: 120,
                   height: 120,
                   decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
                     gradient: AppGradients.accent,
                   ),
                   child: const Icon(
@@ -249,8 +250,9 @@ class _SessionMeta extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.deepIndigo.withValues(alpha: 0.35),
+        color: AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderSubtle),
       ),
       child: Column(
         children: [

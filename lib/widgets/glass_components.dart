@@ -254,7 +254,7 @@ class GlassStatCard extends StatelessWidget {
             style: GlassTheme.displayLarge.copyWith(
               color: accent,
               fontSize: 30,
-              letterSpacing: -1,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 4),
@@ -343,7 +343,7 @@ class _GlassCaseStudyCardState extends State<GlassCaseStudyCard> {
                       widget.tag,
                       style: GlassTheme.captionSmall.copyWith(
                         color: Colors.white,
-                        letterSpacing: 0.6,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),

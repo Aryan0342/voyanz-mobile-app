@@ -629,7 +629,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         ),
         body: professionalAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
           error: (e, _) => Center(
             child: Text(
@@ -692,7 +692,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         ),
         body: pricingAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
           error: (e, _) => Center(
             child: Text(
@@ -865,18 +865,18 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           onTap: () => _selectPricing(title),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
               color: isSelected
-                  ? AppColors.mediumPurple.withValues(alpha: 0.25)
-                  : AppColors.surfaceCard.withValues(alpha: 0.7),
+                  ? AppColors.mediumPurple.withValues(alpha: 0.11)
+                  : AppColors.surfaceCard,
               border: Border.all(
                 color: isSelected
-                    ? AppColors.rosePink
-                    : AppColors.mediumPurple.withValues(alpha: 0.12),
+                    ? AppColors.mediumPurple
+                    : AppColors.borderSubtle,
                 width: isSelected ? 1.6 : 1,
               ),
             ),
@@ -901,14 +901,14 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
                       fontWeight: FontWeight.w700,
                       color: isSelected
                           ? AppColors.textPrimary
-                          : AppColors.rosePink,
+                          : AppColors.mediumPurple,
                     ),
                   ),
                   if (isSelected) ...[
                     const SizedBox(width: 10),
                     const Icon(
                       Icons.check_circle,
-                      color: AppColors.rosePink,
+                      color: AppColors.mediumPurple,
                       size: 18,
                     ),
                   ],

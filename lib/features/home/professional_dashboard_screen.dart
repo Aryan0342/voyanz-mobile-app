@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
@@ -95,54 +96,6 @@ class _ProfessionalDashboardScreenState
                     subtitle: t.yourProDashboard,
                     onOpenSlots: () => context.go('/availability'),
                     onOpenChat: () => context.go('/chat'),
-                  ),
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-            SliverToBoxAdapter(
-              child: _RevealIn(
-                delayMs: 50,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.rosePink.withValues(alpha: 0.14),
-                          AppColors.mediumPurple.withValues(alpha: 0.12),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.mediumPurple.withValues(alpha: 0.18),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.campaign_rounded,
-                          color: AppColors.rosePink,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Fresh UI loaded: new hero, stronger cards, and a clearer navigation shell.',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
@@ -381,11 +334,15 @@ class _ProfessionalDashboardScreenState
                                       borderRadius: BorderRadius.circular(999),
                                       color:
                                           rawStatus.toLowerCase() == 'completed'
-                                          ? Colors.green.withValues(alpha: 0.2)
+                                          ? AppColors.success.withValues(
+                                              alpha: 0.12,
+                                            )
                                           : rawStatus.toLowerCase() ==
                                                 'cancelled'
-                                          ? Colors.red.withValues(alpha: 0.2)
-                                          : AppColors.rosePink.withValues(
+                                          ? AppColors.error.withValues(
+                                              alpha: 0.12,
+                                            )
+                                          : AppColors.mediumPurple.withValues(
                                               alpha: 0.2,
                                             ),
                                     ),
@@ -397,11 +354,11 @@ class _ProfessionalDashboardScreenState
                                         color:
                                             rawStatus.toLowerCase() ==
                                                 'completed'
-                                            ? Colors.green
+                                            ? AppColors.success
                                             : rawStatus.toLowerCase() ==
                                                   'cancelled'
-                                            ? Colors.red
-                                            : AppColors.rosePink,
+                                            ? AppColors.error
+                                            : AppColors.mediumPurple,
                                       ),
                                     ),
                                   ),
@@ -450,7 +407,7 @@ class _ProfessionalDashboardScreenState
                       Icon(
                         Icons.error_outline,
                         size: 48,
-                        color: Colors.red.withValues(alpha: 0.7),
+                        color: AppColors.error.withValues(alpha: 0.7),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -516,23 +473,14 @@ class _DashboardHeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            AppColors.surfaceCard.withValues(alpha: 0.95),
-            AppColors.surfaceElevated.withValues(alpha: 0.95),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.6),
-        ),
+        borderRadius: BorderRadius.circular(10),
+        gradient: AppGradients.card,
+        border: Border.all(color: AppColors.borderSubtle),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -565,8 +513,8 @@ class _DashboardHeroCard extends StatelessWidget {
                   icon: const Icon(Icons.calendar_today_outlined, size: 16),
                   label: const Text('Manage Slots'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.rosePink,
-                    foregroundColor: AppColors.deepIndigo,
+                    backgroundColor: AppColors.mediumPurple,
+                    foregroundColor: Colors.white,
                     textStyle: GoogleFonts.manrope(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -582,9 +530,7 @@ class _DashboardHeroCard extends StatelessWidget {
                   label: const Text('Messages'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
-                    side: BorderSide(
-                      color: AppColors.borderSubtle.withValues(alpha: 0.85),
-                    ),
+                    side: const BorderSide(color: AppColors.borderStrong),
                     textStyle: GoogleFonts.manrope(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -696,18 +642,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          colors: [
-            AppColors.surfaceCard.withValues(alpha: 0.86),
-            AppColors.surfaceElevated.withValues(alpha: 0.74),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.3),
-        ),
+        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surfaceCard,
+        border: Border.all(color: AppColors.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,10 +668,10 @@ class _StatCard extends StatelessWidget {
                 width: 26,
                 height: 26,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.rosePink.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.mediumPurple.withValues(alpha: 0.11),
                 ),
-                child: Icon(icon, size: 14, color: AppColors.rosePink),
+                child: Icon(icon, size: 14, color: AppColors.mediumPurple),
               ),
             ],
           ),

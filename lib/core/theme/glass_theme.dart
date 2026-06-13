@@ -104,16 +104,16 @@ abstract final class GlassTheme {
   }
 
   static TextStyle get displayLarge =>
-      _style(48, FontWeight.w700, textPrimary, letterSpacing: -0.8);
+      _style(48, FontWeight.w700, textPrimary, letterSpacing: 0);
 
   static TextStyle get displayMedium =>
-      _style(40, FontWeight.w700, textPrimary, letterSpacing: -0.6);
+      _style(40, FontWeight.w700, textPrimary, letterSpacing: 0);
 
   static TextStyle get headingXL =>
-      _style(32, FontWeight.w700, textPrimary, letterSpacing: -0.4);
+      _style(32, FontWeight.w700, textPrimary, letterSpacing: 0);
 
   static TextStyle get headingLarge =>
-      _style(28, FontWeight.w700, textPrimary, letterSpacing: -0.2);
+      _style(28, FontWeight.w700, textPrimary, letterSpacing: 0);
 
   static TextStyle get headingMedium =>
       _style(24, FontWeight.w600, textPrimary);
@@ -134,5 +134,5 @@ abstract final class GlassTheme {
   static TextStyle get labelMedium => _style(14, FontWeight.w600, textInverse);
 
   static TextStyle get captionSmall =>
-      _style(11, FontWeight.w500, textTertiary, letterSpacing: 0.4);
+      _style(11, FontWeight.w500, textTertiary, letterSpacing: 0);
 }

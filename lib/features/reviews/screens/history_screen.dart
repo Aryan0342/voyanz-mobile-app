@@ -113,7 +113,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       body: SafeArea(
         child: historyAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
           error: (e, st) {
             return Center(
@@ -154,7 +154,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     icon: const Icon(Icons.refresh),
                     label: Text(t.retry),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.rosePink,
+                      backgroundColor: AppColors.mediumPurple,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,
@@ -372,11 +372,11 @@ class _FilterChip extends StatelessWidget {
           color: isSelected
               ? null
               : AppColors.surfaceCard.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected
-                ? AppColors.rosePink.withValues(alpha: 0.5)
-                : AppColors.mediumPurple.withValues(alpha: 0.15),
+                ? AppColors.mediumPurple.withValues(alpha: 0.35)
+                : AppColors.borderSubtle,
           ),
         ),
         child: Text(
@@ -659,8 +659,8 @@ class _SessionCard extends ConsumerWidget {
       case 'chat':
         return LinearGradient(
           colors: [
-            AppColors.rosePink.withValues(alpha: 0.9),
-            AppColors.rosePink.withValues(alpha: 0.6),
+            AppColors.mediumPurple.withValues(alpha: 0.9),
+            AppColors.magentaRose.withValues(alpha: 0.75),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

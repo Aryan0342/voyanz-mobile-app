@@ -98,7 +98,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
 
   Widget _buildLoading() {
     return const Center(
-      child: CircularProgressIndicator(color: AppColors.rosePink),
+      child: CircularProgressIndicator(color: AppColors.mediumPurple),
     );
   }
 
@@ -168,9 +168,14 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isWaiting
-                      ? AppColors.mediumPurple.withValues(alpha: 0.2)
-                      : AppColors.error.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
+                      ? AppColors.mediumPurple.withValues(alpha: 0.11)
+                      : AppColors.error.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: isWaiting
+                        ? AppColors.mediumPurple.withValues(alpha: 0.24)
+                        : AppColors.error.withValues(alpha: 0.24),
+                  ),
                 ),
                 child: Text(
                   status.localizedLabel(t),
@@ -189,18 +194,9 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.surfaceCard.withValues(alpha: 0.9),
-                  AppColors.surfaceElevated.withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.mediumPurple.withValues(alpha: 0.2),
-              ),
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.borderSubtle),
             ),
             child: Row(
               children: [
@@ -231,7 +227,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             height: 120,
             margin: const EdgeInsets.symmetric(horizontal: 100),
             decoration: const BoxDecoration(
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.all(Radius.circular(20)),
               gradient: AppGradients.accent,
             ),
             child: Icon(
@@ -384,8 +380,9 @@ class _MetaStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.deepIndigo.withValues(alpha: 0.34),
+        color: AppColors.surfaceElevated,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderSubtle),
       ),
       child: Column(
         children: [

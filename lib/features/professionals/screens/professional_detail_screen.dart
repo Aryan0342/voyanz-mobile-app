@@ -640,7 +640,7 @@ class _ProfessionalDetailScreenState
         loading: () => Container(
           decoration: const BoxDecoration(gradient: AppGradients.background),
           child: const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
         ),
         error: (e, _) => Container(
@@ -816,7 +816,7 @@ class _ProfessionalDetailScreenState
                                       ? AppColors.online
                                       : AppColors.offline)
                                   .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(999),
                           border: Border.all(
                             color:
                                 (effectiveOnline == true
@@ -866,18 +866,14 @@ class _ProfessionalDetailScreenState
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.mediumPurple.withValues(alpha: 0.3),
-                                  AppColors.rosePink.withValues(alpha: 0.3),
-                                ],
+                              color: AppColors.mediumPurple.withValues(
+                                alpha: 0.11,
                               ),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(999),
                               border: Border.all(
                                 color: AppColors.mediumPurple.withValues(
-                                  alpha: 0.4,
+                                  alpha: 0.24,
                                 ),
-                                width: 1.5,
                               ),
                             ),
                             child: Row(
@@ -895,7 +891,7 @@ class _ProfessionalDetailScreenState
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textPrimary,
-                                    letterSpacing: 0.5,
+                                    letterSpacing: 0,
                                   ),
                                 ),
                               ],
@@ -908,13 +904,12 @@ class _ProfessionalDetailScreenState
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.rosePink.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
+                              color: AppColors.gold.withValues(alpha: 0.11),
+                              borderRadius: BorderRadius.circular(999),
                               border: Border.all(
-                                color: AppColors.rosePink.withValues(
-                                  alpha: 0.3,
+                                color: AppColors.gold.withValues(
+                                  alpha: 0.24,
                                 ),
-                                width: 1.5,
                               ),
                             ),
                             child: Row(
@@ -926,7 +921,7 @@ class _ProfessionalDetailScreenState
                                         ? Icons.star
                                         : Icons.star_outline,
                                     size: 16,
-                                    color: AppColors.rosePink,
+                                    color: AppColors.gold,
                                   );
                                 }),
                                 const SizedBox(width: 6),

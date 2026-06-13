@@ -151,7 +151,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             Expanded(
               child: messagesAsync.when(
                 loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.rosePink),
+                  child: CircularProgressIndicator(
+                    color: AppColors.mediumPurple,
+                  ),
                 ),
                 error: (e, _) => Center(
                   child: Column(
@@ -247,19 +249,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.surfaceCard.withValues(alpha: 0.86),
-                    AppColors.surfaceElevated.withValues(alpha: 0.92),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.surfaceCard.withValues(alpha: 0.98),
                 border: Border(
-                  top: BorderSide(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
+                  top: BorderSide(color: AppColors.borderSubtle, width: 1),
                 ),
               ),
               child: SafeArea(
@@ -271,13 +263,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       child: Container(
                         constraints: const BoxConstraints(maxHeight: 120),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceCard.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: AppColors.mediumPurple.withValues(
-                              alpha: 0.2,
-                            ),
-                          ),
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.borderSubtle),
                         ),
                         child: TextField(
                           controller: _msgCtrl,
@@ -306,24 +294,19 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: _sending
-                            ? LinearGradient(
-                                colors: [
-                                  AppColors.mediumPurple.withValues(alpha: 0.5),
-                                  AppColors.darkPurple.withValues(alpha: 0.5),
-                                ],
-                              )
-                            : AppGradients.accent,
+                        borderRadius: BorderRadius.circular(10),
+                        color: _sending
+                            ? AppColors.textMuted
+                            : AppColors.mediumPurple,
                         boxShadow: _sending
                             ? []
                             : [
                                 BoxShadow(
-                                  color: AppColors.rosePink.withValues(
+                                  color: AppColors.mediumPurple.withValues(
                                     alpha: 0.4,
                                   ),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                       ),
@@ -404,7 +387,7 @@ class _MessageBubble extends ConsumerWidget {
                     style: GoogleFonts.montserrat(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.rosePink,
+                      color: AppColors.mediumPurple,
                     ),
                   ),
                 ),
@@ -419,24 +402,22 @@ class _MessageBubble extends ConsumerWidget {
                   gradient: isMe ? AppGradients.accent : null,
                   color: isMe
                       ? null
-                      : AppColors.surfaceCard.withValues(alpha: 0.9),
+                      : AppColors.surfaceCard,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(isMe ? 20 : 4),
-                    topRight: Radius.circular(isMe ? 4 : 20),
-                    bottomLeft: const Radius.circular(20),
-                    bottomRight: const Radius.circular(20),
+                    topLeft: Radius.circular(isMe ? 10 : 4),
+                    topRight: Radius.circular(isMe ? 4 : 10),
+                    bottomLeft: const Radius.circular(10),
+                    bottomRight: const Radius.circular(10),
                   ),
                   border: isMe
                       ? null
-                      : Border.all(
-                          color: AppColors.mediumPurple.withValues(alpha: 0.15),
-                        ),
+                      : Border.all(color: AppColors.borderSubtle),
                   boxShadow: isMe
                       ? [
                           BoxShadow(
-                            color: AppColors.rosePink.withValues(alpha: 0.3),
+                            color: AppColors.mediumPurple.withValues(alpha: 0.18),
                             blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            offset: const Offset(0, 5),
                           ),
                         ]
                       : [],

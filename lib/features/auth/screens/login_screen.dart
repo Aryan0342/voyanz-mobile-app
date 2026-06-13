@@ -126,47 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -70,
-              left: -40,
-              child: IgnorePointer(
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.rosePink.withValues(alpha: 0.20),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 18,
-              right: -30,
-              child: IgnorePointer(
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.mediumPurple.withValues(alpha: 0.18),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SafeArea(
+        child: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
@@ -193,7 +153,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                         decoration: BoxDecoration(
                                           gradient: AppGradients.accent,
                                           borderRadius: BorderRadius.circular(
-                                            20,
+                                            12,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
@@ -234,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                               style: GoogleFonts.jost(
                                                 fontSize: 28,
                                                 fontWeight: FontWeight.w700,
-                                                color: brandPrimary,
+                                                color: AppColors.mediumPurple,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
@@ -270,16 +230,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 18),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: const [
-                                      _FeaturePill(label: 'Secure access'),
-                                      _FeaturePill(label: 'Live sessions'),
-                                      _FeaturePill(label: 'Agency branding'),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),
@@ -298,14 +248,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                         fontSize: 22,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Use your account credentials to continue.',
-                                      style: GoogleFonts.manrope(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondary,
                                       ),
                                     ),
                                     const SizedBox(height: 20),
@@ -407,36 +349,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FeaturePill extends StatelessWidget {
-  final String label;
-
-  const _FeaturePill({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: AppColors.borderSubtle.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.manrope(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textSecondary,
         ),
       ),
     );

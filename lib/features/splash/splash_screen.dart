@@ -36,25 +36,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.hero),
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -60,
-              right: -36,
-              child: _GlowBlob(
-                size: 180,
-                colors: [AppColors.rosePink, Color(0x00F5A8C4)],
-              ),
-            ),
-            const Positioned(
-              left: -48,
-              bottom: 120,
-              child: _GlowBlob(
-                size: 210,
-                colors: [AppColors.mediumPurple, Color(0x009370DB)],
-              ),
-            ),
-            SafeArea(
+        child: SafeArea(
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -66,18 +48,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         vertical: 34,
                       ),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.92),
-                            AppColors.surfaceElevated.withValues(alpha: 0.86),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: AppColors.borderSubtle.withValues(alpha: 0.8),
-                        ),
+                        gradient: AppGradients.card,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.borderSubtle),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.deepIndigo.withValues(alpha: 0.08),
@@ -94,7 +67,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             height: 104,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(18),
                               gradient: AppGradients.accent,
                               boxShadow: [
                                 BoxShadow(
@@ -148,7 +121,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
+                              letterSpacing: 0,
                               color: AppColors.textMuted,
                             ),
                           ),
@@ -158,28 +131,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   ),
                 ),
               ),
-            ),
-          ],
         ),
-      ),
-    );
-  }
-}
-
-class _GlowBlob extends StatelessWidget {
-  final double size;
-  final List<Color> colors;
-
-  const _GlowBlob({required this.size, required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: colors),
       ),
     );
   }

@@ -33,7 +33,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
       body: SafeArea(
         child: groupsAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
           error: (e, _) => Center(
             child: Column(
@@ -146,29 +146,25 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               color: AppColors.textMuted,
                             ),
                             filled: true,
-                            fillColor: AppColors.surfaceCard.withValues(
-                              alpha: 0.6,
-                            ),
+                            fillColor: AppColors.surfaceCard,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 14,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: AppColors.mediumPurple.withValues(
-                                  alpha: 0.15,
-                                ),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: AppColors.borderSubtle,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(10),
                               borderSide: const BorderSide(
-                                color: AppColors.rosePink,
+                                color: AppColors.mediumPurple,
                                 width: 1.5,
                               ),
                             ),
@@ -316,12 +312,12 @@ class _ConversationCard extends ConsumerWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.mediumPurple.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: AppColors.rosePink,
+                color: AppColors.mediumPurple,
               ),
             ),
           ],
@@ -373,11 +369,11 @@ class _EmptyState extends ConsumerWidget {
                 width: 94,
                 height: 94,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.mediumPurple.withValues(alpha: 0.22),
-                      AppColors.rosePink.withValues(alpha: 0.18),
+                      AppColors.mediumPurple.withValues(alpha: 0.16),
+                      AppColors.aqua.withValues(alpha: 0.11),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

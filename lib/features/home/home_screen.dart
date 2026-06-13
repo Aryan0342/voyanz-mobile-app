@@ -159,21 +159,21 @@ class HomeShell extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(16),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                color: AppColors.surfaceCard.withValues(alpha: 0.96),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderSubtle),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 30,
-                    offset: const Offset(0, 14),
+                    color: Colors.black.withValues(alpha: 0.07),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -192,7 +192,7 @@ class HomeShell extends ConsumerWidget {
                         fontWeight: selected
                             ? FontWeight.w700
                             : FontWeight.w600,
-                        letterSpacing: 0.2,
+                        letterSpacing: 0,
                       );
                     }),
                     iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -214,7 +214,7 @@ class HomeShell extends ConsumerWidget {
                   selectedIndex: currentIdx,
                   onDestinationSelected: (i) => onTap(context, i),
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                  height: 74,
+                  height: 68,
                   destinations: tabs
                       .map(
                         (t) => NavigationDestination(

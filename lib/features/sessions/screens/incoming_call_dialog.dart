@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
+import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
 class IncomingCallDialog extends ConsumerWidget {
@@ -14,27 +16,26 @@ class IncomingCallDialog extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final icon = incomingCall.type == 'video'
+        ? Icons.videocam
+        : incomingCall.type == 'phone'
+        ? Icons.phone
+        : Icons.chat_bubble_outline;
+
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.all(24),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade100,
-              shape: BoxShape.circle,
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              gradient: AppGradients.accent,
+              borderRadius: BorderRadius.all(Radius.circular(14)),
             ),
-            child: Icon(
-              incomingCall.type == 'video'
-                  ? Icons.videocam
-                  : incomingCall.type == 'phone'
-                  ? Icons.phone
-                  : Icons.chat,
-              size: 48,
-              color: Colors.blue,
-            ),
+            child: Icon(icon, size: 34, color: Colors.white),
           ),
           const SizedBox(height: 16),
           Text(
@@ -47,7 +48,7 @@ class IncomingCallDialog extends ConsumerWidget {
             incomingCall.customerFullname ?? 'Customer',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           if (incomingCall.tool != null) ...[
@@ -56,7 +57,7 @@ class IncomingCallDialog extends ConsumerWidget {
               incomingCall.tool!,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
           ],
@@ -70,8 +71,8 @@ class IncomingCallDialog extends ConsumerWidget {
                   label: const Text('Decline'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
                   ),
                 ),
               ),
@@ -83,7 +84,7 @@ class IncomingCallDialog extends ConsumerWidget {
                   label: const Text('Start'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.mediumPurple,
                     foregroundColor: Colors.white,
                   ),
                 ),

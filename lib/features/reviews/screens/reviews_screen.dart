@@ -178,7 +178,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
       body: SafeArea(
         child: reviewsAsync.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.rosePink),
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
           ),
           error: (e, st) => Center(
             child: Column(
@@ -507,7 +507,7 @@ class _RatingBar extends StatelessWidget {
                 value: value,
                 backgroundColor: AppColors.surfaceElevated,
                 valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.rosePink,
+                  AppColors.gold,
                 ),
               ),
             ),
@@ -540,11 +540,11 @@ class _FilterChip extends StatelessWidget {
           color: isSelected
               ? null
               : AppColors.surfaceCard.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected
-                ? AppColors.rosePink.withValues(alpha: 0.5)
-                : AppColors.mediumPurple.withValues(alpha: 0.15),
+                ? AppColors.mediumPurple.withValues(alpha: 0.35)
+                : AppColors.borderSubtle,
           ),
         ),
         child: Text(
@@ -598,7 +598,7 @@ class _ReviewCard extends StatelessWidget {
                 style: GoogleFonts.manrope(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.rosePink,
+                  color: AppColors.gold,
                 ),
               ),
             ],
@@ -649,11 +649,11 @@ class _EmptyState extends ConsumerWidget {
                 width: 94,
                 height: 94,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.mediumPurple.withValues(alpha: 0.22),
-                      AppColors.rosePink.withValues(alpha: 0.18),
+                      AppColors.mediumPurple.withValues(alpha: 0.16),
+                      AppColors.gold.withValues(alpha: 0.12),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

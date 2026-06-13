@@ -619,7 +619,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
         child: SafeArea(
           child: tokenAsync.when(
             loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.rosePink),
+              child: CircularProgressIndicator(color: AppColors.mediumPurple),
             ),
             error: (e, _) => Center(
               child: Padding(
