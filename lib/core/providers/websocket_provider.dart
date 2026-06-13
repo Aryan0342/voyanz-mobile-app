@@ -75,6 +75,7 @@ class IncomingCall {
   final bool isProfessionalAI;
   final bool avatar;
   final String? recordingReplayOption;
+  final Map<String, dynamic> rawCallParams;
 
   const IncomingCall({
     this.professionalId,
@@ -88,38 +89,55 @@ class IncomingCall {
     this.isProfessionalAI = false,
     this.avatar = false,
     this.recordingReplayOption,
+    this.rawCallParams = const {},
   });
 
   factory IncomingCall.fromCallParams(Map<String, dynamic> params) {
     return IncomingCall(
       professionalId: params['professionalId']?.toString(),
       customerId: params['customerId']?.toString(),
-      professionalFullname: params['professionalFullname'] as String?,
-      customerFullname: params['customerFullname'] as String?,
-      type: params['type'] as String? ?? 'video',
-      language: params['language'] as String? ?? 'fr',
-      tool: params['tool'] as String?,
-      appointmentId: params['appointmentId'] as int?,
-      isProfessionalAI: params['isProfessionalAI'] as bool? ?? false,
-      avatar: params['avatar'] as bool? ?? false,
-      recordingReplayOption: params['recordingReplayOption'] as String?,
+      professionalFullname: params['professionalFullname']?.toString(),
+      customerFullname: params['customerFullname']?.toString(),
+      type: params['type']?.toString() ?? 'video',
+      language: params['language']?.toString() ?? 'fr',
+      tool: params['tool']?.toString(),
+      appointmentId: params['appointmentId'] is int
+          ? params['appointmentId'] as int
+          : int.tryParse(params['appointmentId']?.toString() ?? ''),
+      isProfessionalAI: _readBool(params['isProfessionalAI']),
+      avatar: _readBool(params['avatar']),
+      recordingReplayOption: params['recordingReplayOption']?.toString(),
+      rawCallParams: Map<String, dynamic>.from(params),
     );
   }
 
-  Map<String, dynamic> toCallParams() => {
-    'professionalId': professionalId,
-    'customerId': customerId,
-    'professionalFullname': professionalFullname,
-    'customerFullname': customerFullname,
-    'type': type,
-    'language': language,
-    if (tool != null) 'tool': tool,
-    if (appointmentId != null) 'appointmentId': appointmentId,
-    'isProfessionalAI': isProfessionalAI,
-    'avatar': avatar,
-    if (recordingReplayOption != null)
-      'recordingReplayOption': recordingReplayOption,
-  };
+  Map<String, dynamic> toCallParams() {
+    if (rawCallParams.isNotEmpty) {
+      return Map<String, dynamic>.from(rawCallParams);
+    }
+
+    return {
+      'professionalId': professionalId,
+      'customerId': customerId,
+      'professionalFullname': professionalFullname,
+      'customerFullname': customerFullname,
+      'type': type,
+      'language': language,
+      if (tool != null) 'tool': tool,
+      if (appointmentId != null) 'appointmentId': appointmentId,
+      'isProfessionalAI': isProfessionalAI,
+      'avatar': avatar,
+      if (recordingReplayOption != null)
+        'recordingReplayOption': recordingReplayOption,
+    };
+  }
+}
+
+bool _readBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final text = value?.toString().trim().toLowerCase() ?? '';
+  return text == 'true' || text == '1' || text == 'yes';
 }
 
 /// Incoming call notifier

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,11 +22,43 @@ void main() {
   runApp(const ProviderScope(child: VoyanzApp()));
 }
 
-class VoyanzApp extends ConsumerWidget {
+class VoyanzApp extends ConsumerStatefulWidget {
   const VoyanzApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VoyanzApp> createState() => _VoyanzAppState();
+}
+
+class _VoyanzAppState extends ConsumerState<VoyanzApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
+
+    final isActive = state == AppLifecycleState.resumed;
+    final ws = ref.read(webSocketServiceProvider);
+    ws.setAppActive(isActive);
+
+    if (isActive && ref.read(authStateProvider).valueOrNull != null) {
+      unawaited(ws.connect());
+      ref.read(chatRealtimeProvider);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     // Listen for auth state changes and initialize WebSocket when user logs in

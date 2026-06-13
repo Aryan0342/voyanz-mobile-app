@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/providers.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/auth/data/auth_data_source.dart';
 import 'package:voyanz/features/auth/data/auth_repository.dart';
 import 'package:voyanz/features/auth/models/agency.dart';
@@ -36,6 +37,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = await AsyncValue.guard(() async {
       final response = await _repo.login(email: email, password: password);
       _ref.read(agencyProvider.notifier).state = response.agency;
+      await _restartWebSocket();
       return response.user;
     });
   }
@@ -60,6 +62,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       state = const AsyncValue.loading();
       final user = await _repo.getUserInfos();
       state = AsyncValue.data(user);
+      await _restartWebSocket();
       return true;
     } catch (_) {
       await _repo.logout();
@@ -72,9 +75,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   }
 
   Future<void> logout() async {
+    _ref.read(webSocketServiceProvider).disconnect();
     await _repo.logout();
     _ref.read(agencyProvider.notifier).state = null;
     state = const AsyncValue.data(null);
+  }
+
+  Future<void> _restartWebSocket() async {
+    final ws = _ref.read(webSocketServiceProvider);
+    ws.disconnect();
+    await ws.connect();
   }
 }
 

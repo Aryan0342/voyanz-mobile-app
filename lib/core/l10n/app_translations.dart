@@ -433,6 +433,14 @@ class AppTranslations {
   String get loadingAppointments =>
       _fr ? 'Chargement des créneaux...' : 'Loading appointments...';
   String get phoneSession => _fr ? 'Session téléphonique' : 'Phone Session';
+  String get answerPhoneTitle =>
+      _fr ? 'Repondez a votre telephone' : 'Answer your phone';
+  String get phonePstnSessionMessage => _fr
+      ? 'Voyanz appelle les deux participants sur leur numero mobile verifie.'
+      : 'Voyanz is calling both participants on their verified mobile numbers.';
+  String get phonePstnNoInAppAudio => _fr
+      ? 'L\'audio se fait par appel telephonique classique, pas dans l\'app.'
+      : 'Audio happens through a regular phone call, not inside the app.';
   String get chatSession => _fr ? 'Session chat' : 'Chat Session';
   String get sessionReady => _fr ? 'Session prête' : 'Session ready';
   String get openConversations =>

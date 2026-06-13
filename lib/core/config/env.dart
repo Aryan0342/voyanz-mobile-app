@@ -16,7 +16,7 @@ class EnvConfig {
   static const dev = EnvConfig(
     environment: Environment.dev,
     baseUrl: 'https://voyanz.com',
-    websocketUrl: 'ws://localhost:5276',
+    websocketUrl: 'ws://localhost:5277',
     apiKey: '7645ED1A-235F-459E-8E63-8178078927A3',
   );
 

@@ -15,7 +15,8 @@ class WebSocketService {
   WebSocketChannel? _channel;
   Timer? _reconnectTimer;
   Timer? _heartbeatWatchdog;
-  bool _disposed = false;
+  bool _disposed = true;
+  bool _appActive = true;
 
   int _reconnectAttempt = 0;
   static const List<Duration> _backoffDurations = [
@@ -32,12 +33,18 @@ class WebSocketService {
   WebSocketService(this._tokenStorage);
 
   Future<void> connect() async {
-    if (_disposed || _channel != null) return;
+    if (_channel != null) return;
+    _disposed = false;
+    if (!_appActive) {
+      _logger.i('WebSocket: app inactive, deferring connect');
+      return;
+    }
 
     try {
       final token = await _tokenStorage.accessToken;
       if (token == null || token.isEmpty) {
         _logger.w('WebSocket: no access token available');
+        _disposed = true;
         return;
       }
 
@@ -107,12 +114,22 @@ class WebSocketService {
       _logger.i('WebSocket: join sent');
 
       // Listen for messages
-      _channel!.stream.listen(_onMessage, onError: _onError, onDone: _onDone);
+      final connectedChannel = _channel!;
+      connectedChannel.stream.listen(
+        (raw) => _onMessage(raw, connectedChannel),
+        onError: (err) => _onError(err, connectedChannel),
+        onDone: () => _onDone(connectedChannel),
+      );
 
       // Start heartbeat watchdog
       _startHeartbeatWatchdog();
     } catch (e) {
       _logger.e('WebSocket: connection error: $e');
+      final channel = _channel;
+      _channel = null;
+      try {
+        channel?.sink.close();
+      } catch (_) {}
       _scheduleReconnect();
     }
   }
@@ -121,12 +138,26 @@ class WebSocketService {
     _heartbeatWatchdog?.cancel();
     _heartbeatWatchdog = Timer(const Duration(seconds: 30), () {
       _logger.w('WebSocket: no message for 30s, reconnecting');
-      disconnect();
-      connect();
+      _reconnectNow();
     });
   }
 
-  void _onMessage(dynamic raw) {
+  void _reconnectNow() {
+    _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = null;
+    final channel = _channel;
+    _channel = null;
+    try {
+      channel?.sink.close();
+    } catch (_) {}
+    if (!_disposed && _appActive) {
+      connect();
+    }
+  }
+
+  void _onMessage(dynamic raw, WebSocketChannel channel) {
+    if (!identical(_channel, channel)) return;
+
     try {
       _heartbeatWatchdog?.cancel();
       _startHeartbeatWatchdog();
@@ -152,12 +183,22 @@ class WebSocketService {
     }
   }
 
-  void _onError(dynamic err) {
+  void _onError(dynamic err, WebSocketChannel channel) {
+    if (!identical(_channel, channel)) return;
+
     _logger.e('WebSocket: error: $err');
+    _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = null;
+    _channel = null;
+    try {
+      channel.sink.close();
+    } catch (_) {}
     _scheduleReconnect();
   }
 
-  void _onDone() {
+  void _onDone(WebSocketChannel channel) {
+    if (!identical(_channel, channel)) return;
+
     _logger.w('WebSocket: closed');
     _channel = null;
     if (!_disposed) {
@@ -166,7 +207,7 @@ class WebSocketService {
   }
 
   void _scheduleReconnect() {
-    if (_disposed || _reconnectTimer != null) return;
+    if (_disposed || !_appActive || _reconnectTimer != null) return;
 
     final idx = _reconnectAttempt < _backoffDurations.length - 1
         ? _reconnectAttempt
@@ -178,20 +219,34 @@ class WebSocketService {
 
     _reconnectTimer = Timer(delay, () {
       _reconnectTimer = null;
-      if (!_disposed) {
+      if (!_disposed && _appActive) {
         connect();
       }
     });
   }
 
   void send(String action, Map<String, dynamic> data) {
+    _sendPayload({'action': action, 'data': data}, action);
+  }
+
+  Future<void> sendWithToken(String action, Object data) async {
+    final token = await _tokenStorage.accessToken;
+    if (token == null || token.isEmpty) {
+      _logger.w('WebSocket: no access token available, cannot send $action');
+      return;
+    }
+
+    _sendPayload({'action': action, 'token': token, 'data': data}, action);
+  }
+
+  void _sendPayload(Map<String, dynamic> payload, String action) {
     if (_channel == null) {
       _logger.w('WebSocket: not connected, cannot send $action');
       return;
     }
 
     try {
-      final msg = jsonEncode({'action': action, 'data': data});
+      final msg = jsonEncode(payload);
       _channel!.sink.add(msg);
       _logger.d('WebSocket: sent $action');
     } catch (e) {
@@ -207,10 +262,36 @@ class WebSocketService {
     _listeners[action]?.remove(handler);
   }
 
+  void setAppActive(bool active) {
+    if (_appActive == active) return;
+
+    _appActive = active;
+    if (!active) {
+      _logger.i('WebSocket: app inactive, closing socket');
+      _reconnectTimer?.cancel();
+      _reconnectTimer = null;
+      _heartbeatWatchdog?.cancel();
+      _heartbeatWatchdog = null;
+
+      final channel = _channel;
+      _channel = null;
+      try {
+        channel?.sink.close();
+      } catch (_) {}
+      return;
+    }
+
+    if (!_disposed) {
+      unawaited(connect());
+    }
+  }
+
   void disconnect() {
     _disposed = true;
     _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     _heartbeatWatchdog?.cancel();
+    _heartbeatWatchdog = null;
     _channel?.sink.close();
     _channel = null;
   }

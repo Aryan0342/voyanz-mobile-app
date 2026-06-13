@@ -13,7 +13,13 @@ class AppointmentsDataSource {
         ApiEndpoints.registration,
         data: {'ap_id': apId},
       );
-      return response.data as Map<String, dynamic>;
+      final body = response.data;
+      if (body is! Map<String, dynamic>) {
+        throw Exception('Unexpected appointment registration response');
+      }
+      _throwIfApiError(body);
+      final data = body['data'];
+      return data is Map<String, dynamic> ? data : body;
     } on DioException catch (e) {
       throw Exception(
         _extractApiErrorMessage(e, fallback: 'Appointment registration failed'),
@@ -55,5 +61,37 @@ class AppointmentsDataSource {
     }
 
     return '$fallback (${statusCode ?? 'network error'})';
+  }
+
+  void _throwIfApiError(Map<String, dynamic> body) {
+    final err = body['err'];
+    if (err != null && err != false && err != 0) {
+      if (err is Map<String, dynamic>) {
+        final message =
+            err['message']?.toString() ??
+            err['key']?.toString() ??
+            err['code']?.toString();
+        throw Exception(message == null || message.trim().isEmpty
+            ? 'Appointment registration failed'
+            : message);
+      }
+      throw Exception(err.toString());
+    }
+
+    final topLevelError = body['error'];
+    if (topLevelError != null &&
+        topLevelError != false &&
+        topLevelError != 0) {
+      final message = body['message']?.toString() ?? topLevelError.toString();
+      throw Exception(message);
+    }
+
+    if (body['success'] == false) {
+      final message =
+          body['message']?.toString() ??
+          body['error']?.toString() ??
+          'Appointment registration failed';
+      throw Exception(message);
+    }
   }
 }

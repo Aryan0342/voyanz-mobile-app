@@ -57,8 +57,16 @@ class AuthDataSource {
   }
 
   void _throwIfApiError(Map<String, dynamic> body) {
+    final topLevelError = body['error'];
+    if (topLevelError != null &&
+        topLevelError != false &&
+        topLevelError != 0) {
+      final message = body['message']?.toString() ?? topLevelError.toString();
+      throw Exception(message);
+    }
+
     final err = body['err'];
-    if (err == null) return;
+    if (err == null || err == false || err == 0) return;
 
     if (err is Map<String, dynamic>) {
       final message =

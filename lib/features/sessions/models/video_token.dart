@@ -20,12 +20,21 @@ class VideoToken {
 
   factory VideoToken.fromJson(Map<String, dynamic> json) {
     return VideoToken(
-      token: json['token'] as String? ?? '',
-      room: json['room'] as String? ?? '',
-      identity: json['identity'] as String?,
-      uid: json['uid'] as int?,
-      provider: json['provider'] as String? ?? 'agora',
-      appId: json['appId'] as String?,
+      token: json['token']?.toString() ?? '',
+      room:
+          json['room']?.toString() ??
+          json['channelName']?.toString() ??
+          json['channel']?.toString() ??
+          '',
+      identity: json['identity']?.toString(),
+      uid: json['uid'] is int
+          ? json['uid'] as int
+          : int.tryParse(json['uid']?.toString() ?? ''),
+      provider: json['provider']?.toString() ?? 'agora',
+      appId:
+          json['appId']?.toString() ??
+          json['app_id']?.toString() ??
+          json['agoraAppId']?.toString(),
     );
   }
 }
