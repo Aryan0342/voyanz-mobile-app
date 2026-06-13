@@ -29,7 +29,7 @@ class SessionLaunchException implements Exception {
       sessionId != null &&
       sessionId!.isNotEmpty &&
       seType != null &&
-      seRoom != null;
+      seType!.isNotEmpty;
 
   String? get resolvedSessionId {
     final direct = sessionId?.trim();
@@ -59,6 +59,34 @@ class SessionLaunchException implements Exception {
   String toString() => message;
 }
 
+class SessionLaunchResult {
+  final String sessionId;
+  final String? seType;
+  final String? seStatus;
+  final String? seRoom;
+  final String? chgrId;
+  final Map<String, dynamic> raw;
+
+  const SessionLaunchResult({
+    required this.sessionId,
+    this.seType,
+    this.seStatus,
+    this.seRoom,
+    this.chgrId,
+    this.raw = const {},
+  });
+
+  factory SessionLaunchResult.fromException(SessionLaunchException exception) {
+    return SessionLaunchResult(
+      sessionId: exception.resolvedSessionId ?? '',
+      seType: exception.seType,
+      seStatus: exception.seStatus,
+      seRoom: exception.seRoom,
+      chgrId: exception.chgrId,
+    );
+  }
+}
+
 class SessionAuthExpiredException implements Exception {
   final String message;
 
@@ -77,16 +105,21 @@ class SessionsDataSource {
   Future<VideoToken> getVideoAccessToken({
     required String seId,
     required String coId,
+    String? connectionId,
   }) async {
     try {
       final response = await _dio.get(
         ApiEndpoints.videoAccessToken(seId, coId),
+        queryParameters:
+            connectionId == null || connectionId.trim().isEmpty
+            ? null
+            : {'connectionId': connectionId.trim()},
       );
       final body = response.data as Map<String, dynamic>;
 
       final err = body['err'];
       final error = body['error'];
-      if (err != null) {
+      if (!_isEmptyError(err)) {
         if (_isAuthExpiredError(err)) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -102,7 +135,7 @@ class SessionsDataSource {
         }
         throw Exception(err.toString());
       }
-      if (error != null) {
+      if (!_isEmptyError(error)) {
         if (_isAuthExpiredText(error.toString())) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -123,9 +156,34 @@ class SessionsDataSource {
   }
 
   /// POST /web/1.0/video/heartbeat/:se_id
-  Future<void> sendHeartbeat(String seId) async {
+  Future<void> sendHeartbeat(String seId, {String? connectionId}) async {
     try {
-      await _dio.post(ApiEndpoints.videoHeartbeat(seId));
+      final response = await _dio.post(
+        ApiEndpoints.videoHeartbeat(seId),
+        data: connectionId == null || connectionId.trim().isEmpty
+            ? null
+            : {'connectionId': connectionId.trim()},
+      );
+      final body = response.data;
+      if (body is Map<String, dynamic>) {
+        final err = body['err'];
+        if (!_isEmptyError(err)) {
+          if (_isAuthExpiredError(err)) {
+            throw const SessionAuthExpiredException(
+              'Token expired. Please log in again.',
+            );
+          }
+          if (err is Map<String, dynamic>) {
+            final message =
+                err['message']?.toString() ??
+                err['key']?.toString() ??
+                err['code']?.toString() ??
+                'Video heartbeat failed';
+            throw Exception(message);
+          }
+          throw Exception(err.toString());
+        }
+      }
     } on DioException catch (e) {
       if (_isAuthExpiredText(_extractApiErrorMessage(e, fallback: ''))) {
         throw const SessionAuthExpiredException(
@@ -139,7 +197,7 @@ class SessionsDataSource {
   }
 
   /// POST /web/1.0/call/:typecall/:co_id
-  Future<String> createSessionCall({
+  Future<SessionLaunchResult> createSessionCall({
     required String typeCall,
     required String coId,
     String? apId,
@@ -157,7 +215,7 @@ class SessionsDataSource {
 
       final err = body['err'];
       final error = body['error'];
-      if (err != null) {
+      if (!_isEmptyError(err)) {
         if (_isAuthExpiredError(err)) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -172,7 +230,7 @@ class SessionsDataSource {
         }
         throw Exception(err.toString());
       }
-      if (error != null) {
+      if (!_isEmptyError(error)) {
         if (_isAuthExpiredText(error.toString())) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -185,7 +243,7 @@ class SessionsDataSource {
       if (sessionId == null || sessionId.isEmpty) {
         throw Exception('Session id missing from response');
       }
-      return sessionId;
+      return _extractLaunchResult(body, sessionId);
     } on DioException catch (e) {
       throw _extractSessionLaunchException(
         e,
@@ -205,7 +263,7 @@ class SessionsDataSource {
 
       final err = body['err'];
       final error = body['error'];
-      if (err != null) {
+      if (!_isEmptyError(err)) {
         if (_isAuthExpiredError(err)) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -220,7 +278,7 @@ class SessionsDataSource {
         }
         throw Exception(err.toString());
       }
-      if (error != null) {
+      if (!_isEmptyError(error)) {
         if (_isAuthExpiredText(error.toString())) {
           throw const SessionAuthExpiredException(
             'Token expired. Please log in again.',
@@ -243,14 +301,14 @@ class SessionsDataSource {
     if (data is Map<String, dynamic>) {
       final nestedSession = data['session'];
       if (nestedSession is Map<String, dynamic>) {
-        return nestedSession;
+        return {...data, ...nestedSession};
       }
       return data;
     }
 
     final session = body['session'];
     if (session is Map<String, dynamic>) {
-      return session;
+      return {...body, ...session};
     }
 
     return body;
@@ -279,6 +337,54 @@ class SessionsDataSource {
     }
 
     return null;
+  }
+
+  SessionLaunchResult _extractLaunchResult(
+    Map<String, dynamic> body,
+    String sessionId,
+  ) {
+    final data = body['data'];
+    final dataMap = data is Map<String, dynamic> ? data : null;
+    final bodySession = body['session'];
+    final dataSession = dataMap?['session'];
+    final session = dataSession is Map<String, dynamic>
+        ? dataSession
+        : bodySession is Map<String, dynamic>
+        ? bodySession
+        : dataMap;
+
+    String? firstNonEmpty(List<dynamic> values) {
+      for (final value in values) {
+        final text = value?.toString().trim();
+        if (text != null && text.isNotEmpty && text != 'null') return text;
+      }
+      return null;
+    }
+
+    return SessionLaunchResult(
+      sessionId: sessionId,
+      seType: firstNonEmpty([
+        body['se_type'],
+        dataMap?['se_type'],
+        session?['se_type'],
+      ]),
+      seStatus: firstNonEmpty([
+        body['se_status'],
+        dataMap?['se_status'],
+        session?['se_status'],
+      ]),
+      seRoom: firstNonEmpty([
+        body['se_room'],
+        dataMap?['se_room'],
+        session?['se_room'],
+      ]),
+      chgrId: firstNonEmpty([
+        body['chgr_id'],
+        dataMap?['chgr_id'],
+        session?['chgr_id'],
+      ]),
+      raw: Map<String, dynamic>.from(body),
+    );
   }
 
   String _extractApiErrorMessage(
@@ -327,6 +433,18 @@ class SessionsDataSource {
     }
 
     return _isAuthExpiredText(err.toString());
+  }
+
+  bool _isEmptyError(dynamic value) {
+    if (value == null || value == false || value == 0) return true;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized.isEmpty ||
+          normalized == 'null' ||
+          normalized == 'false' ||
+          normalized == '0';
+    }
+    return false;
   }
 
   bool _isAuthExpiredText(String text) {

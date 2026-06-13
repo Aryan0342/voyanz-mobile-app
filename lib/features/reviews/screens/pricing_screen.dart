@@ -11,7 +11,9 @@ import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
+import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
+import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class PricingScreen extends ConsumerStatefulWidget {
@@ -343,11 +345,16 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
     }
 
     try {
-      final seId = await ref
+      final launch = await ref
           .read(sessionsRepositoryProvider)
           .createSessionCall(typeCall: normalizedType, coId: widget.coId!);
       if (!mounted) return;
-      context.push('/session/wait/$normalizedType/$seId/${widget.coId!}');
+      openLaunchResult(
+        context,
+        launch,
+        fallbackType: normalizedType,
+        coId: widget.coId!,
+      );
     } on SessionAuthExpiredException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -374,34 +381,45 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         return;
       }
 
-      Future<bool> canJoinSession(String seId) async {
+      Future<SessionStatus?> getJoinableStatus(String seId) async {
         try {
           final status = await ref
               .read(sessionsRepositoryProvider)
               .getSessionStatus(seId);
-          return !status.isTerminal;
+          return status.isTerminal ? null : status;
         } catch (_) {
-          return false;
+          return null;
         }
       }
 
-      Future<void> openWait(String seId) async {
-        if (!mounted) return;
-        context.push('/session/wait/$normalizedType/$seId/${widget.coId!}');
-      }
-
-      Future<bool> tryOpenIfJoinable(String? seId) async {
+      Future<bool> tryOpenIfJoinable(
+        String? seId, {
+        String? fallbackType,
+        String? fallbackChgrId,
+      }) async {
         if (seId == null || seId.isEmpty) return false;
-        final joinable = await canJoinSession(seId);
+        final status = await getJoinableStatus(seId);
         if (!mounted) return true;
-        if (!joinable) return false;
-        await openWait(seId);
+        if (status == null) return false;
+        openSessionStatus(
+          context,
+          status,
+          fallbackType: fallbackType ?? normalizedType,
+          coId: widget.coId!,
+          fallbackChgrId: fallbackChgrId,
+        );
         return true;
       }
 
       // New flow: 409 response includes all session details (se_id, se_type, se_room, chgr_id)
       if (e.isDuplicateSessionWithDetails && _isResumableStatus(e.seStatus)) {
-        if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
+        if (await tryOpenIfJoinable(
+          e.resolvedSessionId,
+          fallbackType: e.seType,
+          fallbackChgrId: e.chgrId,
+        )) {
+          return;
+        }
       }
 
       // Fallback 1: canResume if session ID present (old format, for backward compat)
@@ -426,11 +444,16 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         if (await tryOpenIfJoinable(recoveredSeId)) return;
 
         try {
-          final freshSeId = await ref
+          final freshLaunch = await ref
               .read(sessionsRepositoryProvider)
               .createSessionCall(typeCall: normalizedType, coId: widget.coId!);
           if (!mounted) return;
-          await openWait(freshSeId);
+          openLaunchResult(
+            context,
+            freshLaunch,
+            fallbackType: normalizedType,
+            coId: widget.coId!,
+          );
           return;
         } on SessionLaunchException catch (retryError) {
           // Backend can keep a short-lived lock after session termination.
@@ -439,14 +462,19 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           if (!mounted) return;
 
           try {
-            final retriedSeId = await ref
+            final retriedLaunch = await ref
                 .read(sessionsRepositoryProvider)
                 .createSessionCall(
                   typeCall: normalizedType,
                   coId: widget.coId!,
                 );
             if (!mounted) return;
-            await openWait(retriedSeId);
+            openLaunchResult(
+              context,
+              retriedLaunch,
+              fallbackType: normalizedType,
+              coId: widget.coId!,
+            );
             return;
           } on SessionLaunchException catch (secondError) {
             if (!mounted) return;

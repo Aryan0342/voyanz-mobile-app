@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
+import 'package:voyanz/core/network/websocket_service.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
@@ -27,10 +29,14 @@ class VideoCallScreen extends ConsumerStatefulWidget {
 class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   Timer? _heartbeatTimer;
   Timer? _elapsedTimer;
+  late final Map<String, WebSocketEventHandler> _webSocketHandlers;
+  late final String _connectionId;
 
   Duration _elapsed = Duration.zero;
   bool _sessionEndedHandled = false;
   bool _heartbeatActive = false;
+  bool _leaving = false;
+  bool _disposing = false;
 
   RtcEngine? _engine;
   bool _engineInitializing = false;
@@ -72,11 +78,31 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   @override
   void initState() {
     super.initState();
+    _connectionId =
+        'mobile-${widget.seId}-${DateTime.now().microsecondsSinceEpoch}';
+    _webSocketHandlers = {
+      'session_aborted': _handleSessionEndEvent,
+      'session_error': _handleSessionEndEvent,
+      'session_videoaborted': _handleSessionEndEvent,
+      'session_group_stopped': _handleSessionEndEvent,
+      'session_group_all_clients_left': _handleSessionEndEvent,
+      'participant_kicked': _handleParticipantKicked,
+      'FORCE_MUTE_AUDIO': _handleForceMuteAudio,
+      'FORCE_UNMUTE_AUDIO': _handleForceUnmuteAudio,
+      'FORCE_DISABLE_VIDEO': _handleForceDisableVideo,
+      'FORCE_ENABLE_VIDEO': _handleForceEnableVideo,
+      'participant_muted': _handleParticipantMuted,
+      'participant_video_disabled': _handleParticipantVideoDisabled,
+      'sessions_updated': _handleSessionsUpdated,
+    };
+    _registerWebSocketHandlers();
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       unawaited(() async {
         if (!mounted || !_heartbeatActive) return;
         try {
-          await ref.read(sessionsRepositoryProvider).sendHeartbeat(widget.seId);
+          await ref
+              .read(sessionsRepositoryProvider)
+              .sendHeartbeat(widget.seId, connectionId: _connectionId);
         } catch (_) {}
       }());
     });
@@ -88,6 +114,8 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
   @override
   void dispose() {
+    _disposing = true;
+    _unregisterWebSocketHandlers();
     _heartbeatTimer?.cancel();
     _elapsedTimer?.cancel();
     unawaited(_disposeEngine());
@@ -169,6 +197,8 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
       await engine.enableAudio();
       await engine.enableVideo();
+      await engine.muteLocalAudioStream(!_micEnabled);
+      await engine.muteLocalVideoStream(!_cameraEnabled);
       await engine.startPreview();
 
       final room = token.room.trim();
@@ -196,9 +226,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
         _channelId = room;
       });
     } catch (e) {
-      setState(() {
-        _connectionError = e.toString();
-      });
+      if (mounted && !_disposing) {
+        setState(() {
+          _connectionError = e.toString();
+        });
+      }
     } finally {
       _engineInitializing = false;
     }
@@ -209,7 +241,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final engine = _engine;
     _engine = null;
 
-    if (mounted) {
+    if (mounted && !_disposing) {
       setState(() {
         _engineInitialized = false;
         _joined = false;
@@ -229,33 +261,295 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   }
 
   Future<void> _toggleMic() async {
-    final engine = _engine;
-    if (engine == null) return;
+    await _setMicEnabled(!_micEnabled);
+  }
 
-    final next = !_micEnabled;
-    await engine.muteLocalAudioStream(!next);
+  Future<void> _setMicEnabled(bool enabled) async {
+    final engine = _engine;
+    if (engine == null) {
+      if (mounted) {
+        setState(() {
+          _micEnabled = enabled;
+        });
+      }
+      return;
+    }
+
+    await engine.muteLocalAudioStream(!enabled);
     if (!mounted) return;
     setState(() {
-      _micEnabled = next;
+      _micEnabled = enabled;
     });
   }
 
   Future<void> _toggleCamera() async {
-    final engine = _engine;
-    if (engine == null) return;
+    await _setCameraEnabled(!_cameraEnabled);
+  }
 
-    final next = !_cameraEnabled;
-    await engine.muteLocalVideoStream(!next);
+  Future<void> _setCameraEnabled(bool enabled) async {
+    final engine = _engine;
+    if (engine == null) {
+      if (mounted) {
+        setState(() {
+          _cameraEnabled = enabled;
+        });
+      }
+      return;
+    }
+
+    await engine.muteLocalVideoStream(!enabled);
     if (!mounted) return;
     setState(() {
-      _cameraEnabled = next;
+      _cameraEnabled = enabled;
     });
   }
 
-  Future<void> _endCallAndExit() async {
+  Future<void> _endCallAndExit({bool notifyServer = true}) async {
+    if (_leaving) return;
+    _leaving = true;
+
+    if (notifyServer) {
+      _sessionEndedHandled = true;
+      final currentUser = ref.read(authStateProvider).valueOrNull;
+      final otherCoId = widget.coId.trim();
+      if (otherCoId.isNotEmpty && otherCoId != currentUser?.coId.trim()) {
+        ref.read(webSocketServiceProvider).send('session_videoaborted', {
+          'co_id': otherCoId,
+          'who': currentUser?.isProfessional == true
+              ? 'professional'
+              : 'customer',
+        });
+      }
+
+      ref.read(webSocketServiceProvider).send('session_stop', {
+        'se_id': widget.seId,
+      });
+    }
+
     await _disposeEngine();
     if (!mounted) return;
     Navigator.of(context).pop();
+  }
+
+  void _registerWebSocketHandlers() {
+    final ws = ref.read(webSocketServiceProvider);
+    for (final entry in _webSocketHandlers.entries) {
+      ws.on(entry.key, entry.value);
+    }
+  }
+
+  void _unregisterWebSocketHandlers() {
+    final ws = ref.read(webSocketServiceProvider);
+    for (final entry in _webSocketHandlers.entries) {
+      ws.off(entry.key, entry.value);
+    }
+  }
+
+  void _handleSessionEndEvent(Map<String, dynamic> event) {
+    final action = event['action']?.toString() ?? '';
+    final allowNoSessionId = action == 'session_videoaborted';
+    if (!_matchesCurrentSession(event, allowNoSessionId: allowNoSessionId)) {
+      return;
+    }
+
+    _finishFromServer(_messageForSessionEnd(action));
+  }
+
+  void _handleParticipantKicked(Map<String, dynamic> event) {
+    if (!_targetsCurrentUser(event)) return;
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+
+    _finishFromServer('You were removed from the session.');
+  }
+
+  void _handleForceMuteAudio(Map<String, dynamic> event) {
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+    unawaited(_setMicEnabled(false));
+  }
+
+  void _handleForceUnmuteAudio(Map<String, dynamic> event) {
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+    unawaited(_setMicEnabled(true));
+  }
+
+  void _handleForceDisableVideo(Map<String, dynamic> event) {
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+    unawaited(_setCameraEnabled(false));
+  }
+
+  void _handleForceEnableVideo(Map<String, dynamic> event) {
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+    unawaited(_setCameraEnabled(true));
+  }
+
+  void _handleParticipantMuted(Map<String, dynamic> event) {
+    if (!_hasTargetIds(event)) return;
+    if (!_targetsCurrentUser(event)) return;
+    final muted = _readBoolFromEvent(event, const [
+      'muted',
+      'isMuted',
+      'audioMuted',
+    ]);
+    unawaited(_setMicEnabled(!(muted ?? true)));
+  }
+
+  void _handleParticipantVideoDisabled(Map<String, dynamic> event) {
+    if (!_hasTargetIds(event)) return;
+    if (!_targetsCurrentUser(event)) return;
+    final disabled = _readBoolFromEvent(event, const [
+      'disabled',
+      'isDisabled',
+      'videoDisabled',
+    ]);
+    unawaited(_setCameraEnabled(!(disabled ?? true)));
+  }
+
+  void _handleSessionsUpdated(Map<String, dynamic> event) {
+    if (!_matchesCurrentSession(event, allowNoSessionId: true)) return;
+    ref.invalidate(sessionStatusProvider(widget.seId));
+    ref.invalidate(sessionStatusLivePollingProvider(widget.seId));
+  }
+
+  void _finishFromServer(String message) {
+    if (!mounted || _sessionEndedHandled) return;
+    _sessionEndedHandled = true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    Future<void>.delayed(const Duration(milliseconds: 400), () {
+      unawaited(_endCallAndExit(notifyServer: false));
+    });
+  }
+
+  String _messageForSessionEnd(String action) {
+    switch (action) {
+      case 'session_videoaborted':
+        return 'The other participant ended the call.';
+      case 'session_group_stopped':
+      case 'session_group_all_clients_left':
+        return 'The group session has ended.';
+      case 'session_error':
+        return 'The session ended because of a server error.';
+      case 'session_aborted':
+        return 'The session was cancelled.';
+      default:
+        return 'The session has ended.';
+    }
+  }
+
+  bool _matchesCurrentSession(
+    Map<String, dynamic> event, {
+    required bool allowNoSessionId,
+  }) {
+    final ids = <String>{};
+    _collectSessionIds(event, ids);
+
+    if (ids.isEmpty) return allowNoSessionId;
+    return ids.contains(widget.seId);
+  }
+
+  void _collectSessionIds(dynamic source, Set<String> ids) {
+    if (source is Map) {
+      for (final key in const ['se_id', 'session_id', 'sessionId']) {
+        _addNonEmpty(ids, source[key]);
+      }
+
+      final session = source['session'];
+      if (session is Map) {
+        _collectSessionIds(session, ids);
+        _addNonEmpty(ids, session['id']);
+      }
+
+      final data = source['data'];
+      if (data is Map) {
+        _collectSessionIds(data, ids);
+      }
+
+      final dataSessions = data is Map ? data['sessions'] : null;
+      final sessions = source['sessions'] ?? dataSessions;
+      if (sessions is List) {
+        for (final session in sessions) {
+          _collectSessionIds(session, ids);
+          if (session is Map) {
+            _addNonEmpty(ids, session['id']);
+          }
+        }
+      }
+    }
+  }
+
+  bool _targetsCurrentUser(Map<String, dynamic> event) {
+    final currentCoId = ref.read(authStateProvider).valueOrNull?.coId.trim();
+    if (currentCoId == null || currentCoId.isEmpty) return true;
+
+    final targets = <String>{};
+    _collectTargetIds(event, targets);
+    if (targets.isEmpty) return true;
+    return targets.contains(currentCoId);
+  }
+
+  bool _hasTargetIds(Map<String, dynamic> event) {
+    final targets = <String>{};
+    _collectTargetIds(event, targets);
+    return targets.isNotEmpty;
+  }
+
+  void _collectTargetIds(dynamic source, Set<String> ids) {
+    if (source is! Map) return;
+
+    for (final key in const [
+      'co_id',
+      'coId',
+      'participantCoId',
+      'participant_co_id',
+      'targetCoId',
+      'target_co_id',
+      'customerId',
+      'professionalId',
+    ]) {
+      _addNonEmpty(ids, source[key]);
+    }
+
+    final data = source['data'];
+    if (data is Map) _collectTargetIds(data, ids);
+
+    final participant = source['participant'];
+    if (participant is Map) _collectTargetIds(participant, ids);
+  }
+
+  bool? _readBoolFromEvent(Map<String, dynamic> event, List<String> keys) {
+    dynamic readFrom(dynamic source) {
+      if (source is! Map) return null;
+      for (final key in keys) {
+        if (source.containsKey(key)) return source[key];
+      }
+      return null;
+    }
+
+    final raw =
+        readFrom(event) ??
+        readFrom(event['data']) ??
+        readFrom(event['participant']);
+
+    if (raw is bool) return raw;
+    if (raw is num) return raw != 0;
+    final text = raw?.toString().trim().toLowerCase();
+    if (text == null || text.isEmpty) return null;
+    if (text == 'true' || text == '1' || text == 'yes') return true;
+    if (text == 'false' || text == '0' || text == 'no') return false;
+    return null;
+  }
+
+  void _addNonEmpty(Set<String> values, dynamic value) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty || text == 'null') return;
+    values.add(text);
   }
 
   @override
@@ -271,7 +565,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
         : widget.coId;
 
     final tokenAsync = ref.watch(
-      videoTokenProvider((seId: widget.seId, coId: videoCoId)),
+      videoTokenProvider((
+        seId: widget.seId,
+        coId: videoCoId,
+        connectionId: _connectionId,
+      )),
     );
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
@@ -279,7 +577,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final localEngine = _engine;
 
     ref.listen<AsyncValue<VideoToken>>(
-      videoTokenProvider((seId: widget.seId, coId: videoCoId)),
+      videoTokenProvider((
+        seId: widget.seId,
+        coId: videoCoId,
+        connectionId: _connectionId,
+      )),
       (_, next) {
         next.whenData((token) {
           unawaited(_ensureAgoraJoined(token));
@@ -305,7 +607,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
           );
 
           Future<void>.delayed(const Duration(milliseconds: 400), () {
-            unawaited(_endCallAndExit());
+            unawaited(_endCallAndExit(notifyServer: false));
           });
         });
       },

@@ -11,6 +11,7 @@ class SessionsRepository {
   Future<VideoToken> getVideoToken({
     required String seId,
     required String coId,
+    String? connectionId,
   }) async {
     if (kUseMockBackend) {
       return VideoToken(
@@ -22,24 +23,33 @@ class SessionsRepository {
         appId: 'mock-app-id',
       );
     }
-    return _ds.getVideoAccessToken(seId: seId, coId: coId);
+    return _ds.getVideoAccessToken(
+      seId: seId,
+      coId: coId,
+      connectionId: connectionId,
+    );
   }
 
-  Future<void> sendHeartbeat(String seId) async {
+  Future<void> sendHeartbeat(String seId, {String? connectionId}) async {
     if (kUseMockBackend) {
       return;
     }
-    return _ds.sendHeartbeat(seId);
+    return _ds.sendHeartbeat(seId, connectionId: connectionId);
   }
 
-  Future<String> createSessionCall({
+  Future<SessionLaunchResult> createSessionCall({
     required String typeCall,
     required String coId,
     String? apId,
   }) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
-      return 'mock-se-${DateTime.now().millisecondsSinceEpoch}';
+      return SessionLaunchResult(
+        sessionId: 'mock-se-${DateTime.now().millisecondsSinceEpoch}',
+        seType: typeCall,
+        seStatus: 'inprogress',
+        chgrId: typeCall == 'chat' ? 'chat-001' : null,
+      );
     }
     return _ds.createSessionCall(typeCall: typeCall, coId: coId, apId: apId);
   }

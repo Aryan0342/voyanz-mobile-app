@@ -30,6 +30,27 @@ class SessionStatus {
 
   String get normalizedStatus => status.toLowerCase();
 
+  String? get sessionType => _firstNonEmpty([
+    raw['se_type'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['se_type']
+        : null,
+  ]);
+
+  String? get room => _firstNonEmpty([
+    raw['se_room'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['se_room']
+        : null,
+  ]);
+
+  String? get chgrId => _firstNonEmpty([
+    raw['chgr_id'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['chgr_id']
+        : null,
+  ]);
+
   bool get isCalling => normalizedStatus == 'calling';
 
   bool get isAccepted => normalizedStatus == 'accepted';
@@ -113,5 +134,13 @@ class SessionStatus {
       return t.sessionStatusCanceledMessage;
     }
     return t.sessionStatusChangedMessage(status);
+  }
+
+  static String? _firstNonEmpty(List<dynamic> values) {
+    for (final value in values) {
+      final text = value?.toString().trim();
+      if (text != null && text.isNotEmpty && text != 'null') return text;
+    }
+    return null;
   }
 }

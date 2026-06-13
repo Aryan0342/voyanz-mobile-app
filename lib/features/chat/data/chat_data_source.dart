@@ -10,6 +10,7 @@ class ChatDataSource {
   Future<List<ChatGroup>> getGroups() async {
     final response = await _dio.get(ApiEndpoints.chatGroups);
     final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body);
     final list = body['data'] as List? ?? [];
     return list
         .map((e) => ChatGroup.fromJson(e as Map<String, dynamic>))
@@ -17,25 +18,72 @@ class ChatDataSource {
   }
 
   Future<List<ChatMessage>> getMessages(String chgrId) async {
-    final response = await _dio.get(ApiEndpoints.chatMessages(chgrId));
+    final response = await _dio.get(
+      ApiEndpoints.chatMessages(chgrId),
+      queryParameters: const {'full': '1'},
+    );
     final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body);
     final list = body['data'] as List? ?? [];
-    return list
+    final messages = list
         .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
         .toList();
+    messages.sort(_compareMessages);
+    return messages;
   }
 
-  /// POST /api/1.0/chat/message  body: { chgr_id, chme_content }
-  Future<void> sendMessage({
+  /// POST /api/1.0/chat/message  body: { chgr_id, chme_type, chme_text }
+  Future<ChatMessage> sendMessage({
     required String chgrId,
     required String content,
   }) async {
-    await _dio.post(
+    final response = await _dio.post(
       ApiEndpoints.sendChatMessage,
-      data: {'chgr_id': chgrId, 'chme_content': content},
+      data: {'chgr_id': chgrId, 'chme_type': 'text', 'chme_text': content},
     );
+    final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body);
+
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Unexpected chat message response format');
+    }
+
+    return ChatMessage.fromJson(data);
   }
 
   /// Returns the raw image bytes URL for a message image.
   String getImageUrl(String chmeId) => ApiEndpoints.chatImage(chmeId);
+
+  void _throwIfApiError(Map<String, dynamic> body) {
+    final topLevelError = body['error'];
+    if (topLevelError != null &&
+        topLevelError != false &&
+        topLevelError != 0) {
+      final message = body['message']?.toString() ?? topLevelError.toString();
+      throw Exception(message);
+    }
+
+    final err = body['err'];
+    if (err == null) return;
+    if (err == false || err == 0) return;
+
+    if (err is Map<String, dynamic>) {
+      final message =
+          err['message']?.toString() ??
+          err['key']?.toString() ??
+          err['code']?.toString() ??
+          'API error';
+      throw Exception(message);
+    }
+
+    throw Exception(err.toString());
+  }
+
+  int _compareMessages(ChatMessage a, ChatMessage b) {
+    final aId = a.numericId;
+    final bId = b.numericId;
+    if (aId != null && bId != null) return aId.compareTo(bId);
+    return a.chmeId.compareTo(b.chmeId);
+  }
 }

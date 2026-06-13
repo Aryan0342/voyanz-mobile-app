@@ -53,13 +53,21 @@ class ChatRepository {
     return _ds.getMessages(chgrId);
   }
 
-  Future<void> sendMessage({
+  Future<ChatMessage> sendMessage({
     required String chgrId,
     required String content,
   }) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 250));
-      return;
+      return ChatMessage(
+        chmeId: DateTime.now().millisecondsSinceEpoch.toString(),
+        chgrId: chgrId,
+        senderCoId: 'mock-user-001',
+        senderName: 'You',
+        type: 'text',
+        content: content,
+        createdAt: DateTime.now().toIso8601String(),
+      );
     }
     return _ds.sendMessage(chgrId: chgrId, content: content);
   }
