@@ -15,13 +15,17 @@ final sessionsRepositoryProvider = Provider<SessionsRepository>((ref) {
 
 /// Fetch a video token for a given session.
 final videoTokenProvider =
-    FutureProvider.family<VideoToken, ({String seId, String coId})>((
-      ref,
-      params,
-    ) async {
+    FutureProvider.family<
+      VideoToken,
+      ({String seId, String coId, String connectionId})
+    >((ref, params) async {
       return ref
           .watch(sessionsRepositoryProvider)
-          .getVideoToken(seId: params.seId, coId: params.coId);
+          .getVideoToken(
+            seId: params.seId,
+            coId: params.coId,
+            connectionId: params.connectionId,
+          );
     });
 
 final sessionStatusProvider = FutureProvider.family<SessionStatus, String>((

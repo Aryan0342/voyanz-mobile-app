@@ -23,6 +23,7 @@ class ChatSessionScreen extends ConsumerStatefulWidget {
 
 class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
   bool _sessionEndedHandled = false;
+  bool _conversationOpened = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,19 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
           },
         );
         next.whenData((status) {
-          if (!mounted || _sessionEndedHandled || !status.isTerminal) return;
+          if (!mounted) return;
+
+          final chgrId = status.chgrId;
+          if (!_conversationOpened &&
+              status.isInProgress &&
+              chgrId != null &&
+              chgrId.isNotEmpty) {
+            _conversationOpened = true;
+            context.go('/chat/$chgrId');
+            return;
+          }
+
+          if (_sessionEndedHandled || !status.isTerminal) return;
           _sessionEndedHandled = true;
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -169,7 +182,15 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
                 ),
                 const Spacer(),
                 ElevatedButton.icon(
-                  onPressed: () => context.go('/chat'),
+                  onPressed: () {
+                    final status = liveStatusAsync.valueOrNull;
+                    final chgrId = status?.chgrId;
+                    if (chgrId != null && chgrId.isNotEmpty) {
+                      context.go('/chat/$chgrId');
+                      return;
+                    }
+                    context.go('/chat');
+                  },
                   icon: const Icon(Icons.forum_outlined),
                   label: Text(t.openConversations),
                 ),

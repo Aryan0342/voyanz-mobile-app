@@ -191,7 +191,7 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  t.phoneSession,
+                  t.answerPhoneTitle,
                   style: GoogleFonts.jost(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
@@ -200,26 +200,28 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${t.session} #${widget.seId}',
+                  t.phonePstnSessionMessage,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  t.sessionReady,
+                  t.phonePstnNoInAppAudio,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(color: AppColors.textMuted),
                 ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.go('/home'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
+                      backgroundColor: AppColors.mediumPurple,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    icon: const Icon(Icons.call_end),
-                    label: Text(t.endSession),
+                    icon: const Icon(Icons.home_outlined),
+                    label: Text(t.backToHome),
                   ),
                 ),
               ],

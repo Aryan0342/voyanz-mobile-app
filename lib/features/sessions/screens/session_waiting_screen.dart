@@ -10,6 +10,7 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
+import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 class SessionWaitingScreen extends ConsumerStatefulWidget {
@@ -72,7 +73,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           if (!mounted || _hasNavigated || !status.isActive) return;
 
           _hasNavigated = true;
-          _navigateToSession(context);
+          _navigateToSession(context, status: status);
         });
       },
     );
@@ -294,30 +295,24 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     );
   }
 
-  void _navigateToSession(BuildContext context) {
-    final resolvedType = normalizeSessionType(widget.type);
+  void _navigateToSession(BuildContext context, {SessionStatus? status}) {
+    final resolvedType =
+        normalizeSessionType(status?.sessionType) ??
+        normalizeSessionType(widget.type);
 
     if (resolvedType == null) {
       context.pushReplacement('/home');
       return;
     }
 
-    if (resolvedType == 'video') {
-      context.pushReplacement('/video/${widget.seId}/${widget.coId}');
-      return;
-    }
-
-    if (resolvedType == 'phone') {
-      context.pushReplacement('/session/phone/${widget.seId}/${widget.coId}');
-      return;
-    }
-
-    if (resolvedType == 'chat') {
-      context.pushReplacement('/session/chat/${widget.seId}/${widget.coId}');
-      return;
-    }
-
-    context.pushReplacement('/home');
+    openSessionRoute(
+      context,
+      type: resolvedType,
+      seId: status?.seId ?? widget.seId,
+      coId: widget.coId,
+      chgrId: status?.chgrId,
+      replace: true,
+    );
   }
 
   Future<void> _rebookSession() async {
@@ -335,12 +330,16 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         );
         return;
       }
-      final newSeId = await ref
+      final launch = await ref
           .read(sessionsRepositoryProvider)
           .createSessionCall(typeCall: resolvedType, coId: widget.coId);
       if (!mounted) return;
-      context.pushReplacement(
-        '/session/wait/$resolvedType/$newSeId/${widget.coId}',
+      openLaunchResult(
+        context,
+        launch,
+        fallbackType: resolvedType,
+        coId: widget.coId,
+        replace: true,
       );
     } on SessionAuthExpiredException catch (e) {
       if (!mounted) return;

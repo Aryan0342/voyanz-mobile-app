@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
 class IncomingCallDialog extends ConsumerWidget {
   const IncomingCallDialog({Key? key}) : super(key: key);
@@ -60,18 +61,34 @@ class IncomingCallDialog extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _handleAccept(context, ref, incomingCall),
-              icon: const Icon(Icons.call),
-              label: const Text('Start'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _handleReject(context, ref, incomingCall),
+                  icon: const Icon(Icons.call_end),
+                  label: const Text('Decline'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleAccept(context, ref, incomingCall),
+                  icon: const Icon(Icons.call),
+                  label: const Text('Start'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -96,5 +113,20 @@ class IncomingCallDialog extends ConsumerWidget {
 
     // The professional will then receive session_started event
     // which triggers navigation to the video/phone/chat screen
+  }
+
+  void _handleReject(BuildContext context, WidgetRef ref, IncomingCall call) {
+    final ws = ref.read(webSocketServiceProvider);
+    final notifier = ref.read(incomingCallProvider.notifier);
+    final isProfessional =
+        ref.read(authStateProvider).valueOrNull?.isProfessional ?? false;
+
+    ws.send('session_callrejected', {
+      'callParams': call.toCallParams(),
+      'who': isProfessional ? 'professional' : 'customer',
+    });
+
+    notifier.clear();
+    Navigator.of(context).pop();
   }
 }
