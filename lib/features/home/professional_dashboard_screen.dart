@@ -476,7 +476,9 @@ class _ProfessionalDashboardScreenState
 
   void _navigateToSession(BuildContext context, SessionStartedEvent event) {
     final seId = event.seId;
-    final coId = event.coIdProfessional;
+    final coId = event.coIdCustomer.isNotEmpty
+        ? event.coIdCustomer
+        : event.coIdProfessional;
     final seType = event.seType.toLowerCase();
 
     // Navigate based on session type
@@ -485,6 +487,11 @@ class _ProfessionalDashboardScreenState
     } else if (seType == 'phone') {
       context.push('/session/phone/$seId/$coId');
     } else if (seType == 'chat') {
+      final chgrId = event.chgrId;
+      if (chgrId != null && chgrId.isNotEmpty) {
+        context.push('/chat/$chgrId');
+        return;
+      }
       context.push('/session/chat/$seId/$coId');
     }
   }

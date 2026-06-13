@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/chat/models/chat_models.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
@@ -28,6 +32,7 @@ class ChatMessagesScreen extends ConsumerStatefulWidget {
 class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _readMessageIds = <String>{};
   bool _sending = false;
 
   @override
@@ -59,6 +64,31 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       }
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _markMessagesRead(List<ChatMessage> messages) async {
+    final currentCoId = ref.read(authStateProvider).valueOrNull?.coId;
+    final pendingIds = <int>[];
+
+    for (final message in messages) {
+      if (message.chmeId.startsWith('local-')) continue;
+      if (_readMessageIds.contains(message.chmeId)) continue;
+      if (currentCoId != null && message.senderCoId == currentCoId) continue;
+
+      final id = message.numericId;
+      if (id == null) continue;
+
+      pendingIds.add(id);
+      _readMessageIds.add(message.chmeId);
+    }
+
+    if (pendingIds.isEmpty) return;
+
+    final ws = ref.read(webSocketServiceProvider);
+    for (var i = 0; i < pendingIds.length; i += 500) {
+      final end = i + 500 < pendingIds.length ? i + 500 : pendingIds.length;
+      await ws.sendWithToken('chat_messagesreaded', pendingIds.sublist(i, end));
     }
   }
 
@@ -182,6 +212,12 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       ),
                     );
                   }
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    unawaited(_markMessagesRead(messages));
+                  });
+
                   return ListView.builder(
                     controller: _scrollCtrl,
                     reverse: true,
@@ -312,7 +348,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
 }
 
 class _MessageBubble extends ConsumerWidget {
-  final dynamic message;
+  final ChatMessage message;
   final bool isMe;
 
   const _MessageBubble({required this.message, required this.isMe});
@@ -321,24 +357,22 @@ class _MessageBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
     final hasImage =
-        (message.imageUrl != null &&
-            message.imageUrl.toString().trim().isNotEmpty) ||
-        (message.chmeId != null && message.chmeId.toString().trim().isNotEmpty);
+        (message.imageUrl != null && message.imageUrl!.trim().isNotEmpty) ||
+        (message.isImage && message.chmeId.trim().isNotEmpty);
     String? imageUrl;
     if (hasImage) {
-      final raw = message.imageUrl?.toString().trim();
+      final raw = message.imageUrl?.trim();
       if (raw != null && raw.isNotEmpty) {
         imageUrl = _resolveMediaUrl(raw);
       } else {
         final endpoint = ref
             .read(chatRepositoryProvider)
-            .getImageUrl(message.chmeId.toString());
+            .getImageUrl(message.chmeId);
         imageUrl = _resolveMediaUrl(endpoint);
       }
     }
 
-    final isPending =
-        (message.chmeId?.toString().startsWith('local-') ?? false);
+    final isPending = message.chmeId.startsWith('local-');
 
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,

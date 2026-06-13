@@ -50,7 +50,8 @@ class ReviewsHistoryDataSource {
   }
 
   Future<void> postReview(Map<String, dynamic> body) async {
-    await _dio.post(ApiEndpoints.postReview, data: body);
+    final response = await _dio.post(ApiEndpoints.postReview, data: body);
+    _throwIfApiError(response.data, fallback: 'Post review failed');
   }
 
   Future<Map<String, dynamic>> getCustomerPricing() async {
@@ -59,7 +60,12 @@ class ReviewsHistoryDataSource {
       final body = response.data;
 
       if (body is Map<String, dynamic>) {
-        return body['data'] as Map<String, dynamic>? ?? {};
+        _throwIfApiError(body, fallback: 'Customer pricing failed');
+        final data = body['data'];
+        if (data is Map<String, dynamic>) return data;
+        return Map<String, dynamic>.from(body)
+          ..remove('err')
+          ..remove('meta');
       }
       return {};
     } catch (e) {
@@ -73,11 +79,19 @@ class ReviewsHistoryDataSource {
       ApiEndpoints.checkPromoCode,
       data: {'code': code},
     );
-    return response.data as Map<String, dynamic>;
+    final body = response.data;
+    _throwIfApiError(body, fallback: 'Promo code check failed');
+    if (body is Map<String, dynamic>) {
+      final data = body['data'];
+      if (data is Map<String, dynamic>) return data;
+      return body;
+    }
+    return const {};
   }
 
   /// Parse history response handling various formats
   List<dynamic> _parseHistoryResponse(dynamic responseData) {
+    _throwIfApiError(responseData, fallback: 'History request failed');
     try {
       if (responseData == null) return [];
 
@@ -88,6 +102,11 @@ class ReviewsHistoryDataSource {
 
       // Map with 'data' key
       if (responseData is Map<String, dynamic>) {
+        final histories = responseData['histories'];
+        if (histories is List) {
+          return histories;
+        }
+
         final data = responseData['data'];
 
         // If data is already a list, return it
@@ -110,6 +129,7 @@ class ReviewsHistoryDataSource {
 
   /// Parse reviews response handling various formats
   List<dynamic> _parseReviewsResponse(dynamic responseData) {
+    _throwIfApiError(responseData, fallback: 'Reviews request failed');
     try {
       if (responseData == null) return [];
 
@@ -120,6 +140,11 @@ class ReviewsHistoryDataSource {
 
       // Map with 'data' key
       if (responseData is Map<String, dynamic>) {
+        for (final key in const ['reviews', 'reviewspro', 'histories']) {
+          final list = responseData[key];
+          if (list is List) return list;
+        }
+
         final data = responseData['data'];
 
         // If data is already a list, return it
@@ -138,5 +163,31 @@ class ReviewsHistoryDataSource {
       _logger.e('Error parsing reviews response: $e, response: $responseData');
       return [];
     }
+  }
+
+  void _throwIfApiError(dynamic responseData, {required String fallback}) {
+    if (responseData is! Map<String, dynamic>) return;
+
+    final topLevelError = responseData['error'];
+    if (topLevelError != null && topLevelError != false && topLevelError != 0) {
+      final message =
+          responseData['message']?.toString() ?? topLevelError.toString();
+      throw Exception(message.trim().isEmpty ? fallback : message);
+    }
+
+    final err = responseData['err'];
+    if (err == null || err == false || err == 0) return;
+
+    if (err is Map<String, dynamic>) {
+      final message =
+          err['message']?.toString() ??
+          err['key']?.toString() ??
+          err['code']?.toString();
+      throw Exception(message == null || message.trim().isEmpty
+          ? fallback
+          : message);
+    }
+
+    throw Exception(err.toString());
   }
 }

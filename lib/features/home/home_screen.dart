@@ -1121,6 +1121,7 @@ String? _normalizeSessionType(Map<String, dynamic> item) {
   final rawCandidates = [
     source['se_type'],
     source['se_type_label'],
+    source['subtype'],
     source['session_type'],
     source['session_type_label'],
     source['typecall'],

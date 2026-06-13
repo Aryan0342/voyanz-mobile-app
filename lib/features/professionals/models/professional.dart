@@ -81,6 +81,16 @@ class Professional {
       final value = json[key];
       if (value == null) continue;
       if (value is num) return value.toDouble();
+      if (value is Map<String, dynamic>) {
+        final nested = _readDouble(value, [
+          'note',
+          'rating',
+          'average',
+          'avg',
+          'value',
+        ]);
+        if (nested != null) return nested;
+      }
       if (value is String) {
         final parsed = double.tryParse(value);
         if (parsed != null) return parsed;
@@ -129,6 +139,7 @@ class Professional {
             final text = _readString(item, [
               'name',
               'label',
+              'val',
               'value',
               'title',
               'la_name',
@@ -225,7 +236,10 @@ class Professional {
 
     final specialties = _readStringList(json, [
       'co_specialities',
+      'co_speciality',
       'co_specialty',
+      'specialities',
+      'speciality',
       'co_subtype',
     ]);
     final languages = _readStringList(json, ['co_languages', 'languages']);
@@ -263,6 +277,7 @@ class Professional {
         'co_rating',
         'co_rating_average',
         'co_calculatednote',
+        'reviewsNote',
         'rating',
       ]),
       pricePerMinute: prices.isNotEmpty
@@ -385,6 +400,7 @@ class ProfessionalDetail extends Professional {
         'co_rating',
         'co_rating_average',
         'co_calculatednote',
+        'reviewsNote',
         'rating',
       ]),
       pricePerMinute: fallbackPrice,
