@@ -152,17 +152,17 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               vertical: 14,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(16),
                               borderSide: const BorderSide(
                                 color: AppColors.borderSubtle,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(16),
                               borderSide: const BorderSide(
                                 color: AppColors.mediumPurple,
                                 width: 1.5,

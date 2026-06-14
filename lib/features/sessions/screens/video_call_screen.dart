@@ -788,7 +788,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
                                   t.providerLabel(token.provider),
@@ -950,7 +950,7 @@ class _SessionStatusBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: 0.45)),
           ),
           child: Row(

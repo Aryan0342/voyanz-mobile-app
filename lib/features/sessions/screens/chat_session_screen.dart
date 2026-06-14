@@ -118,7 +118,7 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceCard,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.borderSubtle),
                   ),
                   child: Row(
@@ -224,7 +224,7 @@ class _SessionMeta extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderSubtle),
       ),
       child: Column(
@@ -281,7 +281,7 @@ class _SessionStatusBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: 0.45)),
           ),
           child: Row(

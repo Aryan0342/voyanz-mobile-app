@@ -1014,7 +1014,7 @@ class _ProfessionalDetailScreenState
                                   color: AppColors.mediumPurple.withValues(
                                     alpha: 0.15,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(
                                   Icons.support_agent,
@@ -1074,7 +1074,7 @@ class _ProfessionalDetailScreenState
                                     color: AppColors.rosePink.withValues(
                                       alpha: 0.15,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: const Icon(
                                     Icons.person_outline,

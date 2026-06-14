@@ -622,7 +622,7 @@ class _ExploreHero extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         gradient: AppGradients.card,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderSubtle),
         boxShadow: [
           BoxShadow(
@@ -1152,13 +1152,13 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 220,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           gradient: AppGradients.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.borderSubtle),
           boxShadow: [
             BoxShadow(
@@ -1288,7 +1288,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.surfaceCard.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderSubtle),
       ),
       child: Row(
@@ -1342,12 +1342,12 @@ class _ProfessionalCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: AppGradients.card,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderSubtle),
             boxShadow: [
               BoxShadow(

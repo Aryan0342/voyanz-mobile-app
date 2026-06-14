@@ -473,7 +473,7 @@ class _DashboardHeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         gradient: AppGradients.card,
         border: Border.all(color: AppColors.borderSubtle),
         boxShadow: [
@@ -642,7 +642,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         color: AppColors.surfaceCard,
         border: Border.all(color: AppColors.borderSubtle),
       ),

@@ -49,7 +49,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       ),
                       decoration: BoxDecoration(
                         gradient: AppGradients.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: AppColors.borderSubtle),
                         boxShadow: [
                           BoxShadow(
@@ -67,7 +67,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             height: 104,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(24),
                               gradient: AppGradients.accent,
                               boxShadow: [
                                 BoxShadow(

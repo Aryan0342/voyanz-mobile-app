@@ -865,11 +865,11 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _selectPricing(title),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
               color: isSelected
                   ? AppColors.mediumPurple.withValues(alpha: 0.11)
                   : AppColors.surfaceCard,

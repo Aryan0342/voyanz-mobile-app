@@ -328,7 +328,7 @@ class _TopBar extends StatelessWidget {
                 height: 30,
                 decoration: BoxDecoration(
                   gradient: GlassTheme.purpleGradient,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
                   Icons.auto_awesome_rounded,

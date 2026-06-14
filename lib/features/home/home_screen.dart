@@ -160,20 +160,27 @@ class HomeShell extends ConsumerWidget {
       ),
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+        child: SoftEntrance(
+          offset: const Offset(0, 18),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surfaceCard.withValues(alpha: 0.96),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.borderSubtle),
+                color: AppColors.surfaceCard.withValues(alpha: 0.88),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.07),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: AppColors.deepIndigo.withValues(alpha: 0.11),
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
+                  ),
+                  BoxShadow(
+                    color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -183,7 +190,7 @@ class HomeShell extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     indicatorColor: AppColors.mediumPurple.withValues(
-                      alpha: 0.12,
+                      alpha: 0.16,
                     ),
                     labelTextStyle: WidgetStateProperty.resolveWith((states) {
                       final selected = states.contains(WidgetState.selected);
@@ -214,7 +221,7 @@ class HomeShell extends ConsumerWidget {
                   selectedIndex: currentIdx,
                   onDestinationSelected: (i) => onTap(context, i),
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                  height: 68,
+                  height: 72,
                   destinations: tabs
                       .map(
                         (t) => NavigationDestination(
@@ -227,6 +234,7 @@ class HomeShell extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ),

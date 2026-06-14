@@ -264,7 +264,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                         constraints: const BoxConstraints(maxHeight: 120),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceElevated,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.borderSubtle),
                         ),
                         child: TextField(
@@ -294,7 +294,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(16),
                         color: _sending
                             ? AppColors.textMuted
                             : AppColors.mediumPurple,
@@ -406,8 +406,8 @@ class _MessageBubble extends ConsumerWidget {
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(isMe ? 10 : 4),
                     topRight: Radius.circular(isMe ? 4 : 10),
-                    bottomLeft: const Radius.circular(10),
-                    bottomRight: const Radius.circular(10),
+                    bottomLeft: const Radius.circular(16),
+                    bottomRight: const Radius.circular(16),
                   ),
                   border: isMe
                       ? null
@@ -427,7 +427,7 @@ class _MessageBubble extends ConsumerWidget {
                   children: [
                     if (imageUrl != null) ...[
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(16),
                         child: Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
@@ -441,7 +441,7 @@ class _MessageBubble extends ConsumerWidget {
                               color: AppColors.deepIndigo.withValues(
                                 alpha: 0.25,
                               ),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(
                               Icons.broken_image_outlined,

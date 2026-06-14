@@ -5,7 +5,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 /// Light, polished ThemeData used across the app.
 abstract final class AppTheme {
   static ThemeData get dark {
-    const radius = 10.0;
+    const radius = 16.0;
     final baseText = GoogleFonts.manropeTextTheme(ThemeData.light().textTheme);
 
     final textTheme = baseText.copyWith(
@@ -154,7 +154,7 @@ abstract final class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surfaceCard,
-        indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.10),
+        indicatorColor: AppColors.mediumPurple.withValues(alpha: 0.14),
         elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
@@ -175,11 +175,11 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceCard,
-        elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.06),
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.10),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: AppColors.borderSubtle),
         ),
       ),
@@ -225,10 +225,10 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.surfaceLight,
           disabledForegroundColor: AppColors.textMuted,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          elevation: 0,
-          shadowColor: Colors.transparent,
+          minimumSize: const Size(52, 50),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          elevation: 2,
+          shadowColor: AppColors.mediumPurple.withValues(alpha: 0.20),
           shape: roundedShape,
           textStyle: textTheme.labelLarge?.copyWith(
             color: Colors.white,
@@ -242,8 +242,10 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.surfaceLight,
           disabledForegroundColor: AppColors.textMuted,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          minimumSize: const Size(52, 50),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          elevation: 2,
+          shadowColor: AppColors.mediumPurple.withValues(alpha: 0.20),
           shape: roundedShape,
           textStyle: textTheme.labelLarge?.copyWith(
             color: Colors.white,
@@ -254,9 +256,9 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.deepIndigo,
-          minimumSize: const Size(48, 48),
+          minimumSize: const Size(52, 50),
           side: const BorderSide(color: AppColors.borderStrong),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           shape: roundedShape,
           textStyle: textTheme.labelLarge,
         ),
@@ -276,14 +278,14 @@ abstract final class AppTheme {
           disabledForegroundColor: AppColors.textMuted,
           minimumSize: const Size(42, 42),
           padding: const EdgeInsets.all(10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.mediumPurple,
         foregroundColor: Colors.white,
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceCard,
@@ -295,7 +297,7 @@ abstract final class AppTheme {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         side: const BorderSide(color: AppColors.borderSubtle),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
@@ -328,14 +330,14 @@ abstract final class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.deepIndigo,
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         behavior: SnackBarBehavior.floating,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceCard,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         titleTextStyle: textTheme.headlineSmall,
         contentTextStyle: textTheme.bodyMedium,
       ),
@@ -344,7 +346,7 @@ abstract final class AppTheme {
         modalBackgroundColor: AppColors.surfaceCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         showDragHandle: true,
         dragHandleColor: AppColors.textMuted,

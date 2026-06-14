@@ -414,7 +414,7 @@ class _ProfessionalAvailabilityScreenState
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(16),
                                 color: AppColors.rosePink.withValues(
                                   alpha: 0.20,
                                 ),
