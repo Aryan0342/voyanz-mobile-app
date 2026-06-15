@@ -44,6 +44,13 @@ class AppTranslations {
   String get passwordsNoMatch =>
       _fr ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match';
   String get min6Chars => _fr ? '6 caractères minimum' : 'Min 6 characters';
+  String get invalidEmail =>
+      _fr ? "Format d'e-mail invalide" : 'Invalid email format';
+  String get invalidPhone =>
+      _fr ? 'Numero de telephone invalide' : 'Invalid phone number';
+  String get passwordRules => _fr
+      ? 'Le mot de passe ne respecte pas les exigences de securite.'
+      : 'Password does not meet the security requirements.';
   String get required => _fr ? 'Requis' : 'Required';
   List<String> get countryList => _fr
       ? [
@@ -74,9 +81,32 @@ class AppTranslations {
   String get pleaseAcceptCguCgs => _fr
       ? 'Veuillez accepter les CGU et CGS pour continuer.'
       : 'Please accept CGU and CGS to continue.';
+  String get legalStructure =>
+      _fr ? 'Structure legale' : 'Legal structure';
+  String get legalIndividual => _fr ? 'Individuel' : 'Individual';
+  String get legalCompany => _fr ? 'Societe' : 'Company';
+  String get legalAssociation => _fr ? 'Association' : 'Association';
+  String get acceptCharter => _fr
+      ? "J'accepte la charte professionnelle"
+      : 'I accept the professional charter';
+  String get pleaseAcceptCharter => _fr
+      ? 'Veuillez accepter la charte professionnelle pour continuer.'
+      : 'Please accept the professional charter to continue.';
+  String get invalidLegalStructure => _fr
+      ? 'Structure legale invalide.'
+      : 'Invalid legal structure.';
+  String get emailAlreadyRegistered => _fr
+      ? 'Cette adresse e-mail est deja inscrite.'
+      : 'This email is already registered.';
+  String get phoneAlreadyRegistered => _fr
+      ? 'Ce numero de telephone est deja inscrit.'
+      : 'This phone number is already registered.';
+  String get signupRecaptchaRequired => _fr
+      ? 'La verification anti-spam est requise pour creer ce compte.'
+      : 'Anti-spam verification is required to create this account.';
   String get accountCreated => _fr
-      ? 'Compte créé ! Veuillez vous connecter.'
-      : 'Account created! Please log in.';
+      ? 'Compte cree ! Bienvenue.'
+      : 'Account created! Welcome.';
   String createAccountFailed(String err) => _fr
       ? 'Échec de la création du compte : $err'
       : 'Failed to create account: $err';

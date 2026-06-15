@@ -42,6 +42,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     });
   }
 
+  Future<void> signUp({
+    required Map<String, dynamic> body,
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final response = await _repo.signUp(
+        body: body,
+        email: email,
+        password: password,
+      );
+      _ref.read(agencyProvider.notifier).state = response.agency;
+      await _restartWebSocket();
+      return response.user;
+    });
+  }
+
   Future<void> fetchUser() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _repo.getUserInfos());

@@ -17,6 +17,31 @@ class AuthRepository {
       return _mockLogin(email: email, password: password);
     }
     final response = await _dataSource.login(email: email, password: password);
+    return _persistAndHydrate(response);
+  }
+
+  Future<LoginResponse> signUp({
+    required Map<String, dynamic> body,
+    required String email,
+    required String password,
+  }) async {
+    if (kUseMockBackend) {
+      return _mockSignUp(body: body, email: email);
+    }
+
+    final response = await _dataSource.signUp(body: body);
+    if (response.accessToken.isEmpty) {
+      return login(email: email, password: password);
+    }
+
+    return _persistAndHydrate(response);
+  }
+
+  Future<LoginResponse> _persistAndHydrate(LoginResponse response) async {
+    if (response.accessToken.isEmpty) {
+      throw Exception('Missing access token');
+    }
+
     await _tokenStorage.saveTokens(
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
@@ -65,6 +90,35 @@ class AuthRepository {
       user: mockUser,
       accessToken: 'mock-access-token',
       refreshToken: 'mock-refresh-token',
+    );
+
+    await _tokenStorage.saveTokens(
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+    );
+
+    return response;
+  }
+
+  Future<LoginResponse> _mockSignUp({
+    required Map<String, dynamic> body,
+    required String email,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+
+    final mockUser = User(
+      coId: 'mock-user-new',
+      email: email,
+      firstName: body['co_firstname']?.toString(),
+      lastName: body['co_name']?.toString(),
+      role: body['co_type']?.toString() ?? 'customer',
+      phone: body['co_mobile1']?.toString(),
+    );
+
+    final response = LoginResponse(
+      user: mockUser,
+      accessToken: 'mock-signup-access-token',
+      refreshToken: 'mock-signup-refresh-token',
     );
 
     await _tokenStorage.saveTokens(

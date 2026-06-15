@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
-import 'package:voyanz/features/account/providers/account_provider.dart';
+import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -36,9 +37,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _confirmPasswordFocusNode = FocusNode();
   String _role = 'customer';
   String _gender = 'other';
+  String _legalStructure = 'individual';
   bool _acceptCgu = false;
   bool _acceptCgs = false;
-  bool _loading = false;
+  bool _acceptCharter = false;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
 
@@ -93,66 +95,150 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final t = ref.read(translationsProvider);
+
     if (!_acceptCgu || !_acceptCgs) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ref.read(translationsProvider).pleaseAcceptCguCgs),
-        ),
+        SnackBar(content: Text(t.pleaseAcceptCguCgs)),
       );
       return;
     }
 
-    setState(() => _loading = true);
-    try {
-      await ref.read(accountRepositoryProvider).createAccount({
-        // Preferred backend keys from API spec.
-        'co_email1': _emailCtrl.text.trim(),
-        'co_mobile1': _mobileCtrl.text.trim(),
-        'co_type': _role,
-        'cgv': _acceptCgu,
-        'cgs': _acceptCgs,
-
-        // Existing app keys kept for compatibility with alternate server mappings.
-        'co_first_name': _firstNameCtrl.text.trim(),
-        'co_last_name': _lastNameCtrl.text.trim(),
-        'co_display_name': _displayNameCtrl.text.trim(),
-        'co_gender': _gender,
-        'co_birth_date': _dobCtrl.text.trim(),
-        'co_country': _countryCtrl.text.trim(),
-        'co_mobile': _mobileCtrl.text.trim(),
-        'co_email': _emailCtrl.text.trim(),
-        'co_password': _passwordCtrl.text,
-        'co_password_confirmation': _confirmPasswordCtrl.text,
-        'co_accept_cgu': _acceptCgu,
-        'co_accept_cgs': _acceptCgs,
-        'co_role': _role,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.read(translationsProvider).accountCreated),
-          ),
-        );
-        context.go('/login');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ref.read(translationsProvider).createAccountFailed(e.toString()),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    if (_role == 'professional' && !_acceptCharter) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.pleaseAcceptCharter)),
+      );
+      return;
     }
+
+    await ref.read(authStateProvider.notifier).signUp(
+          body: _buildSignUpBody(),
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+  }
+
+  Map<String, dynamic> _buildSignUpBody() {
+    final firstName = _firstNameCtrl.text.trim();
+    final lastName = _lastNameCtrl.text.trim();
+    final body = <String, dynamic>{
+      'co_email1': _emailCtrl.text.trim(),
+      'co_password': _passwordCtrl.text,
+      'co_firstname': firstName,
+      'co_name': lastName,
+      'co_fullname': '$firstName $lastName'.trim(),
+      'co_type': _role,
+      'cgv': 'phone',
+      'cgs': 'phone',
+    };
+
+    void putIfNotEmpty(String key, String value) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) body[key] = trimmed;
+    }
+
+    putIfNotEmpty('co_mobile1', _mobileCtrl.text);
+    putIfNotEmpty('co_birthday', _dobCtrl.text);
+    putIfNotEmpty('co_display_name', _displayNameCtrl.text);
+    body['co_gender'] = _gender;
+
+    final countryCode = _countryCodeFor(_countryCtrl.text);
+    if (countryCode != null) body['co_country'] = countryCode;
+
+    if (_role == 'professional') {
+      body['charter_accepted'] = '1';
+      body['co_legal_structure_type'] = _legalStructure;
+    }
+
+    return body;
+  }
+
+  String? _countryCodeFor(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'france':
+        return 'FR';
+      case 'belgique':
+      case 'belgium':
+        return 'BE';
+      case 'canada':
+        return 'CA';
+      case 'suisse':
+      case 'switzerland':
+        return 'CH';
+      case 'royaume-uni':
+      case 'united kingdom':
+        return 'GB';
+      case 'etats-unis':
+      case 'united states':
+        return 'US';
+      default:
+        return null;
+    }
+  }
+
+  String _friendlySignUpError(Object? error, AppTranslations t) {
+    final message = error
+        .toString()
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .trim();
+    final normalized = message.toLowerCase();
+
+    if (normalized.contains('user_exists_already_email')) {
+      return t.emailAlreadyRegistered;
+    }
+    if (normalized.contains('user_exists_already_phone')) {
+      return t.phoneAlreadyRegistered;
+    }
+    if (normalized.contains('email_format_invalid')) {
+      return t.invalidEmail;
+    }
+    if (normalized.contains('phone_not_correct')) {
+      return t.invalidPhone;
+    }
+    if (normalized.contains('password_format_invalid')) {
+      return t.passwordRules;
+    }
+    if (normalized.contains('recaptcha_token_error')) {
+      return t.signupRecaptchaRequired;
+    }
+    if (normalized.contains('cgu_mandatory') ||
+        normalized.contains('cgs_mandatory')) {
+      return t.pleaseAcceptCguCgs;
+    }
+    if (normalized.contains('charter_mandatory')) {
+      return t.pleaseAcceptCharter;
+    }
+    if (normalized.contains('invalid_legal_structure_type')) {
+      return t.invalidLegalStructure;
+    }
+
+    return message;
   }
 
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
+    final authState = ref.watch(authStateProvider);
+
+    ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
+      if (next.hasValue && next.value != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.accountCreated)),
+        );
+        context.go('/home');
+      }
+      if (next.hasError) {
+        final rawError = next.error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              t.createAccountFailed(_friendlySignUpError(rawError, t)),
+            ),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: VoyanzAppBar(
@@ -251,8 +337,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   ),
                                 ],
                                 selected: {_role},
-                                onSelectionChanged: (v) =>
-                                    setState(() => _role = v.first),
+                                onSelectionChanged: (v) => setState(() {
+                                  _role = v.first;
+                                  if (_role != 'professional') {
+                                    _acceptCharter = false;
+                                  }
+                                }),
                               ),
                               const SizedBox(height: 24),
                               Text(
@@ -408,9 +498,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 autocorrect: false,
                                 enableSuggestions: false,
                                 textCapitalization: TextCapitalization.none,
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? t.required
-                                    : null,
+                                validator: (v) {
+                                  final value = v?.trim() ?? '';
+                                  if (value.isEmpty) return t.emailRequired;
+                                  final validEmail = RegExp(
+                                    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                  ).hasMatch(value);
+                                  return validEmail ? null : t.invalidEmail;
+                                },
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -475,11 +570,71 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   ),
                                 ),
                               ),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 240),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                child: _role == 'professional'
+                                    ? Column(
+                                        key: const ValueKey(
+                                          'professional-signup-fields',
+                                        ),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          const SizedBox(height: 12),
+                                          DropdownButtonFormField<String>(
+                                            initialValue: _legalStructure,
+                                            decoration: InputDecoration(
+                                              labelText: t.legalStructure,
+                                              prefixIcon: const Icon(
+                                                Icons.business_center_outlined,
+                                              ),
+                                            ),
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: 'individual',
+                                                child: Text(t.legalIndividual),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: 'company',
+                                                child: Text(t.legalCompany),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: 'association',
+                                                child: Text(t.legalAssociation),
+                                              ),
+                                            ],
+                                            onChanged: (value) => setState(
+                                              () => _legalStructure =
+                                                  value ?? 'individual',
+                                            ),
+                                          ),
+                                          CheckboxListTile(
+                                            value: _acceptCharter,
+                                            onChanged: (v) => setState(
+                                              () => _acceptCharter = v ?? false,
+                                            ),
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            contentPadding: EdgeInsets.zero,
+                                            title: Text(
+                                              t.acceptCharter,
+                                              style: GoogleFonts.manrope(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
                               const SizedBox(height: 28),
                               GradientButton(
-                                onPressed: _loading ? null : _submit,
+                                onPressed: authState.isLoading ? null : _submit,
                                 width: double.infinity,
-                                child: _loading
+                                child: authState.isLoading
                                     ? const SizedBox(
                                         width: 20,
                                         height: 20,
