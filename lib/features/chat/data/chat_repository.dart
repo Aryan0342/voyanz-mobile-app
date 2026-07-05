@@ -53,6 +53,31 @@ class ChatRepository {
     return _ds.getMessages(chgrId);
   }
 
+  Future<ChatMessagesPage> getMessagesPage(
+    String chgrId, {
+    int limit = 10,
+    int offset = 0,
+    bool fullHistory = false,
+  }) async {
+    if (kUseMockBackend) {
+      final messages = await getMessages(chgrId);
+      return ChatMessagesPage(
+        messages: messages,
+        total: messages.length,
+        limit: messages.length,
+        offset: 0,
+        hasMoreOlder: false,
+        fullHistory: true,
+      );
+    }
+    return _ds.getMessagesPage(
+      chgrId,
+      limit: limit,
+      offset: offset,
+      fullHistory: fullHistory,
+    );
+  }
+
   Future<ChatMessage> sendMessage({
     required String chgrId,
     required String content,
@@ -70,6 +95,25 @@ class ChatRepository {
       );
     }
     return _ds.sendMessage(chgrId: chgrId, content: content);
+  }
+
+  Future<ChatMessage> sendImage({
+    required String chgrId,
+    required String dataUri,
+  }) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      return ChatMessage(
+        chmeId: DateTime.now().millisecondsSinceEpoch.toString(),
+        chgrId: chgrId,
+        senderCoId: 'mock-user-001',
+        senderName: 'You',
+        type: 'image',
+        content: '',
+        createdAt: DateTime.now().toIso8601String(),
+      );
+    }
+    return _ds.sendImage(chgrId: chgrId, dataUri: dataUri);
   }
 
   String getImageUrl(String chmeId) {

@@ -13,21 +13,32 @@ class _FakeSessionsDataSource extends SessionsDataSource {
   String? lastHeartbeatSeId;
 
   @override
-  Future<String> createSessionCall({
+  Future<SessionLaunchResult> createSessionCall({
     required String typeCall,
     required String coId,
     String? apId,
+    String? language,
+    String? tool,
+    String? recordingReplayOption,
+    bool? avatar,
+    SessionLaunchOptions? options,
   }) async {
     lastType = typeCall;
     lastCoId = coId;
-    lastApId = apId;
-    return 'se-999';
+    lastApId = options?.apId ?? apId;
+    return const SessionLaunchResult(
+      sessionId: 'se-999',
+      seType: 'video',
+      seStatus: 'inprogress',
+      seRoom: 'room-1',
+    );
   }
 
   @override
   Future<VideoToken> getVideoAccessToken({
     required String seId,
     required String coId,
+    String? connectionId,
   }) async {
     return const VideoToken(
       token: 'tok-1',
@@ -39,7 +50,7 @@ class _FakeSessionsDataSource extends SessionsDataSource {
   }
 
   @override
-  Future<void> sendHeartbeat(String seId) async {
+  Future<void> sendHeartbeat(String seId, {String? connectionId}) async {
     lastHeartbeatSeId = seId;
   }
 }
@@ -51,15 +62,19 @@ void main() {
       final ds = _FakeSessionsDataSource();
       final repo = SessionsRepository(ds);
 
-      final seId = await repo.createSessionCall(
+      final launch = await repo.createSessionCall(
         typeCall: 'video',
         coId: 'co-1',
         apId: 'ap-7',
       );
-      final token = await repo.getVideoToken(seId: seId, coId: 'co-1');
-      await repo.sendHeartbeat(seId);
+      final token = await repo.getVideoToken(
+        seId: launch.sessionId,
+        coId: 'co-1',
+      );
+      await repo.sendHeartbeat(launch.sessionId);
 
-      expect(seId, 'se-999');
+      expect(launch.sessionId, 'se-999');
+      expect(launch.seType, 'video');
       expect(ds.lastType, 'video');
       expect(ds.lastCoId, 'co-1');
       expect(ds.lastApId, 'ap-7');

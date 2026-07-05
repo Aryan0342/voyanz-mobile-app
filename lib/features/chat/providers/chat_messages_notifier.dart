@@ -64,6 +64,39 @@ class ChatMessagesNotifier
     }
   }
 
+  Future<void> sendImage(String dataUri) async {
+    final user = ref.read(authStateProvider).valueOrNull;
+    final senderCoId = user?.coId ?? 'unknown';
+    final senderName = user?.firstName ?? 'You';
+
+    final optimistic = ChatMessage(
+      chmeId: 'local-${DateTime.now().millisecondsSinceEpoch}',
+      chgrId: chgrId,
+      senderCoId: senderCoId,
+      senderName: senderName,
+      type: 'image',
+      content: '',
+      createdAt: DateTime.now().toUtc().toIso8601String(),
+    );
+
+    final current = state.value ?? <ChatMessage>[];
+    state = AsyncValue.data(_mergeAndSort([...current, optimistic]));
+
+    try {
+      final created = await _repo.sendImage(chgrId: chgrId, dataUri: dataUri);
+      final withoutOptimistic = (state.value ?? <ChatMessage>[])
+          .where((m) => m.chmeId != optimistic.chmeId)
+          .toList();
+      state = AsyncValue.data(_mergeAndSort([...withoutOptimistic, created]));
+    } catch (_) {
+      final afterFailure = (state.value ?? <ChatMessage>[])
+          .where((m) => m.chmeId != optimistic.chmeId)
+          .toList();
+      state = AsyncValue.data(afterFailure);
+      rethrow;
+    }
+  }
+
   /// Forces a reload from the backend.
   Future<void> refresh() => _load();
 

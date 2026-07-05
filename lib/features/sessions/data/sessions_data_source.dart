@@ -87,6 +87,36 @@ class SessionLaunchResult {
   }
 }
 
+class SessionLaunchOptions {
+  final String? apId;
+  final String? language;
+  final String? tool;
+  final String? recordingReplayOption;
+  final bool? avatar;
+
+  const SessionLaunchOptions({
+    this.apId,
+    this.language,
+    this.tool,
+    this.recordingReplayOption,
+    this.avatar,
+  });
+
+  Map<String, dynamic>? toJson() {
+    final data = <String, dynamic>{
+      if (apId != null && apId!.trim().isNotEmpty) 'ap_id': apId!.trim(),
+      if (language != null && language!.trim().isNotEmpty)
+        'language': language!.trim(),
+      if (tool != null && tool!.trim().isNotEmpty) 'tool': tool!.trim(),
+      if (recordingReplayOption != null &&
+          recordingReplayOption!.trim().isNotEmpty)
+        'recordingReplayOption': recordingReplayOption!.trim(),
+      if (avatar != null) 'avatar': avatar,
+    };
+    return data.isEmpty ? null : data;
+  }
+}
+
 class SessionAuthExpiredException implements Exception {
   final String message;
 
@@ -201,11 +231,25 @@ class SessionsDataSource {
     required String typeCall,
     required String coId,
     String? apId,
+    String? language,
+    String? tool,
+    String? recordingReplayOption,
+    bool? avatar,
+    SessionLaunchOptions? options,
   }) async {
     try {
+      final launchOptions =
+          options ??
+          SessionLaunchOptions(
+            apId: apId,
+            language: language,
+            tool: tool,
+            recordingReplayOption: recordingReplayOption,
+            avatar: avatar,
+          );
       final response = await _dio.post(
         ApiEndpoints.createSessionCall(typeCall, coId),
-        data: apId == null ? null : {'ap_id': apId},
+        data: launchOptions.toJson(),
       );
 
       final body = response.data;

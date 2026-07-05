@@ -35,21 +35,6 @@ final chatRealtimeProvider = Provider<void>((ref) {
       return;
     }
 
-    // Legacy fallback: older builds used a single payload under message/data.
-    final rawPayload = event['message'] ?? event['data'];
-    final payload = rawPayload is Map<String, dynamic>
-        ? rawPayload
-        : const <String, dynamic>{};
-    final chgrId = (payload['chgr_id'] ?? payload['chgrId'])?.toString();
-    if (chgrId == null || chgrId.isEmpty) return;
-
-    ref.invalidate(chatMessagesProvider(chgrId));
-    ref.invalidate(chatGroupsProvider);
-    try {
-      ref.read(chatMessagesNotifierProvider(chgrId).notifier).refresh();
-    } catch (_) {
-      // ignore: no-op
-    }
   }
 
   void unreadHandler(Map<String, dynamic> _) {
@@ -57,13 +42,11 @@ final chatRealtimeProvider = Provider<void>((ref) {
   }
 
   ws.on('chat_message_new', handler);
-  ws.on('chat_message', handler);
   ws.on('chat_cmptupdated', unreadHandler);
 
   ref.onDispose(() {
     try {
       ws.off('chat_message_new', handler);
-      ws.off('chat_message', handler);
       ws.off('chat_cmptupdated', unreadHandler);
     } catch (_) {}
   });

@@ -18,28 +18,36 @@ class ChatDataSource {
   }
 
   Future<List<ChatMessage>> getMessages(String chgrId) async {
+    final page = await getMessagesPage(chgrId, fullHistory: true);
+    return page.messages;
+  }
+
+  Future<ChatMessagesPage> getMessagesPage(
+    String chgrId, {
+    int limit = 10,
+    int offset = 0,
+    bool fullHistory = false,
+  }) async {
     final response = await _dio.get(
       ApiEndpoints.chatMessages(chgrId),
-      queryParameters: const {'full': '1'},
+      queryParameters: fullHistory
+          ? const {'full': '1'}
+          : {'limit': limit, 'offset': offset},
     );
     final body = response.data as Map<String, dynamic>;
     _throwIfApiError(body);
-    final list = body['data'] as List? ?? [];
-    final messages = list
-        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-        .toList();
-    messages.sort(_compareMessages);
-    return messages;
+    return ChatMessagesPage.fromJson(body);
   }
 
   /// POST /api/1.0/chat/message  body: { chgr_id, chme_type, chme_text }
   Future<ChatMessage> sendMessage({
     required String chgrId,
     required String content,
+    String type = 'text',
   }) async {
     final response = await _dio.post(
       ApiEndpoints.sendChatMessage,
-      data: {'chgr_id': chgrId, 'chme_type': 'text', 'chme_text': content},
+      data: {'chgr_id': chgrId, 'chme_type': type, 'chme_text': content},
     );
     final body = response.data as Map<String, dynamic>;
     _throwIfApiError(body);
@@ -50,6 +58,13 @@ class ChatDataSource {
     }
 
     return ChatMessage.fromJson(data);
+  }
+
+  Future<ChatMessage> sendImage({
+    required String chgrId,
+    required String dataUri,
+  }) {
+    return sendMessage(chgrId: chgrId, content: dataUri, type: 'image');
   }
 
   /// Returns the raw image bytes URL for a message image.
@@ -78,12 +93,5 @@ class ChatDataSource {
     }
 
     throw Exception(err.toString());
-  }
-
-  int _compareMessages(ChatMessage a, ChatMessage b) {
-    final aId = a.numericId;
-    final bId = b.numericId;
-    if (aId != null && bId != null) return aId.compareTo(bId);
-    return a.chmeId.compareTo(b.chmeId);
   }
 }

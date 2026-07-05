@@ -41,6 +41,11 @@ class SessionsRepository {
     required String typeCall,
     required String coId,
     String? apId,
+    String? language,
+    String? tool,
+    String? recordingReplayOption,
+    bool? avatar,
+    SessionLaunchOptions? options,
   }) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -51,7 +56,16 @@ class SessionsRepository {
         chgrId: typeCall == 'chat' ? 'chat-001' : null,
       );
     }
-    return _ds.createSessionCall(typeCall: typeCall, coId: coId, apId: apId);
+    return _ds.createSessionCall(
+      typeCall: typeCall,
+      coId: coId,
+      apId: apId,
+      language: language,
+      tool: tool,
+      recordingReplayOption: recordingReplayOption,
+      avatar: avatar,
+      options: options,
+    );
   }
 
   Future<SessionStatus> getSessionStatus(String seId) async {

@@ -96,7 +96,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
       'sessions_updated': _handleSessionsUpdated,
     };
     _registerWebSocketHandlers();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       unawaited(() async {
         if (!mounted || !_heartbeatActive) return;
         try {

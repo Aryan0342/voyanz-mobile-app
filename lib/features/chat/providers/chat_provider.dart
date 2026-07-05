@@ -22,3 +22,17 @@ final chatMessagesProvider = FutureProvider.family<List<ChatMessage>, String>((
 ) async {
   return ref.watch(chatRepositoryProvider).getMessages(chgrId);
 });
+
+final chatMessagesPageProvider =
+    FutureProvider.family<
+      ChatMessagesPage,
+      ({String chgrId, int limit, int offset})
+    >((ref, params) async {
+      return ref
+          .watch(chatRepositoryProvider)
+          .getMessagesPage(
+            params.chgrId,
+            limit: params.limit,
+            offset: params.offset,
+          );
+    });
