@@ -229,6 +229,10 @@ class WebSocketService {
     _sendPayload({'action': action, 'data': data}, action);
   }
 
+  void ping() {
+    _sendPayload(const {'action': 'ping'}, 'ping');
+  }
+
   Future<void> sendWithToken(String action, Object data) async {
     final token = await _tokenStorage.accessToken;
     if (token == null || token.isEmpty) {

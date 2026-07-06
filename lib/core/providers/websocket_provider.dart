@@ -43,12 +43,20 @@ class SessionStartedEvent {
   });
 
   factory SessionStartedEvent.fromSession(Map<String, dynamic> session) {
+    return SessionStartedEvent.fromEvent({'session': session});
+  }
+
+  factory SessionStartedEvent.fromEvent(Map<String, dynamic> event) {
+    final session = event['session'] is Map<String, dynamic>
+        ? event['session'] as Map<String, dynamic>
+        : const <String, dynamic>{};
+
     return SessionStartedEvent(
       seId: session['se_id']?.toString() ?? '',
       seStatus: session['se_status'] as String? ?? 'inprogress',
       seType: session['se_type'] as String? ?? 'video',
       seRoom: session['se_room'] as String? ?? '',
-      sePriceHt: session['se_priceht'] as int? ?? 0,
+      sePriceHt: _readInt(session['se_priceht']) ?? 0,
       coIdProfessional: session['co_id_professional']?.toString() ?? '',
       coIdCustomer: session['co_id_customer']?.toString() ?? '',
       apId: session['ap_id']?.toString(),
@@ -56,8 +64,8 @@ class SessionStartedEvent {
       createdAt: session['createdAt'] as String?,
       professional: session['professional'] as Map<String, dynamic>?,
       customer: session['customer'] as Map<String, dynamic>?,
-      avatar: session['avatar'] as bool? ?? false,
-      reviewsPro: session['reviewspro'],
+      avatar: _readBool(event['avatar']) || _readBool(session['avatar']),
+      reviewsPro: event['reviewspro'] ?? session['reviewspro'],
     );
   }
 }
@@ -143,40 +151,55 @@ bool _readBool(dynamic value) {
 /// Incoming call notifier
 class IncomingCallNotifier extends StateNotifier<IncomingCall?> {
   final WebSocketService _ws;
+  late final WebSocketEventHandler _sessionCalledHandler;
 
   IncomingCallNotifier(this._ws) : super(null) {
+    _sessionCalledHandler = (event) {
+      final callParams = event['callParams'] as Map<String, dynamic>? ?? {};
+      state = IncomingCall.fromCallParams(callParams);
+    };
     _setupListeners();
   }
 
   void _setupListeners() {
-    _ws.on('session_called', (event) {
-      final callParams = event['callParams'] as Map<String, dynamic>? ?? {};
-      state = IncomingCall.fromCallParams(callParams);
-    });
+    _ws.on('session_called', _sessionCalledHandler);
   }
 
   void clear() {
     state = null;
+  }
+
+  @override
+  void dispose() {
+    _ws.off('session_called', _sessionCalledHandler);
+    super.dispose();
   }
 }
 
 /// Session started event notifier
 class SessionStartedNotifier extends StateNotifier<SessionStartedEvent?> {
   final WebSocketService _ws;
+  late final WebSocketEventHandler _sessionStartedHandler;
 
   SessionStartedNotifier(this._ws) : super(null) {
+    _sessionStartedHandler = (event) {
+      state = SessionStartedEvent.fromEvent(event);
+    };
     _setupListeners();
   }
 
   void _setupListeners() {
-    _ws.on('session_started', (event) {
-      final session = event['session'] as Map<String, dynamic>? ?? {};
-      state = SessionStartedEvent.fromSession(session);
-    });
+    _ws.on('session_started', _sessionStartedHandler);
   }
 
   void clear() {
     state = null;
+  }
+
+  @override
+  void dispose() {
+    _ws.off('session_started', _sessionStartedHandler);
+    super.dispose();
   }
 }
 
@@ -193,3 +216,10 @@ final sessionStartedProvider =
       final ws = ref.watch(webSocketServiceProvider);
       return SessionStartedNotifier(ws);
     });
+
+int? _readInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
