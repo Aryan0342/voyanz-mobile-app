@@ -135,7 +135,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    t.errorMessage(e.toString()),
+                    'An error occurred. Please try again.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textMuted,
@@ -221,32 +221,29 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            GlassCard(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  _HistoryStat(
-                                    label: t.totalSessions,
-                                    value: '${validItems.length}',
-                                    color: AppColors.mediumPurple,
-                                    icon: Icons.history,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _HistoryStat(
-                                    label: t.completed,
-                                    value: '${counts['completed'] ?? 0}',
-                                    color: AppColors.success,
-                                    icon: Icons.check_circle_outline,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _HistoryStat(
-                                    label: t.pending,
-                                    value: '${counts['pending'] ?? 0}',
-                                    color: AppColors.warning,
-                                    icon: Icons.schedule,
-                                  ),
-                                ],
-                              ),
+                            Row(
+                              children: [
+                                _HistoryStat(
+                                  label: 'TOTAL',
+                                  value: '${validItems.length}',
+                                  color: AppColors.mediumPurple,
+                                  icon: Icons.history,
+                                ),
+                                const SizedBox(width: 12),
+                                _HistoryStat(
+                                  label: 'DONE',
+                                  value: '${counts['completed'] ?? 0}',
+                                  color: AppColors.success,
+                                  icon: Icons.check_circle_outline,
+                                ),
+                                const SizedBox(width: 12),
+                                _HistoryStat(
+                                  label: 'WAIT',
+                                  value: '${counts['pending'] ?? 0}',
+                                  color: AppColors.warning,
+                                  icon: Icons.schedule,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -368,15 +365,10 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: isSelected ? AppGradients.accent : null,
-          color: isSelected
-              ? null
-              : AppColors.surfaceCard.withValues(alpha: 0.6),
+          color: isSelected ? AppColors.mediumPurple : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected
-                ? AppColors.mediumPurple.withValues(alpha: 0.35)
-                : AppColors.borderSubtle,
+            color: isSelected ? Colors.transparent : AppColors.borderSubtle,
           ),
         ),
         child: Text(
@@ -464,152 +456,102 @@ class _SessionCard extends ConsumerWidget {
     ]);
     final sessionId = _value(item, const ['se_id', 'id']);
 
-    return GlassCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              // Icon container
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: _typeGradient(normalizedType),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _statusColor(
-                        normalizedStatus,
-                      ).withValues(alpha: 0.22),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _typeIcon(normalizedType),
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _localizedSessionType(
-                        normalizedType ??
-                            (rawType.isEmpty ? 'session' : rawType),
-                        t,
-                      ),
-                      style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    if (counterpart.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        counterpart,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            duration,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Status badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _statusColor(normalizedStatus).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _statusColor(
-                      normalizedStatus,
-                    ).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Text(
-                  _localizedStatus(normalizedStatus, t),
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _statusColor(normalizedStatus),
-                  ),
-                ),
-              ),
-            ],
+          // Icon container
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              _typeIcon(normalizedType),
+              color: AppColors.textMuted,
+              size: 22,
+            ),
           ),
-          if (date.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Row(
+          const SizedBox(width: 16),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: AppColors.textMuted,
-                ),
-                const SizedBox(width: 6),
                 Text(
-                  date,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    color: AppColors.textMuted,
+                  _localizedSessionType(
+                    normalizedType ?? (rawType.isEmpty ? 'session' : rawType),
+                    t,
+                  ),
+                  style: GoogleFonts.jost(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                if (sessionId.isNotEmpty) ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.badge_outlined,
-                    size: 14,
-                    color: AppColors.textMuted,
-                  ),
-                  const SizedBox(width: 4),
+                if (counterpart.isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    '#$sessionId',
+                    counterpart,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.montserrat(
                       fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+                if (date.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    date,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
                       color: AppColors.textMuted,
                     ),
                   ),
                 ],
               ],
             ),
-          ],
+          ),
+          // Status and Duration
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: _statusColor(normalizedStatus).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _localizedStatus(normalizedStatus, t).toUpperCase(),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _statusColor(normalizedStatus),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                duration,
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -866,32 +808,47 @@ class _HistoryStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.1),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(height: 12),
             Text(
               value,
               style: GoogleFonts.jost(
-                fontSize: 20,
+                fontSize: 26,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.montserrat(
-                fontSize: 11,
-                color: AppColors.textPrimary,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+                color: AppColors.textSecondary,
               ),
             ),
           ],

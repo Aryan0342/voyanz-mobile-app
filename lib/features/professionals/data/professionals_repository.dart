@@ -100,10 +100,12 @@ class ProfessionalsRepository {
     if (kUseMockBackend) {
       return const [
         {
+          'ap_id': 'ap-001',
           'day': 'Monday',
           'slots': ['09:00', '11:30', '14:00'],
         },
         {
+          'ap_id': 'ap-002',
           'day': 'Tuesday',
           'slots': ['10:00', '13:00', '16:00'],
         },

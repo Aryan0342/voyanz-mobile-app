@@ -20,6 +20,20 @@ String _resolveMediaUrl(String raw) {
   return '${EnvConfig.current.baseUrl}$normalized';
 }
 
+String _formatTime(String? dateStr) {
+  if (dateStr == null || dateStr.isEmpty) return '';
+  try {
+    final dt = DateTime.parse(dateStr).toLocal();
+    final hr = dt.hour;
+    final min = dt.minute.toString().padLeft(2, '0');
+    final period = hr >= 12 ? 'PM' : 'AM';
+    final hr12 = hr == 0 ? 12 : (hr > 12 ? hr - 12 : hr);
+    return '$hr12:$min $period';
+  } catch (_) {
+    return '';
+  }
+}
+
 class ChatMessagesScreen extends ConsumerStatefulWidget {
   final String chgrId;
 
@@ -56,7 +70,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ref.read(translationsProvider).sendMessageFailed(e.toString()),
+              ref.read(translationsProvider).sendMessageFailed('Please try again.'),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -99,40 +113,75 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
     );
     final t = ref.watch(translationsProvider);
 
+    String? otherUserName;
+    messagesAsync.whenData((messages) {
+      final currentUser = ref.read(authStateProvider).valueOrNull;
+      for (final m in messages) {
+        if (m.senderCoId != null && m.senderCoId != currentUser?.coId) {
+          otherUserName = m.senderName;
+          break;
+        }
+      }
+    });
+    final displayTitle = otherUserName ?? t.conversation;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: VoyanzAppBar(
-        showBackButton: true,
-        onBackPressed: () => Navigator.of(context).pop(),
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF8F9FA),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        titleSpacing: 0,
         title: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: AppGradients.accent,
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 20),
+            Stack(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppGradients.accent,
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 24),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t.conversation,
+                  displayTitle,
                   style: GoogleFonts.jost(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
                 Text(
-                  t.activeNow,
+                  'Active now',
                   style: GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mediumPurple,
                   ),
                 ),
               ],
@@ -140,15 +189,16 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
           ],
         ),
         actions: [
-          VoyanzAppBarIconButton(icon: Icons.more_vert, onPressed: () {}),
-          const SizedBox(width: 12),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.black),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: Column(
-          children: [
-            Expanded(
+      body: Column(
+        children: [
+          Expanded(
               child: messagesAsync.when(
                 loading: () => const Center(
                   child: CircularProgressIndicator(
@@ -223,7 +273,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                   return ListView.builder(
                     controller: _scrollCtrl,
                     reverse: true,
-                    padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                     itemCount: messages.length,
                     itemBuilder: (_, i) {
                       final msg = messages[messages.length - 1 - i];
@@ -233,11 +283,20 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       final isMe =
                           (msg.senderCoId != null &&
                           msg.senderCoId == currentUser?.coId);
+                          
+                      bool showTime = true;
+                      if (i > 0) {
+                        final nextMsgDown = messages[messages.length - 1 - (i - 1)];
+                        if (nextMsgDown.senderCoId == msg.senderCoId) {
+                           showTime = false;
+                        }
+                      }
+
                       return _RevealIn(
                         delayMs: i * 18,
                         child: Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _MessageBubble(message: msg, isMe: isMe),
+                          padding: EdgeInsets.only(bottom: showTime ? 16 : 4),
+                          child: _MessageBubble(message: msg, isMe: isMe, showTime: showTime),
                         ),
                       );
                     },
@@ -247,13 +306,8 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             ),
             // ── Message input ──
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard.withValues(alpha: 0.98),
-                border: Border(
-                  top: BorderSide(color: AppColors.borderSubtle, width: 1),
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              color: const Color(0xFFF8F9FA),
               child: SafeArea(
                 top: false,
                 child: Row(
@@ -263,60 +317,67 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                       child: Container(
                         constraints: const BoxConstraints(maxHeight: 120),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceElevated,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.borderSubtle),
+                          color: const Color(0xFFF1F1F3),
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        child: TextField(
-                          controller: _msgCtrl,
-                          maxLines: null,
-                          textInputAction: TextInputAction.newline,
-                          style: GoogleFonts.manrope(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: t.typeMessage,
-                            hintStyle: GoogleFonts.manrope(
-                              color: AppColors.textMuted,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.add, color: Colors.black54),
+                              onPressed: () {},
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: _sending
-                            ? AppColors.textMuted
-                            : AppColors.mediumPurple,
-                        boxShadow: _sending
-                            ? []
-                            : [
-                                BoxShadow(
-                                  color: AppColors.mediumPurple.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 5),
+                            Expanded(
+                              child: TextField(
+                                controller: _msgCtrl,
+                                maxLines: null,
+                                textInputAction: TextInputAction.newline,
+                                style: GoogleFonts.manrope(
+                                  color: Colors.black87,
+                                  fontSize: 15,
                                 ),
-                              ],
-                      ),
-                      child: IconButton(
-                        onPressed: _sending ? null : _send,
-                        icon: Icon(
-                          _sending ? Icons.hourglass_empty : Icons.send_rounded,
-                          size: 20,
+                                decoration: InputDecoration(
+                                  hintText: 'Type a message...',
+                                  hintStyle: GoogleFonts.manrope(
+                                    color: Colors.black45,
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: GestureDetector(
+                                onTap: _sending ? null : _send,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: _sending ? null : const LinearGradient(
+                                      colors: [Color(0xFF8B5CF6), Color(0xFFB83280)],
+                                    ),
+                                    color: _sending ? AppColors.textMuted : null,
+                                  ),
+                                  child: _sending
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12.0),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.send,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -325,7 +386,6 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }
@@ -333,12 +393,12 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
 class _MessageBubble extends ConsumerWidget {
   final ChatMessage message;
   final bool isMe;
+  final bool showTime;
 
-  const _MessageBubble({required this.message, required this.isMe});
+  const _MessageBubble({required this.message, required this.isMe, this.showTime = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = ref.watch(translationsProvider);
     final hasImage =
         (message.imageUrl != null && message.imageUrl!.trim().isNotEmpty) ||
         (message.isImage && message.chmeId.trim().isNotEmpty);
@@ -357,70 +417,32 @@ class _MessageBubble extends ConsumerWidget {
 
     final isPending = message.chmeId.startsWith('local-');
 
-    return Row(
-      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        if (!isMe) ...[
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.accent,
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Flexible(
-          child: Column(
-            crossAxisAlignment: isMe
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
-              if (!isMe)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 6),
-                  child: Text(
-                    message.senderName ?? t.unknown,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.mediumPurple,
-                    ),
-                  ),
-                ),
-
-              // Optimistic marker handled above
-              Container(
+        Row(
+          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Flexible(
+              child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  gradient: isMe ? AppGradients.accent : null,
-                  color: isMe
-                      ? null
-                      : AppColors.surfaceCard,
+                  gradient: isMe ? const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFFB83280)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ) : null,
+                  color: isMe ? null : const Color(0xFFEBEBEB),
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(isMe ? 10 : 4),
-                    topRight: Radius.circular(isMe ? 4 : 10),
-                    bottomLeft: const Radius.circular(16),
-                    bottomRight: const Radius.circular(16),
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isMe ? 20 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 20),
                   ),
-                  border: isMe
-                      ? null
-                      : Border.all(color: AppColors.borderSubtle),
-                  boxShadow: isMe
-                      ? [
-                          BoxShadow(
-                            color: AppColors.mediumPurple.withValues(alpha: 0.18),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
-                          ),
-                        ]
-                      : [],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,17 +478,17 @@ class _MessageBubble extends ConsumerWidget {
                     if ((message.content ?? '').toString().trim().isNotEmpty)
                       Text(
                         message.content ?? '',
-                        style: GoogleFonts.montserrat(
+                        style: GoogleFonts.manrope(
                           fontSize: 15,
-                          color: isMe ? Colors.white : AppColors.textPrimary,
+                          color: isMe ? Colors.white : const Color(0xFF2A2A2A),
                           height: 1.4,
                         ),
                       ),
 
-                    // Pending indicator row (timestamp optional)
                     if (isPending) ...[
                       const SizedBox(height: 8),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           SizedBox(
@@ -483,11 +505,20 @@ class _MessageBubble extends ConsumerWidget {
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        if (isMe) const SizedBox(width: 40),
-        if (!isMe) const SizedBox(width: 40),
+        if (showTime)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
+            child: Text(
+              _formatTime(message.createdAt),
+              style: GoogleFonts.manrope(
+                fontSize: 11,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ),
       ],
     );
   }

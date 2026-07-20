@@ -6,6 +6,7 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/utils/string_utils.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 
 class ChatGroupsScreen extends ConsumerStatefulWidget {
@@ -48,6 +49,12 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                 Text(
                   t.failedLoadConversations,
                   style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'An error occurred. Please try again.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.montserrat(color: AppColors.error, fontSize: 12),
                 ),
               ],
             ),
@@ -115,16 +122,25 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                     child: _RevealIn(
                       delayMs: 20,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
-                        child: Text(
-                          t.messages,
-                          style: GoogleFonts.jost(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                        child: Center(
+                          child: Text(
+                            t.messages,
+                            style: GoogleFonts.jost(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  // ── Pinned Section ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _PinnedSection(groups: filtered),
                     ),
                   ),
                   // ── Search bar ──
@@ -146,27 +162,22 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               color: AppColors.textMuted,
                             ),
                             filled: true,
-                            fillColor: AppColors.surfaceCard,
+                            fillColor: Colors.white.withValues(alpha: 0.6),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 14,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(24),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: AppColors.borderSubtle,
-                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: AppColors.mediumPurple,
-                                width: 1.5,
-                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
                             ),
                           ),
                           onChanged: (_) => setState(() {}),
@@ -198,7 +209,20 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                         ),
                       ),
                     )
-                  else
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: Text(
+                          'All Messages',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       sliver: SliverList.builder(
@@ -218,6 +242,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                         },
                       ),
                     ),
+                  ],
                 ],
               ),
             );
@@ -239,8 +264,19 @@ class _ConversationCard extends ConsumerWidget {
     final t = ref.watch(translationsProvider);
     return GestureDetector(
       onTap: onTap,
-      child: GlassCard(
+      child: Container(
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             // Avatar
@@ -293,7 +329,7 @@ class _ConversationCard extends ConsumerWidget {
                   if (group.lastMessage != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      group.lastMessage!,
+                      stripHtml(group.lastMessage!),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.montserrat(
@@ -309,14 +345,10 @@ class _ConversationCard extends ConsumerWidget {
             const SizedBox(width: 12),
             // Arrow
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.mediumPurple.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
+              width: 12,
+              height: 12,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
                 color: AppColors.mediumPurple,
               ),
             ),
@@ -408,6 +440,122 @@ class _EmptyState extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PinnedSection extends StatelessWidget {
+  final List<dynamic> groups;
+  
+  const _PinnedSection({required this.groups});
+
+  @override
+  Widget build(BuildContext context) {
+    if (groups.isEmpty) return const SizedBox.shrink();
+
+    // Use up to the first 5 groups for the pinned section
+    final pinnedGroups = groups.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Pinned',
+            style: GoogleFonts.montserrat(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 90,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            itemCount: pinnedGroups.length,
+            itemBuilder: (context, index) {
+              final group = pinnedGroups[index];
+              final name = group.otherUserName ?? group.name ?? 'Chat';
+              final firstName = name.split(' ').first;
+              
+              return _PinnedAvatar(
+                name: firstName,
+                image: group.otherUserAvatar,
+                icon: group.otherUserAvatar == null ? Icons.person_outline : null,
+                isOnline: index % 2 == 0, // Using mock online status for visual parity
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PinnedAvatar extends StatelessWidget {
+  final String name;
+  final String? image;
+  final IconData? icon;
+  final bool? isOnline;
+
+  const _PinnedAvatar({required this.name, this.image, this.icon, this.isOnline});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: image == null ? null : AppGradients.card,
+                  color: image == null ? Colors.white.withValues(alpha: 0.6) : null,
+                ),
+                padding: image != null ? const EdgeInsets.all(4) : EdgeInsets.zero,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: image != null
+                      ? ClipOval(child: Image.network(image!, fit: BoxFit.cover))
+                      : Icon(icon, color: AppColors.textPrimary, size: 26),
+                ),
+              ),
+              if (isOnline != null)
+                Positioned(
+                  bottom: 2,
+                  right: 2,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isOnline! ? AppColors.online : Colors.grey,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

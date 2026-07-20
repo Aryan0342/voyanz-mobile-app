@@ -291,23 +291,56 @@ class _ProfessionalsListScreenState
 
           if (pros.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: GlassCard(
+                  padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 94,
+                        height: 94,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.mediumPurple.withValues(alpha: 0.16),
+                              AppColors.aqua.withValues(alpha: 0.11),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.explore_outlined,
+                          size: 42,
+                          color: AppColors.deepIndigo,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        t.noProfessionalsFound,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.jost(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        t.noProfessionalsSubtitle,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 15,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t.noProfessionalsFound,
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textMuted,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+                ),
               ),
             );
           }
@@ -621,12 +654,11 @@ class _ExploreHero extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
-        gradient: AppGradients.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 18,
             offset: const Offset(0, 7),
           ),
@@ -638,24 +670,20 @@ class _ExploreHero extends ConsumerWidget {
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.mediumPurple, AppColors.magentaRose],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  color: AppColors.mediumPurple,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.mediumPurple.withValues(alpha: 0.16),
+                      color: AppColors.mediumPurple.withValues(alpha: 0.2),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.explore, color: Colors.white, size: 26),
+                child: const Icon(Icons.explore_outlined, color: Colors.white, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -692,38 +720,37 @@ class _ExploreHero extends ConsumerWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _HeroTag(
-                icon: Icons.bolt_rounded,
+                icon: Icons.circle,
                 label: t.online,
                 tone: AppColors.online,
               ),
               _HeroTag(
-                icon: Icons.videocam_rounded,
+                icon: Icons.videocam_outlined,
                 label: t.videoCall,
-                tone: AppColors.mediumPurple,
+                tone: AppColors.textSecondary,
+                bgColor: Colors.grey.withValues(alpha: 0.08),
               ),
               _HeroTag(
-                icon: Icons.chat_bubble_rounded,
+                icon: Icons.chat_bubble_outline,
                 label: t.textChat,
-                tone: AppColors.rosePink,
+                tone: AppColors.textSecondary,
+                bgColor: Colors.grey.withValues(alpha: 0.08),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
+                  horizontal: 14,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.88),
+                  color: AppColors.mediumPurple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(99),
-                  border: Border.all(
-                    color: AppColors.borderSubtle.withValues(alpha: 0.55),
-                  ),
                 ),
                 child: Text(
                   '${totalCount.toString()} live',
                   style: GoogleFonts.montserrat(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.deepIndigo,
+                    color: AppColors.mediumPurple,
                   ),
                 ),
               ),
@@ -739,24 +766,17 @@ class _HeroTag extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color tone;
+  final Color? bgColor;
 
-  const _HeroTag({required this.icon, required this.label, required this.tone});
+  const _HeroTag({required this.icon, required this.label, required this.tone, this.bgColor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: bgColor ?? tone.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: tone.withValues(alpha: 0.16)),
-        boxShadow: [
-          BoxShadow(
-            color: tone.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -766,9 +786,9 @@ class _HeroTag extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.montserrat(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: tone,
             ),
           ),
         ],
@@ -1157,12 +1177,11 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
         width: 220,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: AppGradients.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderSubtle),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
@@ -1346,12 +1365,11 @@ class _ProfessionalCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: AppGradients.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderSubtle),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -1453,7 +1471,7 @@ class _ProfessionalCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.mediumPurple.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
                     '€${pricePerMinute!.toStringAsFixed(2)}/min',

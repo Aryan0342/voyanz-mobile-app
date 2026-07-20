@@ -21,6 +21,8 @@ class AppTranslations {
   String get logIn => _fr ? 'Connexion' : 'Log In';
   String get noAccount => _fr ? 'Pas de compte ? ' : "Don't have an account? ";
   String get signUp => _fr ? "S'inscrire" : 'Sign Up';
+  String get forgotPassword =>
+      _fr ? 'Mot de passe oublié ?' : 'Forgot Password?';
 
   // ── Auth – register ─────────────────────────────────────────────────────────
   String get createAccount => _fr ? 'Créer un compte' : 'Create Account';
@@ -190,6 +192,9 @@ class AppTranslations {
   String get tryAgain => _fr ? 'Réessayer' : 'Try Again';
   String get noProfessionalsFound =>
       _fr ? 'Aucun professionnel trouvé' : 'No professionals found';
+  String get noProfessionalsSubtitle => _fr
+      ? 'Les conseillers apparaîtront ici une fois disponibles.'
+      : 'Advisors will appear here once available.';
   String get searchAdvisor => _fr
       ? 'Rechercher un conseiller ou une spécialité'
       : 'Search advisor or specialty';
@@ -599,4 +604,65 @@ class AppTranslations {
   String get aboutVoyanzContent => _fr
       ? 'Voyanz - Votre plateforme de confiance pour les consultations professionnelles.\n\nVersion : 1.0.0\nConçu avec Flutter & ❤️'
       : 'Voyanz - Your trusted platform for professional consultations.\n\nVersion: 1.0.0\nBuilt with Flutter & ❤️';
+
+  // ── Wallet / Top-Up ──────────────────────────────────────────────────────
+  String get wallet => _fr ? 'Portefeuille' : 'Wallet';
+  String get topUp => _fr ? 'Recharger' : 'Top Up';
+  String get topUpCredit =>
+      _fr ? 'Recharger mon solde' : 'Top Up Balance';
+  String get buyPack => _fr ? 'Acheter' : 'Buy';
+  String get selectPack => _fr ? 'Choisir un pack' : 'Select a pack';
+  String get creditReceived => _fr ? 'Crédit reçu' : 'Credit received';
+  String get amountToPay => _fr ? 'Montant à payer' : 'Amount to pay';
+  String get firstTopUpBonus =>
+      _fr ? 'Bonus première recharge' : 'First top-up bonus';
+  String get promoDiscount => _fr ? 'Réduction promo' : 'Promo discount';
+  String get payWithCard => _fr ? 'Payer par carte' : 'Pay with Card';
+  String get processingPayment =>
+      _fr ? 'Paiement en cours...' : 'Processing payment...';
+  String get paymentSuccess =>
+      _fr ? 'Paiement réussi' : 'Payment Successful';
+  String get paymentFailed => _fr ? 'Paiement échoué' : 'Payment Failed';
+  String get insufficientBalance =>
+      _fr ? 'Solde insuffisant' : 'Insufficient Balance';
+  String get topUpNow => _fr ? 'Recharger maintenant' : 'Top Up Now';
+  String get transactionHistory =>
+      _fr ? 'Historique des transactions' : 'Transaction History';
+  String get noTransactionsYet =>
+      _fr ? 'Aucune transaction' : 'No transactions yet';
+  String get newBalance => _fr ? 'Nouveau solde' : 'New balance';
+  String get backToWallet =>
+      _fr ? 'Retour au portefeuille' : 'Back to Wallet';
+  String get youPay => _fr ? 'Vous payez' : 'You pay';
+  String get youReceive => _fr ? 'Vous recevez' : 'You receive';
+
+  // ── Appointment Booking ─────────────────────────────────────────────────
+  String get bookAppointment =>
+      _fr ? 'Prendre rendez-vous' : 'Book Appointment';
+  String get availableSlots =>
+      _fr ? 'Créneaux disponibles' : 'Available Slots';
+  String get noSlotsAvailable =>
+      _fr ? 'Aucun créneau disponible' : 'No slots available';
+  String get registerAndPay =>
+      _fr ? 'S\'inscrire et payer' : 'Register & Pay';
+  String get appointmentPaidSuccess =>
+      _fr ? 'Rendez-vous réservé et payé avec succès !'
+          : 'Appointment booked & paid successfully!';
+  String get appointmentPayFailed =>
+      _fr ? 'Le paiement du rendez-vous a échoué'
+          : 'Appointment payment failed';
+  String get appointmentRateInfo =>
+      _fr ? 'Tarif : ~%s/min — facturé selon la durée réelle'
+          : 'Rate: ~%s/min — charged for actual duration';
+  String get slotDate =>
+      _fr ? 'Date' : 'Date';
+  String get slotTime =>
+      _fr ? 'Horaire' : 'Time';
+  String get confirmBooking =>
+      _fr ? 'Confirmer la réservation' : 'Confirm Booking';
+  String get processingRegistration =>
+      _fr ? 'Inscription en cours...' : 'Registering...';
+  String get registrationFailed =>
+      _fr ? 'Échec de l\'inscription au créneau'
+          : 'Slot registration failed';
 }

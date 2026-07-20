@@ -150,8 +150,7 @@ class _ProfessionalDetailScreenState
   }
 
   void _bookSession(BuildContext context, dynamic pro) {
-    // Navigate to pricing screen for this professional
-    context.push('/pricing/${pro.coId}');
+    context.push('/appointment-booking/${pro.coId}');
   }
 
   double? _sessionTypePrice(
@@ -344,7 +343,7 @@ class _ProfessionalDetailScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.errorMessage(e.toString())),
+          content: const Text('An error occurred. Please try again.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -505,7 +504,7 @@ class _ProfessionalDetailScreenState
           content: Text(
             isDuplicateLaunch
                 ? t.sessionAlreadyStarted
-                : t.errorMessage(e.toString()),
+                : 'An error occurred. Please try again.',
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -516,9 +515,14 @@ class _ProfessionalDetailScreenState
       );
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('insufficient_balance')) {
+        _showInsufficientBalanceDialog(context, ref);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.errorMessage(e.toString())),
+          content: const Text('An error occurred. Please try again.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -527,6 +531,46 @@ class _ProfessionalDetailScreenState
         ),
       );
     }
+  }
+
+  void _showInsufficientBalanceDialog(BuildContext context, WidgetRef ref) {
+    final t = ref.read(translationsProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          t.insufficientBalance,
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          t.topUpNow,
+          style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              t.cancel,
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+          GradientButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/wallet/topup');
+            },
+            child: Text(t.topUpNow),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<String?> _recoverRecentSessionId({String? expectedCoId}) async {
@@ -664,9 +708,9 @@ class _ProfessionalDetailScreenState
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  t.errorMessage('$e'),
-                  style: const TextStyle(color: AppColors.textSecondary),
+                const Text(
+                  'An error occurred. Please try again.',
+                  style: TextStyle(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -718,463 +762,576 @@ class _ProfessionalDetailScreenState
             decoration: const BoxDecoration(gradient: AppGradients.hero),
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    // ── Avatar with online indicator ──
-                    Stack(
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: AppGradients.accent,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.rosePink.withValues(
-                                  alpha: 0.35,
-                                ),
-                                blurRadius: 32,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.network(
-                              _profileImageUrl(
-                                rawAvatar: pro.avatar,
-                                seed: pro.coId.isNotEmpty
-                                    ? pro.coId
-                                    : pro.displayName,
-                              ),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  _initials(pro),
-                            ),
-                          ),
-                        ),
-                        if (effectiveOnline != null)
-                          Positioned(
-                            bottom: 8,
-                            right: 8,
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: effectiveOnline == true
-                                    ? AppColors.online
-                                    : AppColors.offline,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.deepIndigo,
-                                  width: 3,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // ── Name & Specialty ──
-                    Text(
-                      pro.displayName,
-                      style: GoogleFonts.jost(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (pro.specialty != null &&
-                        pro.specialty!.toLowerCase() != 'professional' &&
-                        pro.specialty!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        pro.specialty!,
-                        style: GoogleFonts.lora(
-                          fontSize: 16,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-
-                    // ── Online Status Badge ──
-                    if (effectiveOnline != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              (effectiveOnline == true
-                                      ? AppColors.online
-                                      : AppColors.offline)
-                                  .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color:
-                                (effectiveOnline == true
-                                        ? AppColors.online
-                                        : AppColors.offline)
-                                    .withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: effectiveOnline == true
-                                    ? AppColors.online
-                                    : AppColors.offline,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              effectiveOnline == true ? t.online : t.offline,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-
-                    // ── Badges Row (Verified + Rating) ──
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        if (pro.isVerified)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.mediumPurple.withValues(
-                                alpha: 0.11,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: AppColors.mediumPurple.withValues(
-                                  alpha: 0.24,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.verified,
-                                  size: 18,
-                                  color: AppColors.mediumPurple,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  t.verifiedProfile,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                    letterSpacing: 0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (pro.rating != null && pro.rating! > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.gold.withValues(alpha: 0.11),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: AppColors.gold.withValues(
-                                  alpha: 0.24,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ...List.generate(5, (i) {
-                                  return Icon(
-                                    i < pro.rating!.round()
-                                        ? Icons.star
-                                        : Icons.star_outline,
-                                    size: 16,
-                                    color: AppColors.gold,
-                                  );
-                                }),
-                                const SizedBox(width: 6),
-                                Text(
-                                  pro.rating!.toStringAsFixed(1),
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.rosePink,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // ── Availability Status ──
+                    // ── Hero Header Strip ──
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
                       decoration: BoxDecoration(
-                        color: effectiveAvailableNow
-                            ? AppColors.online.withValues(alpha: 0.12)
-                            : AppColors.rosePink.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: effectiveAvailableNow
-                              ? AppColors.online.withValues(alpha: 0.3)
-                              : AppColors.rosePink.withValues(alpha: 0.25),
-                          width: 1.5,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFFFEDF5), Color(0xFFF1EEFF), Color(0x00FFFFFF)],
+                          stops: [0.0, 0.6, 1.0],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
                         ),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Icon(
-                            effectiveAvailableNow
-                                ? Icons.check_circle_outline
-                                : Icons.schedule,
-                            color: effectiveAvailableNow
-                                ? AppColors.online
-                                : AppColors.rosePink,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              availabilityLabel,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                          // ── Avatar with online indicator ──
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Glow ring
+                              Container(
+                                width: 136,
+                                height: 136,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [AppColors.mediumPurple, AppColors.magentaRose],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.mediumPurple.withValues(alpha: 0.30),
+                                      blurRadius: 24,
+                                      spreadRadius: 4,
+                                    ),
+                                    BoxShadow(
+                                      color: AppColors.rosePink.withValues(alpha: 0.20),
+                                      blurRadius: 40,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
                               ),
+                              // Avatar image
+                              Container(
+                                width: 126,
+                                height: 126,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                ),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    _profileImageUrl(
+                                      rawAvatar: pro.avatar,
+                                      seed: pro.coId.isNotEmpty
+                                          ? pro.coId
+                                          : pro.displayName,
+                                    ),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stack) =>
+                                        _initials(pro),
+                                  ),
+                                ),
+                              ),
+                              // Online dot
+                              if (effectiveOnline != null)
+                                Positioned(
+                                  bottom: 6,
+                                  right: 6,
+                                  child: Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      color: effectiveOnline == true
+                                          ? AppColors.online
+                                          : AppColors.offline,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 3,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (effectiveOnline == true
+                                                  ? AppColors.online
+                                                  : AppColors.offline)
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+
+                          // ── Name ──
+                          Text(
+                            pro.displayName,
+                            style: GoogleFonts.jost(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
                             ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (pro.specialty != null &&
+                              pro.specialty!.toLowerCase() != 'professional' &&
+                              pro.specialty!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              pro.specialty!,
+                              style: GoogleFonts.lora(
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+
+                          // ── Online pill + Verified badges ──
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (effectiveOnline != null)
+                                _StatusPill(
+                                  dot: true,
+                                  dotColor: effectiveOnline == true
+                                      ? AppColors.online
+                                      : AppColors.offline,
+                                  label: effectiveOnline == true ? t.online : t.offline,
+                                  bgColor: (effectiveOnline == true
+                                          ? AppColors.online
+                                          : AppColors.offline)
+                                      .withValues(alpha: 0.12),
+                                  borderColor: (effectiveOnline == true
+                                          ? AppColors.online
+                                          : AppColors.offline)
+                                      .withValues(alpha: 0.35),
+                                ),
+                              if (pro.isVerified)
+                                _StatusPill(
+                                  icon: Icons.verified,
+                                  iconColor: AppColors.mediumPurple,
+                                  label: t.verifiedProfile,
+                                  bgColor: AppColors.mediumPurple.withValues(alpha: 0.10),
+                                  borderColor: AppColors.mediumPurple.withValues(alpha: 0.25),
+                                ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
 
-                    // ── Action Buttons ──
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ActionButton(
-                            onPressed: () => _bookSession(context, pro),
-                            icon: Icons.calendar_today_outlined,
-                            label: t.bookSession,
-                            isPrimary: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // ── Session Types Card ──
-                    GlassCard(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.mediumPurple.withValues(
-                                    alpha: 0.15,
+                          // ── Stats Row (Rating / Reviews / Response) ──
+                          if (pro.rating != null && pro.rating! > 0)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.support_agent,
-                                  size: 20,
-                                  color: AppColors.mediumPurple,
+                                ],
+                                border: Border.all(
+                                  color: AppColors.borderSubtle,
+                                  width: 1,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                t.availableServices,
-                                style: GoogleFonts.jost(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
+                              child: Row(
+                                children: [
+                                  _StatCell(
+                                    value: pro.rating!.toStringAsFixed(1),
+                                    sub: 'Reviews',
+                                    icon: Icons.star_rounded,
+                                    iconColor: AppColors.gold,
+                                    hasDivider: false,
+                                  ),
+                                  _StatCell(
+                                    value: '8+ Yrs',
+                                    sub: 'Experience',
+                                    icon: Icons.workspace_premium_outlined,
+                                    iconColor: AppColors.mediumPurple,
+                                    hasDivider: true,
+                                  ),
+                                  _StatCell(
+                                    value: '15 min',
+                                    sub: 'Response',
+                                    icon: Icons.bolt_outlined,
+                                    iconColor: AppColors.magentaRose,
+                                    hasDivider: true,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _ServiceChip(
-                                icon: Icons.phone,
-                                label: t.phone,
-                                isAvailable: pro.supportsPhone,
-                              ),
-                              _ServiceChip(
-                                icon: Icons.videocam,
-                                label: t.video,
-                                isAvailable: pro.supportsVideo,
-                              ),
-                              _ServiceChip(
-                                icon: Icons.chat_bubble_outline,
-                                label: t.tabChat,
-                                isAvailable: pro.supportsChat,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                            ),
+                          if (pro.rating != null && pro.rating! > 0)
+                            const SizedBox(height: 20),
 
-                    // ── About Section ──
-                    if (pro.description != null &&
-                        pro.description!.isNotEmpty) ...[
-                      GlassCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                          // ── Availability Banner ──
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 13,
+                            ),
+                            decoration: BoxDecoration(
+                              color: effectiveAvailableNow
+                                  ? const Color(0xFFECFDF5)
+                                  : const Color(0xFFFFF1F2),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: effectiveAvailableNow
+                                    ? AppColors.online.withValues(alpha: 0.4)
+                                    : AppColors.rosePink.withValues(alpha: 0.4),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.rosePink.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
+                                    color: effectiveAvailableNow
+                                        ? AppColors.online.withValues(alpha: 0.15)
+                                        : AppColors.rosePink.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(
-                                    Icons.person_outline,
-                                    size: 20,
-                                    color: AppColors.rosePink,
+                                  child: Icon(
+                                    effectiveAvailableNow
+                                        ? Icons.check_circle_rounded
+                                        : Icons.schedule_rounded,
+                                    color: effectiveAvailableNow
+                                        ? AppColors.online
+                                        : AppColors.rosePink,
+                                    size: 18,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text(
-                                  t.about,
-                                  style: GoogleFonts.jost(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
+                                Expanded(
+                                  child: Text(
+                                    availabilityLabel,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: effectiveAvailableNow
+                                          ? const Color(0xFF15803D)
+                                          : AppColors.magentaRose,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              pro.description!,
-                              style: GoogleFonts.lora(
-                                fontSize: 14,
-                                height: 1.7,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                          ),
+                          const SizedBox(height: 20),
 
-                    // ── Contact Details Card ──
-                    if (pro.pricePerMinute != null ||
-                        pro.phone != null ||
-                        pro.email != null)
-                      GlassCard(
-                        child: Column(
-                          children: [
-                            if (pro.pricePerMinute != null) ...[
-                              _DetailRow(
-                                icon: Icons.payments_outlined,
-                                label: t.pricePerMinute,
-                                value:
-                                    '€${pro.pricePerMinute!.toStringAsFixed(2)}',
-                                iconColor: AppColors.online,
-                              ),
-                            ],
-                            if (pro.phone != null) ...[
-                              if (pro.pricePerMinute != null)
-                                const Divider(height: 28),
-                              _DetailRow(
-                                icon: Icons.phone_outlined,
-                                label: t.phone,
-                                value: pro.phone!,
-                                iconColor: AppColors.mediumPurple,
-                              ),
-                            ],
-                            if (pro.email != null) ...[
-                              if (pro.phone != null ||
-                                  pro.pricePerMinute != null)
-                                const Divider(height: 28),
-                              _DetailRow(
-                                icon: Icons.email_outlined,
-                                label: t.email,
-                                value: pro.email!,
-                                iconColor: AppColors.rosePink,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 24),
-
-                    // ── Start Session CTA ──
-                    if (effectiveAvailableNow)
-                      GradientButton(
-                        onPressed: () =>
-                            _startSession(context, pro, fromList: listPro),
-                        width: double.infinity,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.videocam,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
+                          // ── EXPERTISE Section ──
+                          if (pro.specialty != null && pro.specialty!.isNotEmpty) ...[
                             Text(
-                              t.startSessionNow,
+                              'EXPERTISE',
                               style: GoogleFonts.montserrat(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textMuted,
+                                letterSpacing: 1.4,
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: pro.specialty!
+                                  .split(RegExp(r'[,/|]'))
+                                  .map((s) => s.trim())
+                                  .where((s) => s.isNotEmpty && s.toLowerCase() != 'professional')
+                                  .map(
+                                    (tag) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 7,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.mediumPurple.withValues(alpha: 0.09),
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: AppColors.mediumPurple.withValues(alpha: 0.22),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        tag,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.mediumPurple,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 20),
                           ],
-                        ),
+
+                          // ── Available Services Card ──
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.mediumPurple.withValues(alpha: 0.07),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: AppColors.borderSubtle,
+                                width: 1,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(9),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [AppColors.mediumPurple, AppColors.magentaRose],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.support_agent,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      t.availableServices,
+                                      style: GoogleFonts.jost(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 18),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _ServiceChip(
+                                      icon: Icons.phone_rounded,
+                                      label: t.phone,
+                                      isAvailable: pro.supportsPhone,
+                                      activeColor: AppColors.mediumPurple,
+                                    ),
+                                    _ServiceChip(
+                                      icon: Icons.videocam_rounded,
+                                      label: t.video,
+                                      isAvailable: pro.supportsVideo,
+                                      activeColor: AppColors.magentaRose,
+                                    ),
+                                    _ServiceChip(
+                                      icon: Icons.chat_bubble_rounded,
+                                      label: t.tabChat,
+                                      isAvailable: pro.supportsChat,
+                                      activeColor: AppColors.aqua,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // ── About Section ──
+                          if (pro.description != null &&
+                              pro.description!.isNotEmpty) ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.rosePink.withValues(alpha: 0.07),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: AppColors.borderSubtle,
+                                  width: 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(9),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.rosePink.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.person_outline_rounded,
+                                          size: 18,
+                                          color: AppColors.rosePink,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        t.about,
+                                        style: GoogleFonts.jost(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    pro.description!,
+                                    style: GoogleFonts.lora(
+                                      fontSize: 14,
+                                      height: 1.75,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // ── Contact Details Card ──
+                          if (pro.pricePerMinute != null ||
+                              pro.phone != null ||
+                              pro.email != null) ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.aqua.withValues(alpha: 0.07),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: AppColors.borderSubtle,
+                                  width: 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                children: [
+                                  if (pro.pricePerMinute != null) ...[
+                                    _DetailRow(
+                                      icon: Icons.payments_outlined,
+                                      label: t.pricePerMinute,
+                                      value:
+                                          '€${pro.pricePerMinute!.toStringAsFixed(2)}',
+                                      iconColor: AppColors.online,
+                                    ),
+                                  ],
+                                  if (pro.phone != null) ...[
+                                    if (pro.pricePerMinute != null)
+                                      Divider(
+                                        height: 28,
+                                        color: AppColors.borderSubtle,
+                                      ),
+                                    _DetailRow(
+                                      icon: Icons.phone_outlined,
+                                      label: t.phone,
+                                      value: pro.phone!,
+                                      iconColor: AppColors.mediumPurple,
+                                    ),
+                                  ],
+                                  if (pro.email != null) ...[
+                                    if (pro.phone != null ||
+                                        pro.pricePerMinute != null)
+                                      Divider(
+                                        height: 28,
+                                        color: AppColors.borderSubtle,
+                                      ),
+                                    _DetailRow(
+                                      icon: Icons.email_outlined,
+                                      label: t.email,
+                                      value: pro.email!,
+                                      iconColor: AppColors.rosePink,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          // ── Book Session CTA ──
+                          _ActionButton(
+                            onPressed: () => _bookSession(context, pro),
+                            icon: Icons.calendar_today_rounded,
+                            label: t.bookSession,
+                            isPrimary: true,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // ── Start Session CTA ──
+                          if (effectiveAvailableNow)
+                            GradientButton(
+                              onPressed: () =>
+                                  _startSession(context, pro, fromList: listPro),
+                              width: double.infinity,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.bolt_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    t.startSessionNow,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -1199,6 +1356,125 @@ class _ProfessionalDetailScreenState
   }
 }
 
+
+
+
+// ── Status Pill Widget ──
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final Color bgColor;
+  final Color borderColor;
+  final bool dot;
+  final Color? dotColor;
+  final IconData? icon;
+  final Color? iconColor;
+
+  const _StatusPill({
+    required this.label,
+    required this.bgColor,
+    required this.borderColor,
+    this.dot = false,
+    this.dotColor,
+    this.icon,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor, width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot && dotColor != null)
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          if (icon != null) Icon(icon, size: 13, color: iconColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat Cell Widget ──
+class _StatCell extends StatelessWidget {
+  final String value;
+  final String sub;
+  final IconData icon;
+  final Color iconColor;
+  final bool hasDivider;
+
+  const _StatCell({
+    required this.value,
+    required this.sub,
+    required this.icon,
+    required this.iconColor,
+    required this.hasDivider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Row(
+        children: [
+          if (hasDivider)
+            Container(width: 1, height: 40, color: AppColors.borderSubtle),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 20, color: iconColor),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: GoogleFonts.jost(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    sub,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Action Button Widget ──
 class _ActionButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -1218,17 +1494,19 @@ class _ActionButton extends StatelessWidget {
     if (isPrimary) {
       return GradientButton(
         onPressed: onPressed,
+        width: double.infinity,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 label,
                 style: GoogleFonts.montserrat(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1299,7 +1577,7 @@ class _DetailRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.15),
+            color: iconColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 20),
@@ -1312,17 +1590,18 @@ class _DetailRow extends StatelessWidget {
               Text(
                 label,
                 style: GoogleFonts.montserrat(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: AppColors.textMuted,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 value,
                 style: GoogleFonts.montserrat(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -1339,36 +1618,44 @@ class _ServiceChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isAvailable;
+  final Color activeColor;
 
   const _ServiceChip({
     required this.icon,
     required this.label,
     required this.isAvailable,
+    this.activeColor = AppColors.mediumPurple,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = isAvailable ? activeColor : AppColors.textMuted;
     return Column(
       children: [
         Container(
-          width: 56,
-          height: 56,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
-            color: isAvailable
-                ? AppColors.online.withValues(alpha: 0.15)
-                : AppColors.textMuted.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
+            color: color.withValues(alpha: isAvailable ? 0.12 : 0.07),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isAvailable
-                  ? AppColors.online.withValues(alpha: 0.3)
-                  : AppColors.textMuted.withValues(alpha: 0.2),
+              color: color.withValues(alpha: isAvailable ? 0.28 : 0.14),
               width: 1.5,
             ),
+            boxShadow: isAvailable
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
           ),
           child: Icon(
             icon,
-            color: isAvailable ? AppColors.online : AppColors.textMuted,
-            size: 28,
+            color: color,
+            size: 26,
           ),
         ),
         const SizedBox(height: 8),

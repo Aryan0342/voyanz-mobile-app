@@ -228,7 +228,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     } catch (e) {
       if (mounted && !_disposing) {
         setState(() {
-          _connectionError = e.toString();
+          _connectionError = 'An error occurred. Please try again.';
         });
       }
     } finally {
@@ -643,7 +643,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      e.toString(),
+                      'Please try again later.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         color: AppColors.textSecondary,

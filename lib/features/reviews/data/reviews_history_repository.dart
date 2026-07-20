@@ -17,7 +17,7 @@ class ReviewsHistoryRepository {
           'se_status': 'completed',
           'se_duration': '45 min',
           'co_id': 'pro001',
-          'co_fullname': 'Sarah Johnson',
+          'co_fullname': 'Sarah JohnsonLAN',
         },
         {
           'se_id': 1002,

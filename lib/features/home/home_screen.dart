@@ -357,7 +357,7 @@ class ProfileScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.profileUpdateFailed(e.toString())),
+          content: Text(t.profileUpdateFailed('Please try again.')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -406,8 +406,8 @@ class ProfileScreen extends ConsumerWidget {
                         gradient: AppGradients.accent,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.rosePink.withValues(alpha: 0.4),
-                            blurRadius: 32,
+                            color: AppColors.rosePink.withValues(alpha: 0.15),
+                            blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
                         ],
@@ -418,7 +418,7 @@ class ProfileScreen extends ConsumerWidget {
                           style: GoogleFonts.jost(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -440,6 +440,7 @@ class ProfileScreen extends ConsumerWidget {
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
                           color: AppColors.textMuted,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -453,69 +454,6 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 18),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.rosePink.withValues(alpha: 0.12),
-                            AppColors.mediumPurple.withValues(alpha: 0.10),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: AppColors.mediumPurple.withValues(alpha: 0.16),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.auto_awesome_rounded,
-                              color: AppColors.mediumPurple,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isProfessional
-                                      ? 'Professional Studio'
-                                      : 'New Voyanz look',
-                                  style: GoogleFonts.jost(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  isProfessional
-                                      ? 'Track clients, slots, and reviews from one refreshed dashboard.'
-                                      : 'A brighter explorer, refreshed cards, and a more polished bottom bar.',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -674,6 +612,7 @@ class ProfileScreen extends ConsumerWidget {
                           phoneLabel: t.phoneCall,
                           videoLabel: t.videoCall,
                           chatLabel: t.textChat,
+                          onCreditTap: () => context.push('/wallet'),
                         ),
                         error: (_, __) => _CustomerStatsGrid(
                           creditValue: '€0.00',
@@ -684,6 +623,7 @@ class ProfileScreen extends ConsumerWidget {
                           phoneLabel: t.phoneCall,
                           videoLabel: t.videoCall,
                           chatLabel: t.textChat,
+                          onCreditTap: () => context.push('/wallet'),
                         ),
                         data: (history) {
                           final counts = _customerSessionTypeCounts(history);
@@ -703,11 +643,61 @@ class ProfileScreen extends ConsumerWidget {
                             phoneLabel: t.phoneCall,
                             videoLabel: t.videoCall,
                             chatLabel: t.textChat,
+                            onCreditTap: () => context.push('/wallet'),
                           );
                         },
                       ),
               ),
             ),
+            // ── Empty state message when no data ──
+            if (historyAsync.hasValue && historyAsync.value!.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppGradients.accent.scale(0.25),
+                          ),
+                          child: Icon(
+                            isProfessional ? Icons.history : Icons.explore_outlined,
+                            size: 38,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          isProfessional
+                              ? t.noSessionsYetTitle
+                              : t.noHistoryYet,
+                          style: GoogleFonts.jost(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          isProfessional
+                              ? t.consultationHistoryWillAppear
+                              : t.startChatExplore,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            color: AppColors.textMuted,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             // ── Menu section ──
             SliverToBoxAdapter(
               child: Padding(
@@ -750,6 +740,13 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         );
                       },
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: t.wallet,
+                      subtitle: t.topUpCredit,
+                      onTap: () => context.push('/wallet'),
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
@@ -969,48 +966,65 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.icon,
     required this.value,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
+    final card = Container(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              gradient: AppGradients.accent.scale(0.22),
-              borderRadius: BorderRadius.circular(14),
+              color: AppColors.mediumPurple.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.mediumPurple, size: 22),
+            child: Icon(icon, color: AppColors.mediumPurple, size: 20),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Text(
             value,
             style: GoogleFonts.jost(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.montserrat(
               fontSize: 12,
-              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
       ),
     );
+
+    if (onTap == null) return card;
+    return SoftPress(onTap: onTap, child: card);
   }
 }
 
@@ -1023,6 +1037,7 @@ class _CustomerStatsGrid extends StatelessWidget {
   final String phoneLabel;
   final String videoLabel;
   final String chatLabel;
+  final VoidCallback? onCreditTap;
 
   const _CustomerStatsGrid({
     required this.creditValue,
@@ -1033,6 +1048,7 @@ class _CustomerStatsGrid extends StatelessWidget {
     required this.phoneLabel,
     required this.videoLabel,
     required this.chatLabel,
+    this.onCreditTap,
   });
 
   @override
@@ -1043,12 +1059,13 @@ class _CustomerStatsGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icons.account_balance_wallet_outlined,
+                icon: Icons.credit_card_outlined,
                 value: creditValue,
                 label: creditLabel,
+                onTap: onCreditTap,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _StatCard(
                 icon: Icons.phone_in_talk_outlined,
@@ -1058,7 +1075,7 @@ class _CustomerStatsGrid extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -1068,7 +1085,7 @@ class _CustomerStatsGrid extends StatelessWidget {
                 label: videoLabel,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _StatCard(
                 icon: Icons.chat_bubble_outline,
@@ -1254,50 +1271,29 @@ class _ProfileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                gradient: AppGradients.accent.scale(0.28),
+                color: AppColors.surfaceCard.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.12),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
               ),
-              child: Icon(icon, color: AppColors.mediumPurple, size: 22),
+              child: Icon(icon, color: AppColors.textPrimary.withValues(alpha: 0.8), size: 22),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle!,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                title,
+                style: GoogleFonts.jost(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const Icon(

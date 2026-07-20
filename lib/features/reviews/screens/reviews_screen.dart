@@ -151,7 +151,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.reviewSubmitFailed(e.toString())),
+          content: Text(t.reviewSubmitFailed('Please try again.')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -199,7 +199,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  t.errorMessage(e.toString()),
+                  'An error occurred. Please try again.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.manrope(
                     color: AppColors.textMuted,
@@ -436,8 +436,19 @@ class _RatingOverviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    return GlassCard(
-      padding: const EdgeInsets.all(18),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Row(
@@ -536,15 +547,10 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          gradient: isSelected ? AppGradients.accent : null,
-          color: isSelected
-              ? null
-              : AppColors.surfaceCard.withValues(alpha: 0.6),
+          color: isSelected ? AppColors.mediumPurple : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected
-                ? AppColors.mediumPurple.withValues(alpha: 0.35)
-                : AppColors.borderSubtle,
+            color: isSelected ? Colors.transparent : AppColors.borderSubtle,
           ),
         ),
         child: Text(
@@ -576,8 +582,19 @@ class _ReviewCard extends StatelessWidget {
         'Anonymous';
     final date = review['re_date']?.toString() ?? '';
 
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -640,49 +657,53 @@ class _EmptyState extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
       child: Center(
-        child: GlassCard(
-          padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 94,
-                height: 94,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.mediumPurple.withValues(alpha: 0.16),
-                      AppColors.gold.withValues(alpha: 0.12),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: AppColors.mediumPurple.withValues(alpha: 0.1),
                 ),
                 child: const Icon(
                   Icons.star_border_rounded,
-                  size: 46,
-                  color: AppColors.deepIndigo,
+                  size: 32,
+                  color: AppColors.mediumPurple,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Text(
                 t.noReviewsYet,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.jost(
-                  fontSize: 30,
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 isProfessional
                     ? t.reviewsFromClientsWillAppear
                     : t.reviewsFromConsultationsWillAppear,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.manrope(
-                  fontSize: 15,
+                  fontSize: 14,
                   color: AppColors.textSecondary,
                   height: 1.5,
                 ),

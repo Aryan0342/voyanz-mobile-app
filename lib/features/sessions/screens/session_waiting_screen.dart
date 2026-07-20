@@ -86,7 +86,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
             child: statusAsync.when(
               loading: _buildLoading,
-              error: (e, _) => _buildError(context, e.toString(), t),
+              error: (e, _) => _buildError(context, 'An error occurred. Please try again.', t),
               data: (status) =>
                   _buildStatus(context, status, t, isProfessional),
             ),
@@ -342,7 +342,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
       final t = ref.read(translationsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.errorMessage(e.toString())),
+          content: const Text('An error occurred. Please try again.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

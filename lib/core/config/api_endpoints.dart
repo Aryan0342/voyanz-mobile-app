@@ -53,4 +53,10 @@ class ApiEndpoints {
 
   // ── Appointments ───────────────────────────────────────────────────────
   static const String registration = '/web/1.0/registration';
+
+  // ── Wallet / Payment ──────────────────────────────────────────────────
+  static const String stripePaymentIntent = '/stripe/payment-intent';
+  static const String checkBalance = '/web/1.0/check-balance';
+  static String payreturnStatusById(String pi) =>
+      '/web/1.0/payreturn/status/$pi';
 }

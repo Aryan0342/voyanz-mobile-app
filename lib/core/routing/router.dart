@@ -19,6 +19,10 @@ import 'package:voyanz/features/reviews/screens/pricing_screen.dart';
 import 'package:voyanz/features/home/home_screen.dart';
 import 'package:voyanz/features/home/professional_dashboard_screen.dart';
 import 'package:voyanz/features/splash/splash_screen.dart';
+import 'package:voyanz/features/wallet/screens/wallet_screen.dart';
+import 'package:voyanz/features/wallet/screens/topup_screen.dart';
+import 'package:voyanz/features/wallet/screens/payment_success_screen.dart';
+import 'package:voyanz/features/appointments/screens/appointment_booking_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -96,6 +100,24 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/appointment-booking/:coId',
+            builder: (context, state) => AppointmentBookingScreen(
+              coId: state.pathParameters['coId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/wallet',
+            builder: (context, state) => const WalletScreen(),
+          ),
+          GoRoute(
+            path: '/wallet/topup',
+            builder: (context, state) => const TopUpScreen(),
+          ),
+          GoRoute(
+            path: '/wallet/success',
+            builder: (context, state) => const PaymentSuccessScreen(),
           ),
         ],
       ),

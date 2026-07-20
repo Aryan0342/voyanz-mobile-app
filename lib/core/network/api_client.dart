@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/core/config/env.dart';
@@ -27,8 +28,8 @@ class ApiClient {
     _instance = Dio(
       BaseOptions(
         baseUrl: EnvConfig.current.baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 300),
+        receiveTimeout: const Duration(seconds: 300),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -58,7 +59,7 @@ class ApiClient {
         LogInterceptor(
           requestBody: true,
           responseBody: true,
-          logPrint: (obj) => _logger.d(obj),
+          logPrint: (obj) => debugPrint('[DIO] $obj'),
         ),
       );
     }

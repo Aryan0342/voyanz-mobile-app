@@ -206,7 +206,7 @@ class _ProfessionalAvailabilityScreenState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(t.failedAddSlot('$e'))));
+        ).showSnackBar(SnackBar(content: Text(t.failedAddSlot('Please try again.'))));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -276,7 +276,7 @@ class _ProfessionalAvailabilityScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  e.toString(),
+                  'An error occurred. Please try again.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     color: AppColors.textSecondary,

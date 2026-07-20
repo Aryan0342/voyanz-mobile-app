@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -100,10 +100,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
     final agencyName = agency?.name?.trim();
     final logo = agency?.logo?.trim();
-    final agencyTag = EnvConfig.current.baseUrl.replaceFirst(
-      RegExp(r'^https?://'),
-      '',
-    );
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
@@ -124,222 +120,100 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.background),
-        child: SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: FadeTransition(
-                      opacity: _fadeAnim,
-                      child: SlideTransition(
-                        position: _slideAnim,
+      backgroundColor: Colors.white,
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: SlideTransition(
+          position: _slideAnim,
+          child: Column(
+            children: [
+              // HERO SECTION
+              Expanded(
+                flex: 42,
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF5B21B6),
+                        Color(0xFF7C3AED),
+                        Color(0xFF8B5CF6),
+                        Color(0xFFA855F7),
+                      ],
+                      stops: [0.0, 0.3, 0.65, 1.0],
+                    ),
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            GlassCard(
-                              padding: const EdgeInsets.all(28),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 60,
-                                        height: 60,
-                                        padding: const EdgeInsets.all(11),
-                                        decoration: BoxDecoration(
-                                          gradient: AppGradients.accent,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: brandPrimary.withValues(
-                                                alpha: 0.24,
-                                              ),
-                                              blurRadius: 18,
-                                              offset: const Offset(0, 8),
-                                            ),
-                                          ],
-                                        ),
-                                        child: (logo != null && logo.isNotEmpty)
-                                            ? Image.network(
-                                                logo,
-                                                fit: BoxFit.contain,
-                                                errorBuilder: (_, __, ___) =>
-                                                    Image.asset(
-                                                      'assets/images/voyanz-logo.png',
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                              )
-                                            : Image.asset(
-                                                'assets/images/voyanz-logo.png',
-                                                fit: BoxFit.contain,
-                                              ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              (agencyName != null &&
-                                                      agencyName.isNotEmpty)
-                                                  ? agencyName
-                                                  : 'Voyanz',
-                                              style: GoogleFonts.jost(
-                                                fontSize: 28,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.mediumPurple,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              agencyTag,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.manrope(
-                                                fontSize: 12,
-                                                color: AppColors.textMuted,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 22),
-                                  Text(
-                                    t.welcomeBack,
-                                    style: GoogleFonts.jost(
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    t.tagline,
-                                    style: GoogleFonts.manrope(
-                                      fontSize: 14,
-                                      height: 1.5,
-                                      color: AppColors.textSecondary,
-                                    ),
+                            // Frosted logo circle
+                            Container(
+                              width: 74,
+                              height: 74,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.35),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.14),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 8),
                                   ),
                                 ],
                               ),
+                              child: (logo != null && logo.isNotEmpty)
+                                  ? Image.network(
+                                      logo,
+                                      fit: BoxFit.contain,
+                                      color: Colors.white,
+                                      errorBuilder: (_, __, ___) =>
+                                          Image.asset(
+                                            'assets/images/voyanz-logo.png',
+                                            fit: BoxFit.contain,
+                                            color: Colors.white,
+                                          ),
+                                    )
+                                  : Image.asset(
+                                      'assets/images/voyanz-logo.png',
+                                      fit: BoxFit.contain,
+                                      color: Colors.white,
+                                    ),
                             ),
-                            const SizedBox(height: 18),
-                            GlassCard(
-                              padding: const EdgeInsets.all(24),
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text(
-                                      t.logIn,
-                                      style: GoogleFonts.jost(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    TextFormField(
-                                      focusNode: _emailFocusNode,
-                                      controller: _emailCtrl,
-                                      decoration: InputDecoration(
-                                        labelText: t.email,
-                                        prefixIcon: const Icon(
-                                          Icons.email_outlined,
-                                        ),
-                                      ),
-                                      keyboardType: TextInputType.emailAddress,
-                                      textInputAction: TextInputAction.next,
-                                      autocorrect: false,
-                                      enableSuggestions: false,
-                                      textCapitalization:
-                                          TextCapitalization.none,
-                                      validator: (v) => (v == null || v.isEmpty)
-                                          ? t.emailRequired
-                                          : null,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    TextFormField(
-                                      focusNode: _passwordFocusNode,
-                                      controller: _passwordCtrl,
-                                      decoration: InputDecoration(
-                                        labelText: t.password,
-                                        prefixIcon: const Icon(
-                                          Icons.lock_outline,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          icon: Icon(
-                                            _obscure
-                                                ? Icons.visibility_off
-                                                : Icons.visibility,
-                                          ),
-                                          onPressed: () => setState(
-                                            () => _obscure = !_obscure,
-                                          ),
-                                        ),
-                                      ),
-                                      obscureText: _obscure,
-                                      textInputAction: TextInputAction.done,
-                                      autocorrect: false,
-                                      enableSuggestions: false,
-                                      validator: (v) => (v == null || v.isEmpty)
-                                          ? t.passwordRequired
-                                          : null,
-                                      onFieldSubmitted: (_) => _submit(),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    GradientButton(
-                                      onPressed: authState.isLoading
-                                          ? null
-                                          : _submit,
-                                      width: double.infinity,
-                                      child: authState.isLoading
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Text(t.logIn),
-                                    ),
-                                  ],
-                                ),
+                            const SizedBox(height: 16),
+                            // Brand name
+                            Text(
+                              (agencyName != null && agencyName.isNotEmpty)
+                                  ? agencyName
+                                  : 'Voyanz',
+                              style: GoogleFonts.jost(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            TextButton(
-                              onPressed: () => context.push('/register'),
-                              child: Text.rich(
-                                TextSpan(
-                                  text: t.noAccount,
-                                  style: GoogleFonts.manrope(
-                                    color: AppColors.textMuted,
-                                    fontSize: 14,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: t.signUp,
-                                      style: GoogleFonts.manrope(
-                                        color: AppColors.rosePink,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            const SizedBox(height: 6),
+                            // Tagline
+                            Text(
+                              t.tagline,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.manrope(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.80),
+                                height: 1.45,
                               ),
                             ),
                           ],
@@ -349,6 +223,292 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
               ),
+
+              // FORM CARD
+              Expanded(
+                flex: 58,
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(34),
+                    ),
+                  ),
+                  transform: Matrix4.translationValues(0, -30, 0),
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 34, 28, 24),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 460),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Heading
+                              Text(
+                                t.welcomeBack,
+                                style: GoogleFonts.jost(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                t.tagline,
+                                style: GoogleFonts.manrope(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 26),
+
+                              // Email field
+                              _LoginTextField(
+                                controller: _emailCtrl,
+                                focusNode: _emailFocusNode,
+                                hintText: t.email,
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                textCapitalization: TextCapitalization.none,
+                                validator: (v) =>
+                                    (v == null || v.isEmpty)
+                                        ? t.emailRequired
+                                        : null,
+                              ),
+                              const SizedBox(height: 14),
+
+                              // Password field
+                              _LoginTextField(
+                                controller: _passwordCtrl,
+                                focusNode: _passwordFocusNode,
+                                hintText: t.password,
+                                prefixIcon: Icons.lock_outline,
+                                obscureText: _obscure,
+                                textInputAction: TextInputAction.done,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                suffixIcon: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _obscure = !_obscure),
+                                  child: Icon(
+                                    _obscure
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: AppColors.textMuted,
+                                    size: 20,
+                                  ),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.isEmpty)
+                                        ? t.passwordRequired
+                                        : null,
+                                onFieldSubmitted: (_) => _submit(),
+                              ),
+
+                              // Forgot password
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 8,
+                                    ),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    t.forgotPassword,
+                                    style: GoogleFonts.manrope(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.mediumPurple,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+
+                              // CTA Button - pill shaped
+                              GradientButton(
+                                onPressed:
+                                    authState.isLoading ? null : _submit,
+                                width: double.infinity,
+                                height: 56,
+                                borderRadius: BorderRadius.circular(32),
+                                child: authState.isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        t.logIn,
+                                        style: GoogleFonts.jost(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Sign-up link
+                              Center(
+                                child: TextButton(
+                                  onPressed: () => context.push('/register'),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                  ),
+                                  child: Text.rich(
+                                    TextSpan(
+                                      text: t.noAccount,
+                                      style: GoogleFonts.manrope(
+                                        color: AppColors.textMuted,
+                                        fontSize: 14,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: t.signUp,
+                                          style: GoogleFonts.manrope(
+                                            color: AppColors.magentaRose,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Clean, lightly-bordered input field matching the reference design.
+class _LoginTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String hintText;
+  final IconData prefixIcon;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final TextCapitalization textCapitalization;
+  final Widget? suffixIcon;
+  final String? Function(String?)? validator;
+  final void Function(String)? onFieldSubmitted;
+
+  const _LoginTextField({
+    required this.controller,
+    required this.hintText,
+    required this.prefixIcon,
+    this.focusNode,
+    this.obscureText = false,
+    this.keyboardType,
+    this.textInputAction,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.textCapitalization = TextCapitalization.none,
+    this.suffixIcon,
+    this.validator,
+    this.onFieldSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
+      textCapitalization: textCapitalization,
+      validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
+      style: GoogleFonts.manrope(
+        fontSize: 15,
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: GoogleFonts.manrope(
+          color: AppColors.textMuted,
+          fontSize: 15,
+        ),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Icon(prefixIcon, color: AppColors.textMuted, size: 20),
+        ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 52),
+        suffixIcon: suffixIcon != null
+            ? Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: suffixIcon,
+              )
+            : null,
+        suffixIconConstraints: const BoxConstraints(minWidth: 48),
+        filled: true,
+        fillColor: const Color(0xFFF4F5F9),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.mediumPurple,
+            width: 1.6,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.6),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
         ),
       ),
     );
