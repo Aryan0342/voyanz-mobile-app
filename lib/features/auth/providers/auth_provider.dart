@@ -65,6 +65,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = await AsyncValue.guard(() => _repo.getUserInfos());
   }
 
+  Future<void> refreshUser() async {
+    final result = await AsyncValue.guard(() => _repo.getUserInfos());
+    result.whenData((user) {
+      final current = state.valueOrNull;
+      if (user.credit == null && current != null && current.credit != null) {
+        state = AsyncValue.data(current.copyWith(credit: current.credit));
+      } else {
+        state = AsyncValue.data(user);
+      }
+    });
+  }
+
   Future<bool> restoreSession() {
     return _restoreFuture ??= _restoreSessionImpl();
   }
@@ -97,6 +109,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     await _repo.logout();
     _ref.read(agencyProvider.notifier).state = null;
     state = const AsyncValue.data(null);
+  }
+
+  void updateCredit(double credit) {
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(credit: credit));
+    }
   }
 
   Future<void> _restartWebSocket() async {

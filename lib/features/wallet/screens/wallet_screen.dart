@@ -5,22 +5,38 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
-import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/wallet/models/history_item.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = ref.watch(translationsProvider);
-    final userAsync = ref.watch(authStateProvider);
-    final historyAsync = ref.watch(walletHistoryProvider);
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
 
-    final credit = userAsync.valueOrNull?.credit;
-    final creditStr =
-        credit != null ? '€${credit.toStringAsFixed(2)}' : '€0.00';
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(walletLiveBalanceProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
+    final historyAsync = ref.watch(walletHistoryProvider);
+    final credit = ref.watch(walletBalanceProvider);
+    final liveBalanceAsync = ref.watch(walletLiveBalanceProvider);
+
+    final liveCredit = liveBalanceAsync.valueOrNull;
+    final creditStr = liveCredit != null
+        ? liveCredit.display
+        : credit != null
+            ? '€${credit.toStringAsFixed(2)}'
+            : '€0.00';
 
     return GradientScaffold(
       appBar: VoyanzAppBar(
@@ -35,7 +51,10 @@ class WalletScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => ref.refresh(walletHistoryProvider.future),
+            onRefresh: () => Future.wait([
+                  ref.refresh(walletHistoryProvider.future),
+                  ref.refresh(walletLiveBalanceProvider.future),
+                ]),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(

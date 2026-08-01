@@ -75,6 +75,28 @@ class ProfessionalsDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> getProfessionalBookingSlots(
+    String coId,
+  ) async {
+    final response = await _dio.get(ApiEndpoints.professionalInfos(coId));
+    final body = response.data as Map<String, dynamic>;
+    _throwIfApiError(body, fallbackPrefix: 'Professional slots API error');
+
+    List<dynamic> extract(String key) {
+      if (body[key] is List) return body[key] as List;
+      final data = body['data'];
+      if (data is Map<String, dynamic> && data[key] is List) {
+        return data[key] as List;
+      }
+      return const [];
+    }
+
+    return {
+      'nextdisponibilities': extract('nextdisponibilities'),
+      'appointments': extract('appointments'),
+    };
+  }
+
   Future<List<dynamic>> getDisponibilities() async {
     final response = await _dio.get(ApiEndpoints.professionalDisponibilities);
     final raw = response.data;

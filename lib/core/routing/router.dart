@@ -7,6 +7,7 @@ import 'package:voyanz/features/account/screens/register_screen.dart';
 import 'package:voyanz/features/professionals/screens/professionals_list_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_detail_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_availability_screen.dart';
+import 'package:voyanz/features/professionals/screens/professional_account_screen.dart';
 import 'package:voyanz/features/sessions/screens/video_call_screen.dart';
 import 'package:voyanz/features/sessions/screens/phone_session_screen.dart';
 import 'package:voyanz/features/sessions/screens/chat_session_screen.dart';
@@ -29,6 +30,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
+      if (authState.isLoading) return null;
       final loggedIn = authState.valueOrNull != null;
       final isSplashRoute = state.matchedLocation == '/splash';
       final isAuthRoute =
@@ -91,6 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/clients',
             builder: (context, state) => const ProfessionalClientsScreen(),
+          ),
+          GoRoute(
+            path: '/professional-account',
+            builder: (context, state) => const ProfessionalAccountScreen(),
           ),
           GoRoute(
             path: '/pricing/:coId',

@@ -6,6 +6,7 @@ import 'package:voyanz/features/wallet/models/history_item.dart';
 import 'package:voyanz/features/wallet/models/payment_intent_response.dart';
 import 'package:voyanz/features/wallet/models/payment_status.dart';
 import 'package:voyanz/features/wallet/models/topup_pack.dart';
+import 'package:voyanz/features/wallet/models/wallet_balance.dart';
 
 final walletDataSourceProvider = Provider<WalletDataSource>((ref) {
   return WalletDataSource(ref.watch(dioProvider));
@@ -43,3 +44,10 @@ final paymentStatusProvider =
     return ref.watch(walletRepositoryProvider).confirmPayment(pi);
   },
 );
+
+final walletBalanceProvider = StateProvider<double?>((ref) => null);
+
+final walletLiveBalanceProvider =
+    FutureProvider.autoDispose<WalletBalance>((ref) async {
+      return ref.watch(walletRepositoryProvider).getBalance();
+    });

@@ -227,12 +227,13 @@ class _ProfessionalAvailabilityScreenState
 
     return GradientScaffold(
       appBar: VoyanzAppBar(
+        showBackButton: true,
         title: Text(
           t.manageSlots,
           style: GoogleFonts.jost(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         actions: [
@@ -247,51 +248,74 @@ class _ProfessionalAvailabilityScreenState
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _submitting ? null : _showAddSlotDialog,
+        backgroundColor: AppColors.mediumPurple,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         icon: _submitting
             ? const SizedBox(
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
-            : const Icon(Icons.add),
-        label: Text(t.addSlot),
+            : const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          t.addSlot,
+          style: GoogleFonts.manrope(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
       ),
       body: availabilityAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.mediumPurple),
+        ),
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 44),
-                const SizedBox(height: 10),
-                Text(
-                  t.failedLoadAvailability,
-                  style: GoogleFonts.jost(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+            child: AppCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 44,
+                    color: AppColors.error,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'An error occurred. Please try again.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                  const SizedBox(height: 12),
+                  Text(
+                    t.failedLoadAvailability,
+                    style: GoogleFonts.jost(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                ElevatedButton.icon(
-                  onPressed: () => ref.invalidate(
-                    professionalDisponibilitiesPayloadProvider,
+                  const SizedBox(height: 8),
+                  Text(
+                    'An error occurred. Please try again.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.manrope(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(t.retry),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => ref.invalidate(
+                      professionalDisponibilitiesPayloadProvider,
+                    ),
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(t.retry),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -307,83 +331,82 @@ class _ProfessionalAvailabilityScreenState
           final rows = _normalizeDisponibilities(sourceItems);
 
           return ListView(
+            physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 96),
             children: [
-              _RevealIn(
-                delayMs: 20,
+              SoftEntrance(
+                duration: const Duration(milliseconds: 320),
+                offset: const Offset(0, 12),
                 child: Text(
                   'Computed availability',
                   style: GoogleFonts.jost(
                     color: AppColors.textPrimary,
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               if (rows.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCard.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Text(
-                    t.noSlotsYet,
-                    style: GoogleFonts.montserrat(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+                SoftEntrance(
+                  duration: const Duration(milliseconds: 360),
+                  offset: const Offset(0, 12),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.mediumPurple.withValues(alpha: 0.1),
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 20,
+                            color: AppColors.mediumPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            t.noSlotsYet,
+                            style: GoogleFonts.manrope(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ...rows.map((row) {
                 final dayRange = _summarizeDayRange(row.slots);
-                return _RevealIn(
-                  delayMs: 70 + (rows.indexOf(row) * 24),
+                final index = rows.indexOf(row);
+                return SoftEntrance(
+                  duration: Duration(milliseconds: 340 + (index * 30)),
+                  offset: const Offset(0, 10),
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.surfaceCard.withValues(alpha: 0.90),
-                            AppColors.surfaceCard.withValues(alpha: 0.65),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: AppColors.borderSubtle.withValues(alpha: 0.35),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.surfaceDark.withValues(
-                              alpha: 0.18,
-                            ),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
+                    child: AppCard(
+                      padding: const EdgeInsets.all(18),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
                               Container(
-                                width: 8,
-                                height: 8,
+                                width: 10,
+                                height: 10,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.rosePink,
+                                  color: AppColors.mediumPurple,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Text(
                                 _formatDayTitle(row.day, t),
                                 style: GoogleFonts.jost(
@@ -394,40 +417,15 @@ class _ProfessionalAvailabilityScreenState
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              color: AppColors.surfaceDark.withValues(
-                                alpha: 0.28,
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              StatusPill(
+                                label: dayRange,
+                                color: AppColors.mediumPurple,
+                                icon: Icons.access_time_rounded,
                               ),
-                              border: Border.all(
-                                color: AppColors.borderSubtle.withValues(
-                                  alpha: 0.30,
-                                ),
-                              ),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: AppColors.rosePink.withValues(
-                                  alpha: 0.20,
-                                ),
-                              ),
-                              child: Text(
-                                dayRange,
-                                style: GoogleFonts.jost(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
+                            ],
                           ),
                         ],
                       ),

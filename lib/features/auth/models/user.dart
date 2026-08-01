@@ -23,6 +23,17 @@ class User {
     this.credit,
   });
 
+  User copyWith({double? credit}) => User(
+        coId: coId,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        role: role,
+        phone: phone,
+        avatar: avatar,
+        credit: credit ?? this.credit,
+      );
+
   factory User.fromJson(Map<String, dynamic> json) {
     final rawRole =
         json['co_role'] ??

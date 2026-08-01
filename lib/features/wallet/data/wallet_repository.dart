@@ -5,11 +5,17 @@ import 'package:voyanz/features/wallet/models/history_item.dart';
 import 'package:voyanz/features/wallet/models/payment_intent_response.dart';
 import 'package:voyanz/features/wallet/models/payment_status.dart';
 import 'package:voyanz/features/wallet/models/topup_pack.dart';
+import 'package:voyanz/features/wallet/models/wallet_balance.dart';
 
 class WalletRepository {
   final WalletDataSource _ds;
+  String? _htmlTextCgu;
+  String? _htmlTextCgs;
 
   WalletRepository(this._ds);
+
+  String? get htmlTextCgu => _htmlTextCgu;
+  String? get htmlTextCgs => _htmlTextCgs;
 
   Future<List<TopUpPack>> getPacks() async {
     if (kUseMockBackend) {
@@ -17,6 +23,8 @@ class WalletRepository {
       return _mockPacks;
     }
     final data = await _ds.fetchPricing();
+    _htmlTextCgu = data['htmlTextCgu']?.toString();
+    _htmlTextCgs = data['htmlTextCgs']?.toString();
     final packs = data['packs'];
     if (packs is List) {
       return packs
@@ -43,6 +51,18 @@ class WalletRepository {
       return const PaymentStatusResponse(status: 'succeeded');
     }
     return _ds.confirmPaymentStatus(pi);
+  }
+
+  Future<WalletBalance> getBalance() async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return const WalletBalance(
+        balance: 5000,
+        balanceFormatted: '50,00 €',
+        currency: 'EUR',
+      );
+    }
+    return _ds.fetchBalance();
   }
 
   Future<BalanceResponse> checkBalance({
@@ -120,6 +140,7 @@ const _mockPacks = [
     promotion: 4000,
     promotionf: '40,00 €',
     whypromo: 'firstinvoice',
+    description: 'Perfect to discover our service with a bonus credit.',
   ),
   TopUpPack(
     id: 'essai',
@@ -133,6 +154,7 @@ const _mockPacks = [
     promotion: 0,
     promotionf: '0 €',
     whypromo: '',
+    description: 'A trial pack to get started with no commitment.',
   ),
   TopUpPack(
     id: 'standard',
@@ -146,6 +168,7 @@ const _mockPacks = [
     promotion: 0,
     promotionf: '0 €',
     whypromo: '',
+    description: 'Our most popular pack for regular consultations.',
   ),
   TopUpPack(
     id: 'confort',
@@ -159,6 +182,7 @@ const _mockPacks = [
     promotion: 0,
     promotionf: '0 €',
     whypromo: '',
+    description: 'Extra credit for extended or multiple sessions.',
   ),
   TopUpPack(
     id: 'prenium',
@@ -172,5 +196,6 @@ const _mockPacks = [
     promotion: 1000,
     promotionf: '10,00 €',
     whypromo: 'promotion',
+    description: 'Best value with a bonus credit included.',
   ),
 ];

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
+import 'package:voyanz/core/l10n/language_switcher.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -247,6 +248,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // Language toggle
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: LanguageSwitcherButton(),
+                              ),
+                              const SizedBox(height: 10),
+
                               // Heading
                               Text(
                                 t.welcomeBack,

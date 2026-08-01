@@ -11,6 +11,8 @@ class TopUpPack {
   final String promotionf;
   final String whypromo;
   final String? description;
+  final String? code;
+  final int? codepurcent;
 
   const TopUpPack({
     required this.id,
@@ -25,6 +27,8 @@ class TopUpPack {
     required this.promotionf,
     required this.whypromo,
     this.description,
+    this.code,
+    this.codepurcent,
   });
 
   bool get isFirstPurchaseBonus => whypromo == 'firstinvoice';
@@ -43,6 +47,8 @@ class TopUpPack {
       promotionf: json['promotionf']?.toString() ?? '',
       whypromo: json['whypromo']?.toString() ?? '',
       description: json['description']?.toString(),
+      code: json['code']?.toString(),
+      codepurcent: _parseIntOrNull(json['codepurcent']),
     );
   }
 
@@ -50,5 +56,13 @@ class TopUpPack {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return 0;
+  }
+
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    final parsed = int.tryParse(value.toString());
+    return parsed;
   }
 }

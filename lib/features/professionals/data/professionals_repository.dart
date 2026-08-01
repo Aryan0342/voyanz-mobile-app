@@ -167,6 +167,30 @@ class ProfessionalsRepository {
     return _ds.getDisponibilitiesPayload();
   }
 
+  Future<Map<String, dynamic>> getProfessionalBookingSlots(
+    String coId,
+  ) async {
+    if (kUseMockBackend) {
+      return {
+        'nextdisponibilities': const [
+          {
+            'date': '2026-08-05',
+            'hours': [
+              ['10:00', ['period']],
+              ['11:00', ['period']],
+              ['14:00', ['period']],
+            ],
+            'hoursIntervals': [
+              ['10:00', '12:00', ['period']],
+            ],
+          },
+        ],
+        'appointments': const [],
+      };
+    }
+    return _ds.getProfessionalBookingSlots(coId);
+  }
+
   Future<void> createDisponibility(Map<String, dynamic> data) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 300));

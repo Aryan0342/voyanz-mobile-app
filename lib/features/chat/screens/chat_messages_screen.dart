@@ -9,6 +9,7 @@ import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/utils/date_utils.dart' as date_utils;
 import 'package:voyanz/features/chat/models/chat_models.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
@@ -22,16 +23,13 @@ String _resolveMediaUrl(String raw) {
 
 String _formatTime(String? dateStr) {
   if (dateStr == null || dateStr.isEmpty) return '';
-  try {
-    final dt = DateTime.parse(dateStr).toLocal();
-    final hr = dt.hour;
-    final min = dt.minute.toString().padLeft(2, '0');
-    final period = hr >= 12 ? 'PM' : 'AM';
-    final hr12 = hr == 0 ? 12 : (hr > 12 ? hr - 12 : hr);
-    return '$hr12:$min $period';
-  } catch (_) {
-    return '';
-  }
+  final local = date_utils.DateUtils.parisToLocal(dateStr);
+  if (local == null) return '';
+  final hr = local.hour;
+  final min = local.minute.toString().padLeft(2, '0');
+  final period = hr >= 12 ? 'PM' : 'AM';
+  final hr12 = hr == 0 ? 12 : (hr > 12 ? hr - 12 : hr);
+  return '$hr12:$min $period';
 }
 
 class ChatMessagesScreen extends ConsumerStatefulWidget {

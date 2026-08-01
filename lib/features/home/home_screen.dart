@@ -10,6 +10,7 @@ import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 
@@ -80,7 +81,9 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/availability')) return 1;
     if (location.startsWith('/chat')) return 2;
     if (location.startsWith('/clients')) return 3;
-    if (location.startsWith('/profile')) return 4;
+    if (location.startsWith('/profile') ||
+        location.startsWith('/professional-account') ||
+        location.startsWith('/wallet')) return 4;
     return 0; // dashboard (home)
   }
 
@@ -632,10 +635,15 @@ class ProfileScreen extends ConsumerWidget {
                             loading: () => null,
                             error: (_, __) => null,
                           );
-                          final finalCredit = user?.credit ?? credit;
+                          final liveBalance = isProfessional
+                              ? null
+                              : ref.watch(walletLiveBalanceProvider).valueOrNull;
+                          final creditStr = liveBalance != null
+                              ? liveBalance.display
+                              : _formatEuro(user?.credit ?? credit);
 
                           return _CustomerStatsGrid(
-                            creditValue: _formatEuro(finalCredit),
+                            creditValue: creditStr,
                             phoneCount: '${counts.phone}',
                             videoCount: '${counts.video}',
                             chatCount: '${counts.chat}',
@@ -741,20 +749,31 @@ class ProfileScreen extends ConsumerWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 10),
-                    _ProfileTile(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: t.wallet,
-                      subtitle: t.topUpCredit,
-                      onTap: () => context.push('/wallet'),
-                    ),
-                    const SizedBox(height: 10),
-                    _ProfileTile(
-                      icon: Icons.payment_outlined,
-                      title: t.paymentMethods,
-                      subtitle: t.cardsBilling,
-                      onTap: () => context.push('/pricing'),
-                    ),
+                    if (user?.isProfessional != true) ...[
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.account_balance_wallet_outlined,
+                        title: t.wallet,
+                        subtitle: t.topUpCredit,
+                        onTap: () => context.push('/wallet'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.payment_outlined,
+                        title: t.paymentMethods,
+                        subtitle: t.cardsBilling,
+                        onTap: () => context.push('/pricing'),
+                      ),
+                    ],
+                    if (user?.isProfessional == true) ...[
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.account_balance_outlined,
+                        title: t.stripeAccount,
+                        subtitle: t.setUpPayments,
+                        onTap: () => context.push('/professional-account'),
+                      ),
+                    ],
                   ],
                 ),
               ),

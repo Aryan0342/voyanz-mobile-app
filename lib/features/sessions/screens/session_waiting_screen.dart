@@ -6,6 +6,7 @@ import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
@@ -350,9 +351,13 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
       await ref.read(authStateProvider.notifier).logout();
       if (!mounted) return;
       context.go('/login');
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       final t = ref.read(translationsProvider);
+      if (e.toString().toLowerCase().contains('insufficient_balance')) {
+        _showInsufficientBalanceDialog();
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t.rebookSessionFailed),
@@ -361,6 +366,46 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         ),
       );
     }
+  }
+
+  void _showInsufficientBalanceDialog() {
+    final t = ref.read(translationsProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          t.insufficientBalance,
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          t.topUpNow,
+          style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              t.cancel,
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+          GradientButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/wallet/topup');
+            },
+            child: Text(t.topUpNow),
+          ),
+        ],
+      ),
+    );
   }
 }
 

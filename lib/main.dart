@@ -12,7 +12,7 @@ import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await StripeConfig.init();
+  // await StripeConfig.init();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -37,12 +37,24 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initStripe();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Future<void> _initStripe() async {
+    try {
+      await StripeConfig.init().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => throw TimeoutException('Stripe init timed out'),
+      );
+    } catch (e) {
+      debugPrint('Stripe init failed: $e');
+    }
   }
 
   @override

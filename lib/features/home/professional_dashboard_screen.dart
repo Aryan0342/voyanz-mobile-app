@@ -84,13 +84,15 @@ class _ProfessionalDashboardScreenState
       ),
       body: SafeArea(
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
           slivers: [
             // ── Welcome section ──
             SliverToBoxAdapter(
-              child: _RevealIn(
-                delayMs: 20,
+              child: SoftEntrance(
+                duration: const Duration(milliseconds: 320),
+                offset: const Offset(0, 14),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: _DashboardHeroCard(
                     name: name,
                     subtitle: t.yourProDashboard,
@@ -101,12 +103,13 @@ class _ProfessionalDashboardScreenState
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 18)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
             // ── Stats section ──
             SliverToBoxAdapter(
-              child: _RevealIn(
-                delayMs: 80,
+              child: SoftEntrance(
+                duration: const Duration(milliseconds: 360),
+                offset: const Offset(0, 14),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -160,8 +163,9 @@ class _ProfessionalDashboardScreenState
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
             SliverToBoxAdapter(
-              child: _RevealIn(
-                delayMs: 130,
+              child: SoftEntrance(
+                duration: const Duration(milliseconds: 400),
+                offset: const Offset(0, 14),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: _StatCard(
@@ -186,18 +190,19 @@ class _ProfessionalDashboardScreenState
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 18)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-            // ── Upcoming Sessions ──
+            // ── Recent Sessions ──
             SliverToBoxAdapter(
-              child: _RevealIn(
-                delayMs: 180,
+              child: SoftEntrance(
+                duration: const Duration(milliseconds: 440),
+                offset: const Offset(0, 14),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     t.recentSessions,
                     style: GoogleFonts.jost(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
@@ -214,23 +219,22 @@ class _ProfessionalDashboardScreenState
                   return SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
+                      child: AppCard(
                         padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppColors.borderSubtle.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                          color: AppColors.surfaceDark.withValues(alpha: 0.62),
-                        ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.inbox_outlined,
-                              size: 48,
-                              color: AppColors.textSecondary,
+                            Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.mediumPurple.withValues(alpha: 0.1),
+                              ),
+                              child: const Icon(
+                                Icons.inbox_outlined,
+                                size: 28,
+                                color: AppColors.mediumPurple,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -272,33 +276,54 @@ class _ProfessionalDashboardScreenState
                             ?.toString() ??
                         '';
 
-                    return _RevealIn(
-                      delayMs: 220 + (idx * 40),
+                    final statusColor = rawStatus.toLowerCase() == 'completed'
+                        ? AppColors.success
+                        : rawStatus.toLowerCase() == 'cancelled'
+                            ? AppColors.error
+                            : AppColors.mediumPurple;
+                    final statusIcon = rawStatus.toLowerCase() == 'completed'
+                        ? Icons.check_circle_outline
+                        : rawStatus.toLowerCase() == 'cancelled'
+                            ? Icons.cancel_outlined
+                            : Icons.schedule;
+
+                    final typeIcon = rawType.toLowerCase() == 'phone'
+                        ? Icons.phone_in_talk_outlined
+                        : rawType.toLowerCase() == 'chat'
+                            ? Icons.chat_bubble_outline
+                            : Icons.videocam_outlined;
+
+                    return SoftEntrance(
+                      duration: Duration(milliseconds: 320 + (idx * 40)),
+                      offset: const Offset(0, 10),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 7,
+                          vertical: 6,
                         ),
-                        child: Container(
+                        child: AppCard(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: AppColors.borderSubtle.withValues(
-                                alpha: 0.3,
-                              ),
-                            ),
-                            color: AppColors.surfaceDark.withValues(
-                              alpha: 0.58,
-                            ),
-                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: AppColors.mediumPurple.withValues(
+                                        alpha: 0.10,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      typeIcon,
+                                      size: 20,
+                                      color: AppColors.mediumPurple,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -307,13 +332,13 @@ class _ProfessionalDashboardScreenState
                                         Text(
                                           clientName,
                                           style: GoogleFonts.manrope(
-                                            fontSize: 14,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w700,
                                             color: AppColors.textPrimary,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
                                         Text(
                                           sessionType,
                                           style: GoogleFonts.manrope(
@@ -325,53 +350,22 @@ class _ProfessionalDashboardScreenState
                                       ],
                                     ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(999),
-                                      color:
-                                          rawStatus.toLowerCase() == 'completed'
-                                          ? AppColors.success.withValues(
-                                              alpha: 0.12,
-                                            )
-                                          : rawStatus.toLowerCase() ==
-                                                'cancelled'
-                                          ? AppColors.error.withValues(
-                                              alpha: 0.12,
-                                            )
-                                          : AppColors.mediumPurple.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                    ),
-                                    child: Text(
-                                      localizedStatus,
-                                      style: GoogleFonts.manrope(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color:
-                                            rawStatus.toLowerCase() ==
-                                                'completed'
-                                            ? AppColors.success
-                                            : rawStatus.toLowerCase() ==
-                                                  'cancelled'
-                                            ? AppColors.error
-                                            : AppColors.mediumPurple,
-                                      ),
-                                    ),
+                                  const SizedBox(width: 8),
+                                  StatusPill(
+                                    label: localizedStatus,
+                                    color: statusColor,
+                                    icon: statusIcon,
                                   ),
                                 ],
                               ),
                               if (sessionDate.isNotEmpty) ...[
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 10),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.calendar_today_outlined,
-                                      size: 12,
-                                      color: AppColors.textSecondary,
+                                      size: 13,
+                                      color: AppColors.textMuted,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
@@ -379,7 +373,7 @@ class _ProfessionalDashboardScreenState
                                       style: GoogleFonts.manrope(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
-                                        color: AppColors.textSecondary,
+                                        color: AppColors.textMuted,
                                       ),
                                     ),
                                   ],
@@ -395,36 +389,41 @@ class _ProfessionalDashboardScreenState
               },
               loading: () => const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.mediumPurple),
+                  ),
                 ),
               ),
               error: (e, st) => SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: AppColors.error.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        t.failedLoadSessions,
-                        style: GoogleFonts.manrope(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 44,
+                          color: AppColors.error,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        Text(
+                          t.failedLoadSessions,
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
       ),
@@ -469,71 +468,99 @@ class _DashboardHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: AppGradients.card,
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Welcome back, $name',
-            style: GoogleFonts.jost(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppGradients.accent,
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back, $name',
+                      style: GoogleFonts.jost(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: GoogleFonts.manrope(
-              fontSize: 13,
-              height: 1.35,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
+                child: GradientButton(
                   onPressed: onOpenSlots,
-                  icon: const Icon(Icons.calendar_today_outlined, size: 16),
-                  label: const Text('Manage Slots'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.mediumPurple,
-                    foregroundColor: Colors.white,
-                    textStyle: GoogleFonts.manrope(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  height: 46,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.calendar_today_outlined, size: 16, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Manage Slots'),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onOpenChat,
-                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                  label: const Text('Messages'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.borderStrong),
-                    textStyle: GoogleFonts.manrope(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                child: SoftPress(
+                  onTap: onOpenChat,
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceCard,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.borderStrong),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 16,
+                          color: AppColors.textPrimary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Messages',
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -554,19 +581,9 @@ class _RevealIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: Duration(milliseconds: 380 + delayMs),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, builtChild) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 18 * (1 - value)),
-            child: builtChild,
-          ),
-        );
-      },
+    return SoftEntrance(
+      duration: Duration(milliseconds: 340 + delayMs),
+      offset: const Offset(0, 12),
       child: child,
     );
   }
@@ -639,13 +656,8 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: AppColors.surfaceCard,
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -659,19 +671,19 @@ class _StatCard extends StatelessWidget {
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   color: AppColors.mediumPurple.withValues(alpha: 0.11),
                 ),
-                child: Icon(icon, size: 14, color: AppColors.mediumPurple),
+                child: Icon(icon, size: 15, color: AppColors.mediumPurple),
               ),
             ],
           ),

@@ -16,6 +16,7 @@ class ApiEndpoints {
   static const String professionals = '/web/1.0/professionals';
   static String professionalInfos(String coId) =>
       '/web/1.0/professional/$coId/infos';
+  static const String professionalAccount = '/web/1.0/professional/account';
   static String professionalFavorite(String coId) =>
       '/web/1.0/professional/favorite/$coId';
   static const String professionalDisponibilities =
@@ -59,4 +60,5 @@ class ApiEndpoints {
   static const String checkBalance = '/web/1.0/check-balance';
   static String payreturnStatusById(String pi) =>
       '/web/1.0/payreturn/status/$pi';
+  static const String getBalance = '/web/1.0/balance';
 }

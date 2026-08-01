@@ -1,18 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/mock_backend.dart';
-import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
-import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/appointments/providers/appointments_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/core/config/stripe_config.dart';
 
 class AppointmentBookingScreen extends ConsumerStatefulWidget {
   final String coId;
@@ -66,6 +67,25 @@ class _AppointmentBookingScreenState
         ),
       );
       return;
+    }
+
+    if (!StripeConfig.isInitialized) {
+      try {
+        await StripeConfig.init().timeout(
+          const Duration(seconds: 8),
+          onTimeout: () => throw TimeoutException('Stripe init timed out'),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment is temporarily unavailable. Please try again later.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
     }
 
     try {
@@ -138,7 +158,7 @@ class _AppointmentBookingScreenState
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
     final proAsync = ref.watch(professionalDetailProvider(widget.coId));
-    final dispoAsync = ref.watch(professionalDisponibilitiesProvider);
+    final dispoAsync = ref.watch(professionalBookingSlotsProvider(widget.coId));
 
     return GradientScaffold(
       appBar: VoyanzAppBar(
@@ -279,17 +299,18 @@ class _AppointmentBookingScreenState
                         padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
                         itemCount: slots.length,
                         itemBuilder: (_, i) {
-                          final slot = slots[i] as Map<String, dynamic>;
+                          final slot = slots[i];
                           final apId = slot['ap_id']?.toString() ??
                               slot['di_id']?.toString() ??
                               '';
+                          final slotKey = slot['key']?.toString() ?? apId;
                           final day = slot['day']?.toString() ?? '';
                           final rawSlots = slot['slots'];
                           final timeSlots = rawSlots is List
                               ? rawSlots.map((s) => s.toString()).toList()
                               : <String>[];
 
-                          if (apId.isEmpty || timeSlots.isEmpty) {
+                          if (timeSlots.isEmpty) {
                             return const SizedBox.shrink();
                           }
 
@@ -313,7 +334,7 @@ class _AppointmentBookingScreenState
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: timeSlots.map((time) {
-                                      final key = '$apId|$time';
+                                      final key = '$slotKey|$time';
                                       final selected =
                                           _selectedSlotKey == key;
                                       return GestureDetector(
@@ -377,50 +398,100 @@ class _AppointmentBookingScreenState
                     ),
                     child: SafeArea(
                       top: false,
-                      child: GradientButton(
-                        width: double.infinity,
-                        onPressed: _isProcessing
-                            ? null
-                            : () async {
-                                final apId = _selectedSlot!['ap_id']
-                                        ?.toString() ??
-                                    _selectedSlot!['di_id']?.toString() ??
-                                    '';
-                                if (apId.isEmpty) return;
-                                await _registerAndPay(
-                                  apId,
-                                  pro.displayName,
-                                  rateStr ?? '',
-                                );
-                              },
-                        child: _isProcessing
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.lock_outline,
-                                    color: Colors.white,
-                                    size: 20,
+                      child: Builder(
+                        builder: (bottomContext) {
+                          final apId = _selectedSlot!['ap_id']?.toString() ??
+                              _selectedSlot!['di_id']?.toString() ??
+                              '';
+                          if (apId.isEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mediumPurple.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    t.registerAndPay,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        size: 20,
+                                        color: AppColors.mediumPurple,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          t.consultationSlotInfo,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                GradientButton(
+                                  width: double.infinity,
+                                  onPressed: () => context.pop(true),
+                                  child: Text(
+                                    t.continueToProfile,
                                     style: GoogleFonts.montserrat(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            );
+                          }
+                          return GradientButton(
+                            width: double.infinity,
+                            onPressed: _isProcessing
+                                ? null
+                                : () async {
+                                    await _registerAndPay(
+                                      apId,
+                                      pro.displayName,
+                                      rateStr ?? '',
+                                    );
+                                  },
+                            child: _isProcessing
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.lock_outline,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        t.registerAndPay,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          );
+                        },
                       ),
                     ),
                   ),

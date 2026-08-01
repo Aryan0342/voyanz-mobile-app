@@ -4,6 +4,7 @@ import 'package:voyanz/core/config/api_endpoints.dart';
 import 'package:voyanz/features/wallet/models/payment_intent_response.dart';
 import 'package:voyanz/features/wallet/models/payment_status.dart';
 import 'package:voyanz/features/wallet/models/balance_response.dart';
+import 'package:voyanz/features/wallet/models/wallet_balance.dart';
 
 final _logger = Logger();
 
@@ -49,6 +50,10 @@ class WalletDataSource {
       return PaymentIntentResponse.fromJson(
         body is Map<String, dynamic> ? body : <String, dynamic>{},
       );
+    } on DioException catch (e) {
+      _checkRateLimit(e);
+      _logger.e('Error creating payment intent: $e');
+      rethrow;
     } catch (e) {
       _logger.e('Error creating payment intent: $e');
       rethrow;
@@ -71,6 +76,22 @@ class WalletDataSource {
     }
   }
 
+  Future<WalletBalance> fetchBalance() async {
+    try {
+      final response = await _dio.get(ApiEndpoints.getBalance);
+      final body = response.data;
+      _logger.d('Balance raw response: $body');
+      _throwIfApiError(body, fallback: 'Failed to fetch balance');
+      final data = body is Map<String, dynamic> ? body['data'] : null;
+      return WalletBalance.fromJson(
+        data is Map<String, dynamic> ? data : <String, dynamic>{},
+      );
+    } catch (e) {
+      _logger.e('Error fetching balance: $e');
+      rethrow;
+    }
+  }
+
   Future<BalanceResponse> checkBalance({
     required String professionalId,
     required String type,
@@ -85,6 +106,10 @@ class WalletDataSource {
       return BalanceResponse.fromJson(
         body is Map<String, dynamic> ? body : <String, dynamic>{},
       );
+    } on DioException catch (e) {
+      _checkRateLimit(e);
+      _logger.e('Error checking balance: $e');
+      rethrow;
     } catch (e) {
       _logger.e('Error checking balance: $e');
       rethrow;
@@ -106,6 +131,7 @@ class WalletDataSource {
         },
       );
       final body = response.data;
+      _logger.d('History raw response: $body');
       _throwIfApiError(body, fallback: 'Failed to fetch history');
       if (body is Map<String, dynamic>) return body;
       return <String, dynamic>{};
@@ -132,6 +158,12 @@ class WalletDataSource {
     } catch (e) {
       _logger.e('Error checking promo code: $e');
       rethrow;
+    }
+  }
+
+  void _checkRateLimit(DioException e) {
+    if (e.response?.statusCode == 429) {
+      throw Exception('Too many requests, please wait a moment and try again.');
     }
   }
 

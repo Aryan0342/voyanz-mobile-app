@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -9,8 +11,10 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/features/wallet/models/payment_status.dart';
 import 'package:voyanz/features/wallet/models/topup_pack.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/core/config/stripe_config.dart';
 
 class TopUpScreen extends ConsumerWidget {
   const TopUpScreen({super.key});
@@ -22,6 +26,8 @@ class TopUpScreen extends ConsumerWidget {
     final selectedPack = ref.watch(selectedPackProvider);
     final userAsync = ref.watch(authStateProvider);
     final credit = userAsync.valueOrNull?.credit;
+    final liveBalanceAsync = ref.watch(walletLiveBalanceProvider);
+    final liveCredit = liveBalanceAsync.valueOrNull;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCF9FF),
@@ -90,9 +96,15 @@ class TopUpScreen extends ConsumerWidget {
                             textBaseline: TextBaseline.alphabetic,
                             children: [
                               Text(
-                                credit != null
-                                    ? credit.toStringAsFixed(2).replaceAll('.', ',')
-                                    : '0,00',
+                                liveCredit != null
+                                    ? liveCredit.display
+                                        .replaceAll('€', '')
+                                        .trim()
+                                    : credit != null
+                                        ? credit
+                                            .toStringAsFixed(2)
+                                            .replaceAll('.', ',')
+                                        : '0,00',
                                 style: GoogleFonts.jost(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -140,15 +152,27 @@ class TopUpScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      error: (e, _) => Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            'An error occurred while loading. Please try again.',
-                            style: GoogleFonts.montserrat(color: AppColors.error),
+                      error: (e, _) {
+                        final msg = e.toString().replaceFirst('Exception: ', '');
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    size: 48, color: AppColors.error),
+                                const SizedBox(height: 16),
+                                Text(
+                                  msg,
+                                  style: GoogleFonts.montserrat(color: AppColors.error),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                       data: (packs) => Column(
                         children: packs
                             .map(
@@ -194,6 +218,8 @@ class TopUpScreen extends ConsumerWidget {
                     _PromoCodeSection(t: t),
                     const SizedBox(height: 24),
                     _OrderSummary(pack: selectedPack, t: t),
+                    const SizedBox(height: 12),
+                    _TermsLink(t: t, onTap: () => _showTermsDialog(context, ref)),
                     const SizedBox(height: 24),
                     GradientButton(
                       width: double.infinity,
@@ -223,6 +249,109 @@ class TopUpScreen extends ConsumerWidget {
     );
   }
 
+  void _showTermsDialog(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(walletRepositoryProvider);
+    final cgu = repo.htmlTextCgu;
+    final cgs = repo.htmlTextCgs;
+    if ((cgu == null || cgu.isEmpty) && (cgs == null || cgs.isEmpty)) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Terms & Conditions',
+          style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (cgu != null && cgu.isNotEmpty) ...[
+                Text(
+                  'Terms of Use',
+                  style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cgu.replaceAll(RegExp(r'<[^>]*>'), ''),
+                  style: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
+                ),
+              ],
+              if (cgs != null && cgs.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Terms of Service',
+                  style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cgs.replaceAll(RegExp(r'<[^>]*>'), ''),
+                  style: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Close',
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _applyNewBalance(WidgetRef ref, PaymentStatusResponse status, TopUpPack pack) {
+    double? newCredit;
+    if (status.jackpotf != null) {
+      final raw = status.jackpotf!
+          .replaceAll(RegExp(r'[^0-9,.-]'), '')
+          .replaceAll(',', '.');
+      newCredit = double.tryParse(raw);
+    }
+    if (newCredit == null) {
+      final current = ref.read(walletBalanceProvider) ?? 0;
+      newCredit = current + pack.tocomptabilize / 100;
+    }
+    ref.read(walletBalanceProvider.notifier).state = newCredit;
+    ref.invalidate(walletLiveBalanceProvider);
+  }
+
+  Future<T> _runWithLoading<T>(
+    NavigatorState navigator,
+    String message,
+    Future<T> Function() action,
+  ) async {
+    unawaited(
+      navigator.push(
+        PageRouteBuilder<void>(
+          opaque: false,
+          barrierDismissible: false,
+          barrierColor: Colors.black54,
+          transitionDuration: const Duration(milliseconds: 180),
+          reverseTransitionDuration: const Duration(milliseconds: 180),
+          pageBuilder: (_, animation, _) => FadeTransition(
+            opacity: animation,
+            child: _PaymentLoadingCard(message: message),
+          ),
+        ),
+      ),
+    );
+    try {
+      return await action();
+    } finally {
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    }
+  }
+
   Future<void> _handlePayment(
     BuildContext context,
     WidgetRef ref,
@@ -231,15 +360,47 @@ class TopUpScreen extends ConsumerWidget {
     final t = ref.read(translationsProvider);
     final repo = ref.read(walletRepositoryProvider);
     final promoCode = ref.read(promoCodeProvider);
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    if (!StripeConfig.isInitialized) {
+      try {
+        await StripeConfig.init().timeout(
+          const Duration(seconds: 8),
+          onTimeout: () => throw TimeoutException('Stripe init timed out'),
+        );
+      } catch (e) {
+        debugPrint('Stripe init failed in topup: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Payment is temporarily unavailable. Please try again later.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     try {
-      final intent = await repo.createPaymentIntent(
-        item: pack.id,
-        code: promoCode,
+      final intent = await _runWithLoading(
+        navigator,
+        t.processingPayment,
+        () => repo.createPaymentIntent(
+          item: pack.id,
+          code: promoCode,
+        ),
       );
 
       if (kUseMockBackend) {
-        await repo.confirmPayment(intent.clientSecret);
+        final status = await _runWithLoading(
+          navigator,
+          t.processingPayment,
+          () => repo.confirmPayment(intent.clientSecret),
+        );
+        if (status.isSuccess) {
+          _applyNewBalance(ref, status, pack);
+        }
         if (context.mounted) {
           context.push('/wallet/success', extra: {
             'amount': pack.tocomptabilizef,
@@ -262,12 +423,19 @@ class TopUpScreen extends ConsumerWidget {
       final piId = piParts.isNotEmpty ? piParts[0] : '';
 
       if (piId.isNotEmpty) {
-        final status = await repo.confirmPayment(piId);
-        if (status.isSuccess && context.mounted) {
-          context.push('/wallet/success', extra: {
-            'amount': pack.tocomptabilizef,
-            'packName': pack.name,
-          });
+        final status = await _runWithLoading(
+          navigator,
+          t.processingPayment,
+          () => repo.confirmPayment(piId),
+        );
+        if (status.isSuccess) {
+          _applyNewBalance(ref, status, pack);
+          if (context.mounted) {
+            context.push('/wallet/success', extra: {
+              'amount': pack.tocomptabilizef,
+              'packName': pack.name,
+            });
+          }
         } else if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -287,6 +455,56 @@ class TopUpScreen extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+class _PaymentLoadingCard extends StatelessWidget {
+  final String message;
+
+  const _PaymentLoadingCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.mediumPurple.withValues(alpha: 0.16),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 48,
+              height: 48,
+              child: CircularProgressIndicator(
+                strokeWidth: 4,
+                color: AppColors.mediumPurple,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -626,6 +844,35 @@ class _OrderSummary extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _TermsLink extends ConsumerWidget {
+  final AppTranslations t;
+  final VoidCallback onTap;
+
+  const _TermsLink({required this.t, required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(walletRepositoryProvider);
+    final hasTerms = (repo.htmlTextCgu != null && repo.htmlTextCgu!.isNotEmpty) ||
+        (repo.htmlTextCgs != null && repo.htmlTextCgs!.isNotEmpty);
+
+    if (!hasTerms) return const SizedBox.shrink();
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        'By continuing, you accept our Terms & Conditions',
+        style: GoogleFonts.montserrat(
+          fontSize: 12,
+          color: AppColors.textMuted,
+          decoration: TextDecoration.underline,
+        ),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

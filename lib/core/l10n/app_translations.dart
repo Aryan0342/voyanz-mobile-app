@@ -636,6 +636,54 @@ class AppTranslations {
   String get youPay => _fr ? 'Vous payez' : 'You pay';
   String get youReceive => _fr ? 'Vous recevez' : 'You receive';
 
+  // ── Professional Stripe Account ──────────────────────────────────────────
+  String get stripeAccount => _fr ? 'Compte Stripe' : 'Stripe Account';
+  String get setUpPayments => _fr
+      ? 'Configurer les paiements'
+      : 'Set Up Payments';
+  String get stripeOnboardingDescription => _fr
+      ? 'Connectez votre compte Stripe pour recevoir les paiements de vos sessions. Vous serez redirigé vers Stripe pour finaliser la configuration.'
+      : 'Connect your Stripe account to receive payments for your sessions. You will be redirected to Stripe to complete setup.';
+  String get startOnboarding => _fr
+      ? 'Commencer la configuration'
+      : 'Start Onboarding';
+  String get stripeAccountActive =>
+      _fr ? 'Compte Stripe actif' : 'Stripe Account Active';
+  String get stripeAccountPending =>
+      _fr ? 'Configuration en attente' : 'Setup Pending';
+  String get stripeAccountError =>
+      _fr ? 'Erreur de configuration' : 'Setup Error';
+  String get readyToReceivePayments => _fr
+      ? 'Vous êtes prêt à recevoir des paiements.'
+      : 'You are ready to receive payments.';
+  String get completeOnboardingToReceive => _fr
+      ? 'Finalisez la configuration Stripe pour recevoir vos paiements.'
+      : 'Complete Stripe setup to receive your payments.';
+  String get stripeAccountErrorDetail => _fr
+      ? 'Une erreur est survenue avec votre compte Stripe. Contactez le support.'
+      : 'An error occurred with your Stripe account. Contact support.';
+  String get accountActive => _fr ? 'Compte actif' : 'Active Account';
+  String get stripeAccountActiveMessage => _fr
+      ? 'Votre compte Stripe est connecté et actif. Vous pouvez gérer vos paramètres de paiement depuis le tableau de bord Stripe.'
+      : 'Your Stripe account is connected and active. You can manage your payment settings from the Stripe dashboard.';
+  String get viewDashboard =>
+      _fr ? 'Voir le tableau de bord Stripe' : 'View Stripe Dashboard';
+  String get accountId => _fr ? 'ID du compte' : 'Account ID';
+  String get stripeOnboardingInfo => _fr
+      ? 'Vous serez redirigé vers Stripe pour configurer votre compte de paiement.'
+      : 'You will be redirected to Stripe to set up your payment account.';
+  String get failedLoadAccount =>
+      _fr ? 'Impossible de charger les informations du compte'
+          : 'Failed to load account info';
+  String get noOnboardingUrlAvailable => _fr
+      ? 'Aucune URL d\'onboarding disponible. Réessayez plus tard.'
+      : 'No onboarding URL available. Try again later.';
+  String get invalidOnboardingUrl => _fr
+      ? 'URL d\'onboarding invalide.'
+      : 'Invalid onboarding URL.';
+  String get failedToOpenUrl =>
+      _fr ? 'Impossible d\'ouvrir le lien.' : 'Failed to open link.';
+
   // ── Appointment Booking ─────────────────────────────────────────────────
   String get bookAppointment =>
       _fr ? 'Prendre rendez-vous' : 'Book Appointment';
@@ -665,4 +713,9 @@ class AppTranslations {
   String get registrationFailed =>
       _fr ? 'Échec de l\'inscription au créneau'
           : 'Slot registration failed';
+  String get consultationSlotInfo =>
+      _fr ? 'Créneau de consultation 1-à-1 — facturé par minute. Lancez la session depuis le profil.'
+          : '1-on-1 consultation slot — billed per minute. Start the session from the profile.';
+  String get continueToProfile =>
+      _fr ? 'Continuer vers le profil' : 'Continue to profile';
 }

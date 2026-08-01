@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
-import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
@@ -436,19 +435,8 @@ class _RatingOverviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
@@ -547,7 +535,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.mediumPurple : Colors.white,
+          color: isSelected ? AppColors.mediumPurple : AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected ? Colors.transparent : AppColors.borderSubtle,
@@ -582,19 +570,8 @@ class _ReviewCard extends StatelessWidget {
         'Anonymous';
     final date = review['re_date']?.toString() ?? '';
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -610,13 +587,20 @@ class _ReviewCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                rating.toStringAsFixed(1),
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gold,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star_rounded, size: 16, color: AppColors.gold),
+                  const SizedBox(width: 4),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -657,19 +641,8 @@ class _EmptyState extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
       child: Center(
-        child: Container(
+        child: AppCard(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -677,7 +650,7 @@ class _EmptyState extends ConsumerWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   color: AppColors.mediumPurple.withValues(alpha: 0.1),
                 ),
                 child: const Icon(
@@ -691,7 +664,7 @@ class _EmptyState extends ConsumerWidget {
                 t.noReviewsYet,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.jost(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
@@ -703,7 +676,7 @@ class _EmptyState extends ConsumerWidget {
                     : t.reviewsFromConsultationsWillAppear,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.manrope(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.textSecondary,
                   height: 1.5,
                 ),
@@ -724,20 +697,11 @@ class _RevealIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: Duration(milliseconds: 340 + delayMs),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, builtChild) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 12 * (1 - value)),
-            child: builtChild,
-          ),
-        );
-      },
+    return SoftEntrance(
+      duration: Duration(milliseconds: 320 + delayMs),
+      offset: const Offset(0, 10),
       child: child,
     );
   }
 }
+
