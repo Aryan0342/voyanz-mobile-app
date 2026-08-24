@@ -253,6 +253,60 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
   }
 }
 
+class _UnreadIndicator extends ConsumerWidget {
+  final String chgrId;
+
+  const _UnreadIndicator({required this.chgrId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      chatUnreadCountsProvider.select((m) => m[chgrId] ?? 0),
+    );
+    final groups = ref.watch(chatGroupsProvider).valueOrNull;
+    bool? lastRead;
+    for (final g in groups ?? const []) {
+      if (g.chgrId == chgrId) {
+        lastRead = g.lastMessageRead;
+        break;
+      }
+    }
+
+    if (count > 0) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        constraints: const BoxConstraints(minWidth: 24),
+        decoration: BoxDecoration(
+          color: AppColors.mediumPurple,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          count > 99 ? '99+' : '$count',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (lastRead == false) {
+      return Container(
+        width: 10,
+        height: 10,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.rosePink,
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
 class _ConversationCard extends ConsumerWidget {
   final dynamic group;
   final VoidCallback onTap;
@@ -343,15 +397,8 @@ class _ConversationCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Arrow
-            Container(
-              width: 12,
-              height: 12,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.mediumPurple,
-              ),
-            ),
+            // Unread badge / read-state dot
+            _UnreadIndicator(chgrId: group.chgrId),
           ],
         ),
       ),
@@ -473,7 +520,7 @@ class _PinnedSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 90,
+          height: 112,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -481,10 +528,9 @@ class _PinnedSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final group = pinnedGroups[index];
               final name = group.otherUserName ?? group.name ?? 'Chat';
-              final firstName = name.split(' ').first;
               
               return _PinnedAvatar(
-                name: firstName,
+                name: name,
                 image: group.otherUserAvatar,
                 icon: group.otherUserAvatar == null ? Icons.person_outline : null,
                 isOnline: index % 2 == 0, // Using mock online status for visual parity
@@ -548,11 +594,18 @@ class _PinnedAvatar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            name,
-            style: GoogleFonts.montserrat(
-              fontSize: 13,
-              color: AppColors.textPrimary,
+          SizedBox(
+            width: 84,
+            child: Text(
+              name,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                height: 1.2,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],

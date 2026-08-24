@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:voyanz/core/l10n/app_translations.dart';
 
 class SessionStatus {
@@ -51,6 +53,58 @@ class SessionStatus {
         : null,
   ]);
 
+  /// Scheduled appointment id — present for group/scheduled sessions
+  /// (used to detect group sessions, WEBSOCKET §5.2).
+  String? get apId => _firstNonEmpty([
+    raw['ap_id'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['ap_id']
+        : null,
+  ]);
+
+  String? get professionalCoId => _firstNonEmpty([
+    raw['co_id_professional'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['co_id_professional']
+        : null,
+  ]);
+
+  String? get customerCoId => _firstNonEmpty([
+    raw['co_id_customer'],
+    raw['session'] is Map<String, dynamic>
+        ? (raw['session'] as Map<String, dynamic>)['co_id_customer']
+        : null,
+  ]);
+
+  /// Whether the professional has actually joined the session (presence).
+  ///
+  /// The backend records connected participants in `se_connections`
+  /// (JSON object keyed by co_id). A freshly created REST session has an
+  /// empty/absent `se_connections`, so this stays false until the pro joins.
+  bool get isProfessionalPresent {
+    final proId = professionalCoId;
+    if (proId == null || proId.trim().isEmpty) return false;
+
+    final connections = _firstNonEmpty([
+      raw['se_connections'],
+      raw['session'] is Map<String, dynamic>
+          ? (raw['session'] as Map<String, dynamic>)['se_connections']
+          : null,
+    ]);
+    if (connections == null || connections.trim().isEmpty) return false;
+
+    try {
+      final decoded = jsonDecode(connections);
+      if (decoded is Map) {
+        return decoded.keys.any(
+          (key) => key.toString().trim() == proId.trim(),
+        );
+      }
+    } catch (_) {}
+
+    return connections.contains(proId.trim());
+  }
+
   bool get isCalling => normalizedStatus == 'calling';
 
   bool get isAccepted => normalizedStatus == 'accepted';
@@ -66,6 +120,12 @@ class SessionStatus {
   bool get isCanceled =>
       normalizedStatus == 'canceled' || normalizedStatus == 'cancelled';
 
+  /// The pro answered the phone but did not press key 1 within the
+  /// confirmation window (anti-voicemail protection).
+  bool get isNoStarConfirm =>
+      normalizedStatus == 'professional_no_star_confirm' ||
+      normalizedStatus == 'no_star_confirm';
+
   bool get isKnownSpecStatus =>
       isCalling ||
       isAccepted ||
@@ -73,7 +133,8 @@ class SessionStatus {
       isInProgress ||
       isCompleted ||
       isRejected ||
-      isCanceled;
+      isCanceled ||
+      isNoStarConfirm;
 
   bool get isActive {
     return isInProgress;
@@ -91,6 +152,8 @@ class SessionStatus {
       case 'expired':
       case 'timeout':
       case 'failed':
+      case 'professional_no_star_confirm':
+      case 'no_star_confirm':
         return true;
       default:
         return isCompleted || isRejected;
@@ -108,6 +171,7 @@ class SessionStatus {
     if (isCompleted) return t.sessionStatusCompletedLabel;
     if (isRejected) return t.sessionStatusRejectedLabel;
     if (isCanceled) return t.sessionStatusCanceledLabel;
+    if (isNoStarConfirm) return t.sessionStatusNoStarConfirmLabel;
     return t.sessionStatusUnknownLabel(status);
   }
 
@@ -132,6 +196,9 @@ class SessionStatus {
     }
     if (isCanceled) {
       return t.sessionStatusCanceledMessage;
+    }
+    if (isNoStarConfirm) {
+      return t.sessionStatusNoStarConfirmMessage;
     }
     return t.sessionStatusChangedMessage(status);
   }

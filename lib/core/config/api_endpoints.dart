@@ -4,6 +4,7 @@ class ApiEndpoints {
 
   // ── Auth ───────────────────────────────────────────────────────────────
   static const String login = '/api/1.0/login';
+  static const String forgetPassword = '/api/1.0/forgetpassword';
   static const String userInfos = '/web/1.0/user/infos';
 
   // ── Account ────────────────────────────────────────────────────────────

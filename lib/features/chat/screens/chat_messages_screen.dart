@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
@@ -14,6 +19,8 @@ import 'package:voyanz/features/chat/models/chat_models.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
+import 'package:voyanz/features/sessions/models/session_status.dart';
+import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 
 String _resolveMediaUrl(String raw) {
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
@@ -34,8 +41,15 @@ String _formatTime(String? dateStr) {
 
 class ChatMessagesScreen extends ConsumerStatefulWidget {
   final String chgrId;
+  final String? seId;
+  final String? coId;
 
-  const ChatMessagesScreen({super.key, required this.chgrId});
+  const ChatMessagesScreen({
+    super.key,
+    required this.chgrId,
+    this.seId,
+    this.coId,
+  });
 
   @override
   ConsumerState<ChatMessagesScreen> createState() => _ChatMessagesScreenState();
@@ -46,6 +60,11 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   final _scrollCtrl = ScrollController();
   final _readMessageIds = <String>{};
   bool _sending = false;
+  bool _sendingImage = false;
+  bool _sessionEndedHandled = false;
+
+  bool get _hasSession =>
+      widget.seId != null && widget.seId!.trim().isNotEmpty;
 
   @override
   void dispose() {
@@ -79,6 +98,132 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
     }
   }
 
+  static const _maxImageBytes = 5 * 1024 * 1024;
+
+  /// Images chosen by the user, shown as previews above the composer until
+  /// they press send (WhatsApp-style).
+  final List<File> _pendingImages = [];
+
+  /// Sniffs image type from magic bytes instead of trusting the filename:
+  /// many Android gallery pickers return names WITHOUT a usable extension
+  /// (e.g. "IMG_20260823"), which used to abort the upload silently.
+  String? _sniffImageMime(Uint8List bytes) {
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[2] == 0xFF) {
+      return 'jpeg';
+    }
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'png';
+    }
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38) {
+      return 'gif';
+    }
+    return null;
+  }
+
+  void _showImageError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 6),
+      ),
+    );
+  }
+
+  Future<void> _pickImages() async {
+    if (_sendingImage) return;
+    try {
+      debugPrint('[chat-image] opening multi picker...');
+      final picked = await ImagePicker().pickMultiImage(
+        imageQuality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      );
+      if (picked.isEmpty) {
+        debugPrint('[chat-image] picker cancelled');
+        return;
+      }
+      debugPrint('[chat-image] picked ${picked.length} image(s)');
+      if (!mounted) return;
+      setState(() {
+        _pendingImages.addAll(picked.map((x) => File(x.path)));
+      });
+    } catch (e) {
+      debugPrint('[chat-image] PICK FAILED: $e');
+      _showImageError('Could not open gallery: $e');
+    }
+  }
+
+  Future<void> _sendPendingImages() async {
+    if (_pendingImages.isEmpty || _sendingImage) return;
+    setState(() => _sendingImage = true);
+    var failed = 0;
+    try {
+      // Copy so we can mutate the live list safely while iterating.
+      final items = List<File>.from(_pendingImages);
+      for (final file in items) {
+        try {
+          final bytes = await file.readAsBytes();
+          final mime = _sniffImageMime(bytes);
+          if (mime == null) {
+            debugPrint('[chat-image] skip ${file.path}: unknown format');
+            failed++;
+            if (mounted) setState(() => _pendingImages.remove(file));
+            continue;
+          }
+          if (bytes.length > _maxImageBytes) {
+            debugPrint('[chat-image] skip ${file.path}: >5MB');
+            failed++;
+            if (mounted) setState(() => _pendingImages.remove(file));
+            continue;
+          }
+
+          final b64 = base64Encode(bytes);
+          debugPrint(
+            '[chat-image] sending $mime (${bytes.length} bytes)',
+          );
+          await ref
+              .read(chatMessagesNotifierProvider(widget.chgrId).notifier)
+              .sendImage('data:image/$mime;base64,$b64');
+          debugPrint('[chat-image] send OK');
+          if (mounted) setState(() => _pendingImages.remove(file));
+        } catch (e) {
+          failed++;
+          debugPrint('[chat-image] SEND FAILED: $e');
+        }
+      }
+      if (failed > 0) {
+        _showImageError('$failed image(s) failed to send. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _sendingImage = false);
+    }
+  }
+
+  /// Send button: images first (if any), then the typed text message.
+  Future<void> _onSendPressed() async {
+    if (_sending || _sendingImage) return;
+    if (_pendingImages.isNotEmpty) {
+      await _sendPendingImages();
+      if (!mounted) return;
+    }
+    if (_msgCtrl.text.trim().isNotEmpty) {
+      await _send();
+    }
+  }
+
   Future<void> _markMessagesRead(List<ChatMessage> messages) async {
     final currentCoId = ref.read(authStateProvider).valueOrNull?.coId;
     final pendingIds = <int>[];
@@ -102,6 +247,73 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       final end = i + 500 < pendingIds.length ? i + 500 : pendingIds.length;
       await ws.sendWithToken('chat_messagesreaded', pendingIds.sublist(i, end));
     }
+
+    ref.read(chatUnreadCountsProvider.notifier).state = {
+      ...ref.read(chatUnreadCountsProvider),
+      widget.chgrId: 0,
+    };
+    // Re-fetch the groups list so the REST-side `lastmessageread` flag
+    // refreshes too — otherwise the fallback unread dot stays lit.
+    ref.invalidate(chatGroupsProvider);
+  }
+
+  Future<void> _confirmEndSession() async {
+    final t = ref.read(translationsProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.endSessionConfirmTitle),
+        content: Text(t.endSessionConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(t.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              t.endSession,
+              style: const TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    _sessionEndedHandled = true;
+    final ws = ref.read(webSocketServiceProvider);
+    if (!ws.isConnected) {
+      await ws.connect();
+    }
+    ws.send('session_stop', {'se_id': widget.seId});
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.sessionEnded),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    if (mounted) {
+      context.go('/home');
+    }
+  }
+
+  void _handleSessionEnded(String message) {
+    if (_sessionEndedHandled || !mounted) return;
+    _sessionEndedHandled = true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    Future<void>.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) context.go('/home');
+    });
   }
 
   @override
@@ -110,6 +322,27 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       chatMessagesNotifierProvider(widget.chgrId),
     );
     final t = ref.watch(translationsProvider);
+
+    if (_hasSession) {
+      ref.listen<AsyncValue<SessionStatus>>(
+        sessionStatusLivePollingProvider(widget.seId!),
+        (_, next) {
+          next.whenOrNull(
+            data: (status) {
+              if (!mounted || !status.isTerminal) return;
+              _handleSessionEnded(
+                status.localizedMessage(
+                  ref.read(translationsProvider),
+                  isProfessional:
+                      ref.read(authStateProvider).valueOrNull?.isProfessional ??
+                      false,
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
 
     String? otherUserName;
     messagesAsync.whenData((messages) {
@@ -196,6 +429,11 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       ),
       body: Column(
         children: [
+          if (_hasSession)
+            _ChatSessionEndBar(
+              sessionId: widget.seId!,
+              onEnd: _confirmEndSession,
+            ),
           Expanded(
               child: messagesAsync.when(
                 loading: () => const Center(
@@ -308,7 +546,59 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
               color: const Color(0xFFF8F9FA),
               child: SafeArea(
                 top: false,
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_pendingImages.isNotEmpty) ...[
+                      SizedBox(
+                        height: 88,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _pendingImages.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final file = _pendingImages[index];
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    file,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() => _pendingImages.removeAt(index));
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
@@ -322,7 +612,10 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.add, color: Colors.black54),
-                              onPressed: () {},
+                              onPressed:
+                                  (_sending || _sendingImage)
+                                      ? null
+                                      : _pickImages,
                             ),
                             Expanded(
                               child: TextField(
@@ -347,18 +640,27 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                             Padding(
                               padding: const EdgeInsets.all(4.0),
                               child: GestureDetector(
-                                onTap: _sending ? null : _send,
+                                onTap: (_sending || _sendingImage)
+                                    ? null
+                                    : _onSendPressed,
                                 child: Container(
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    gradient: _sending ? null : const LinearGradient(
-                                      colors: [Color(0xFF8B5CF6), Color(0xFFB83280)],
-                                    ),
-                                    color: _sending ? AppColors.textMuted : null,
+                                    gradient: (_sending || _sendingImage)
+                                        ? null
+                                        : const LinearGradient(
+                                            colors: [
+                                              Color(0xFF9B3366),
+                                              Color(0xFFB83280),
+                                            ],
+                                          ),
+                                    color: (_sending || _sendingImage)
+                                        ? AppColors.textMuted
+                                        : null,
                                   ),
-                                  child: _sending
+                                  child: (_sending || _sendingImage)
                                       ? const Padding(
                                           padding: EdgeInsets.all(12.0),
                                           child: CircularProgressIndicator(
@@ -366,8 +668,11 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                                             color: Colors.white,
                                           ),
                                         )
-                                      : const Icon(
-                                          Icons.send,
+                                      : Icon(
+                                          _pendingImages.isNotEmpty &&
+                                                  _msgCtrl.text.trim().isEmpty
+                                              ? Icons.image
+                                              : Icons.send,
                                           color: Colors.white,
                                           size: 18,
                                         ),
@@ -380,7 +685,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                     ),
                   ],
                 ),
-              ),
+                      ],
+                    ),
+                  ),
             ),
           ],
         ),
@@ -430,7 +737,7 @@ class _MessageBubble extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   gradient: isMe ? const LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFFB83280)],
+                    colors: [Color(0xFF9B3366), Color(0xFFB83280)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ) : null,
@@ -544,6 +851,60 @@ class _RevealIn extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+class _ChatSessionEndBar extends ConsumerWidget {
+  final String sessionId;
+  final VoidCallback onEnd;
+
+  const _ChatSessionEndBar({
+    required this.sessionId,
+    required this.onEnd,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
+    return Material(
+      color: AppColors.error,
+      child: SafeArea(
+        bottom: false,
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '#$sessionId',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.manrope(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onEnd,
+                icon: const Icon(Icons.stop_circle_outlined, color: Colors.white, size: 18),
+                label: Text(
+                  t.endSession,
+                  style: GoogleFonts.manrope(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

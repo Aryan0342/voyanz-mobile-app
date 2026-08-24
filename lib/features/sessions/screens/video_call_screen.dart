@@ -11,10 +11,12 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/video_token.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 class VideoCallScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -31,12 +33,16 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   Timer? _elapsedTimer;
   late final Map<String, WebSocketEventHandler> _webSocketHandlers;
   late final String _connectionId;
+  late final WebSocketService _webSocketService;
 
   Duration _elapsed = Duration.zero;
   bool _sessionEndedHandled = false;
   bool _heartbeatActive = false;
   bool _leaving = false;
   bool _disposing = false;
+  // WEBSOCKET §5.6/§5.7: customers announce Agora channel join/leave
+  // for group sessions (ap_id set).
+  bool _groupJoinAnnounced = false;
 
   RtcEngine? _engine;
   bool _engineInitializing = false;
@@ -47,6 +53,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
 
   bool _micEnabled = true;
   bool _cameraEnabled = true;
+  String? _remoteVideoDiagnostics;
   ConnectionStateType? _connectionState;
   String? _connectionError;
 
@@ -95,6 +102,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
       'participant_video_disabled': _handleParticipantVideoDisabled,
       'sessions_updated': _handleSessionsUpdated,
     };
+    _webSocketService = ref.read(webSocketServiceProvider);
     _registerWebSocketHandlers();
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       unawaited(() async {
@@ -118,6 +126,11 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     _unregisterWebSocketHandlers();
     _heartbeatTimer?.cancel();
     _elapsedTimer?.cancel();
+    // Safety net: if we announced a group join but never exited through
+    // _endCallAndExit, tell the server we left the channel.
+    if (_groupJoinAnnounced) {
+      _announceGroupLeft();
+    }
     unawaited(_disposeEngine());
     super.dispose();
   }
@@ -165,6 +178,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
               _connectionError = null;
             });
             _heartbeatActive = true;
+            unawaited(_announceGroupJoinIfNeeded());
           },
           onUserJoined: (connection, remoteUid, elapsed) {
             if (!mounted) return;
@@ -184,6 +198,18 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
             if (!mounted) return;
             setState(() {
               _connectionState = state;
+            });
+          },
+          onRemoteVideoStateChanged:
+              (connection, remoteUid, state, reason, elapsed) {
+            if (!mounted) return;
+            final ok =
+                state == RemoteVideoState.remoteVideoStateDecoding ||
+                state == RemoteVideoState.remoteVideoStateStarting;
+            setState(() {
+              _remoteVideoDiagnostics = ok
+                  ? null
+                  : 'remote video: ${state.name} (${reason.name})';
             });
           },
           onError: (err, msg) {
@@ -211,6 +237,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
         options: const ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           channelProfile: ChannelProfileType.channelProfileCommunication,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          autoSubscribeVideo: true,
         ),
       );
 
@@ -304,6 +333,37 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     });
   }
 
+  /// WEBSOCKET §5.6: after the customer joins the Agora channel of a group
+  /// session (ap_id set), announce it so the host/back-office can track it.
+  Future<void> _announceGroupJoinIfNeeded() async {
+    if (_groupJoinAnnounced || _leaving) return;
+    try {
+      final user = ref.read(authStateProvider).valueOrNull;
+      if (user == null || user.isProfessional) return;
+
+      final status = await ref
+          .read(sessionsRepositoryProvider)
+          .getSessionStatus(widget.seId);
+      if (_groupJoinAnnounced || _leaving || !mounted) return;
+      if (status.apId == null) return; // 1-to-1 session — no announcement.
+
+      _groupJoinAnnounced = true;
+      _webSocketService.send('session_group_client_joined', {
+        'se_id': widget.seId,
+      });
+    } catch (_) {
+      // Status lookup failed — treat as non-fatal.
+    }
+  }
+
+  void _announceGroupLeft() {
+    if (!_groupJoinAnnounced) return;
+    _groupJoinAnnounced = false;
+    _webSocketService.send('session_group_client_left', {
+      'se_id': widget.seId,
+    });
+  }
+
   Future<void> _endCallAndExit({bool notifyServer = true}) async {
     if (_leaving) return;
     _leaving = true;
@@ -320,28 +380,42 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
               : 'customer',
         });
       }
+    }
 
+    // WEBSOCKET §5.7: voluntary leave from a group session channel.
+    _announceGroupLeft();
+
+    if (notifyServer) {
       ref.read(webSocketServiceProvider).send('session_stop', {
         'se_id': widget.seId,
       });
     }
+
+    // PAYMENT Q12: billing is computed when the session closes, so the
+    // wallet must be refreshed after completion.
+    _refreshWalletAfterSessionEnd();
 
     await _disposeEngine();
     if (!mounted) return;
     Navigator.of(context).pop();
   }
 
+  void _refreshWalletAfterSessionEnd() {
+    try {
+      ref.invalidate(walletLiveBalanceProvider);
+      ref.invalidate(walletHistoryProvider);
+    } catch (_) {}
+  }
+
   void _registerWebSocketHandlers() {
-    final ws = ref.read(webSocketServiceProvider);
     for (final entry in _webSocketHandlers.entries) {
-      ws.on(entry.key, entry.value);
+      _webSocketService.on(entry.key, entry.value);
     }
   }
 
   void _unregisterWebSocketHandlers() {
-    final ws = ref.read(webSocketServiceProvider);
     for (final entry in _webSocketHandlers.entries) {
-      ws.off(entry.key, entry.value);
+      _webSocketService.off(entry.key, entry.value);
     }
   }
 
@@ -651,7 +725,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    OutlinedButton(
+                    GradientButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text(t.goBack),
                     ),
@@ -683,12 +757,9 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back_ios_new,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
+                        VoyanzAppBarIconButton(
+                          icon: Icons.arrow_back_ios_new,
+                          iconSize: 18,
                           onPressed: () {
                             unawaited(_endCallAndExit());
                           },
@@ -735,6 +806,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                     statusAsync: liveStatusAsync,
                     t: t,
                     isProfessional: isProfessional,
+                    remoteJoined: _remoteUid != null,
                   ),
                   Expanded(
                     child: Padding(
@@ -799,6 +871,29 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
                                 ),
                               ),
                             ),
+                            if (_remoteVideoDiagnostics != null &&
+                                _remoteVideoDiagnostics!.isNotEmpty)
+                              Positioned(
+                                left: 14,
+                                top: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black87,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    _remoteVideoDiagnostics!,
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -930,11 +1025,13 @@ class _SessionStatusBanner extends StatelessWidget {
   final AsyncValue<SessionStatus> statusAsync;
   final AppTranslations t;
   final bool isProfessional;
+  final bool remoteJoined;
 
   const _SessionStatusBanner({
     required this.statusAsync,
     required this.t,
     required this.isProfessional,
+    this.remoteJoined = false,
   });
 
   @override
@@ -943,8 +1040,15 @@ class _SessionStatusBanner extends StatelessWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (status) {
-        final isGood = status.isInProgress;
-        final color = isGood ? AppColors.success : AppColors.mediumPurple;
+        // Bug #2: only report the session as live/connected once the
+        // professional is actually present (heartbeat) or their video arrived.
+        final isLive =
+            status.isInProgress &&
+            (remoteJoined || status.isProfessionalPresent);
+        final color = isLive ? AppColors.success : AppColors.mediumPurple;
+        final message = isLive
+            ? '${status.localizedLabel(t)}: ${status.localizedMessage(t, isProfessional: isProfessional)}'
+            : t.waitingForJoinTitle(isProfessional: isProfessional);
         return Container(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -959,7 +1063,7 @@ class _SessionStatusBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${status.localizedLabel(t)}: ${status.localizedMessage(t, isProfessional: isProfessional)}',
+                  message,
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

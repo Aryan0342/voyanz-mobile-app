@@ -38,18 +38,20 @@ class WalletDataSource {
     String? code,
   }) async {
     try {
-      final data = <String, dynamic>{'item': item};
-      if (code != null && code.isNotEmpty) data['code'] = code;
+      return await _withRateLimitBackoff(() async {
+        final data = <String, dynamic>{'item': item};
+        if (code != null && code.isNotEmpty) data['code'] = code;
 
-      final response = await _dio.post(
-        ApiEndpoints.stripePaymentIntent,
-        data: data,
-      );
-      final body = response.data;
-      _throwIfApiError(body, fallback: 'Failed to create payment intent');
-      return PaymentIntentResponse.fromJson(
-        body is Map<String, dynamic> ? body : <String, dynamic>{},
-      );
+        final response = await _dio.post(
+          ApiEndpoints.stripePaymentIntent,
+          data: data,
+        );
+        final body = response.data;
+        _throwIfApiError(body, fallback: 'Failed to create payment intent');
+        return PaymentIntentResponse.fromJson(
+          body is Map<String, dynamic> ? body : <String, dynamic>{},
+        );
+      });
     } on DioException catch (e) {
       _checkRateLimit(e);
       _logger.e('Error creating payment intent: $e');
@@ -97,15 +99,17 @@ class WalletDataSource {
     required String type,
   }) async {
     try {
-      final response = await _dio.post(
-        ApiEndpoints.checkBalance,
-        data: {'professionalId': professionalId, 'type': type},
-      );
-      final body = response.data;
-      _throwIfApiError(body, fallback: 'Failed to check balance');
-      return BalanceResponse.fromJson(
-        body is Map<String, dynamic> ? body : <String, dynamic>{},
-      );
+      return await _withRateLimitBackoff(() async {
+        final response = await _dio.post(
+          ApiEndpoints.checkBalance,
+          data: {'professionalId': professionalId, 'type': type},
+        );
+        final body = response.data;
+        _throwIfApiError(body, fallback: 'Failed to check balance');
+        return BalanceResponse.fromJson(
+          body is Map<String, dynamic> ? body : <String, dynamic>{},
+        );
+      });
     } on DioException catch (e) {
       _checkRateLimit(e);
       _logger.e('Error checking balance: $e');
@@ -159,6 +163,24 @@ class WalletDataSource {
       _logger.e('Error checking promo code: $e');
       rethrow;
     }
+  }
+
+  /// PAYMENT doc Q37: `payment-intent` and `check-balance` sit behind the
+  /// `paymentLimiter`. On HTTP 429 retry with exponential backoff
+  /// (1s -> 2s -> 4s) before surfacing a user-facing message.
+  Future<T> _withRateLimitBackoff<T>(Future<T> Function() attempt) async {
+    var delay = const Duration(seconds: 1);
+    for (var attemptIndex = 0; attemptIndex < 3; attemptIndex++) {
+      try {
+        return await attempt();
+      } on DioException catch (e) {
+        if (e.response?.statusCode != 429 || attemptIndex == 2) rethrow;
+      }
+      _logger.w('Rate limited (429), retrying in ${delay.inSeconds}s...');
+      await Future<void>.delayed(delay);
+      delay *= 2;
+    }
+    throw Exception('unreachable');
   }
 
   void _checkRateLimit(DioException e) {

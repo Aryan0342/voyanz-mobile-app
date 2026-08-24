@@ -7,7 +7,7 @@ class ChatRepository {
 
   ChatRepository(this._ds);
 
-  Future<List<ChatGroup>> getGroups() async {
+  Future<List<ChatGroup>> getGroups({String? myCoId, String? myRole}) async {
     if (kUseMockBackend) {
       return const [
         ChatGroup(
@@ -26,7 +26,7 @@ class ChatRepository {
         ),
       ];
     }
-    return _ds.getGroups();
+    return _ds.getGroups(myCoId: myCoId, myRole: myRole);
   }
 
   Future<List<ChatMessage>> getMessages(String chgrId) async {

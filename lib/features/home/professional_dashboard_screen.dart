@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,11 +7,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/utils/ringtone_service.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
+import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/screens/incoming_call_dialog.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
@@ -23,6 +27,8 @@ class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
 
 class _ProfessionalDashboardScreenState
     extends ConsumerState<ProfessionalDashboardScreen> {
+  Timer? _bannerTimer;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +40,7 @@ class _ProfessionalDashboardScreenState
 
   @override
   void dispose() {
+    _bannerTimer?.cancel();
     // Clean up WebSocket when leaving the screen
     // Note: Don't disconnect here; keep it alive for background notifications
     super.dispose();
@@ -50,24 +57,43 @@ class _ProfessionalDashboardScreenState
     final t = ref.watch(translationsProvider);
     final name = _displayName(user, professionalFallback: t.professional);
 
-    // Listen for incoming calls and show dialog
+    // Incoming session handling differs by type:
+    // - phone: the backend routes the call directly, so accept silently.
+    // - video: show the incoming-call dialog and let the pro accept/decline.
+    // - chat:  show a lightweight banner instead of a ringing call modal.
     ref.listen(incomingCallProvider, (previous, next) {
-      if (next != null &&
-          (previous == null || previous.customerId != next.customerId)) {
+      if (next == null) {
+        _stopRingtone();
+        return;
+      }
+      final isNewCall =
+          previous == null || previous.customerId != next.customerId;
+      if (!isNewCall) return;
+
+      final type = next.type.toLowerCase();
+      if (type == 'phone') {
+        _acceptCallDirect(next);
+        return;
+      }
+
+      _startRingtone();
+      if (type == 'video') {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => const IncomingCallDialog(),
         );
+      } else if (type == 'chat') {
+        _showIncomingChatBanner(context, next);
       }
     });
 
-    // Listen for session started event and navigate to session
+    // Listen for session started events and navigate directly to the session.
     ref.listen(sessionStartedProvider, (previous, next) {
-      if (next != null) {
-        _navigateToSession(context, next);
-        ref.read(sessionStartedProvider.notifier).clear();
-      }
+      if (next == null) return;
+      _stopRingtone();
+      ref.read(sessionStartedProvider.notifier).clear();
+      _navigateToSession(context, next);
     });
 
     return GradientScaffold(
@@ -140,7 +166,10 @@ class _ProfessionalDashboardScreenState
                                 (sum, item) =>
                                     sum +
                                     (double.tryParse(
-                                          item['re_rating']?.toString() ?? '',
+                                          (item['rv_note'] ??
+                                                  item['re_rating'] ??
+                                                  '')
+                                              .toString(),
                                         ) ??
                                         0),
                               );
@@ -173,10 +202,10 @@ class _ProfessionalDashboardScreenState
                     value: historyAsync.when(
                       data: (items) {
                         final upcoming = _validSessions(items).where((s) {
-                          final status = (s['se_status']?.toString() ?? '')
-                              .toLowerCase();
+                          final status = _sessionStatus(s).toLowerCase();
                           return status == 'pending' ||
                               status == 'calling' ||
+                              status == 'accepted' ||
                               status == 'inprogress';
                         }).length;
                         return '$upcoming';
@@ -252,44 +281,64 @@ class _ProfessionalDashboardScreenState
                   );
                 }
 
-                final validItems = _validSessions(items).take(5).toList();
+                final validItems = _validSessions(items).toList()
+                  ..sort(_compareSessionsNewestFirst);
+                final recentItems = validItems.take(5).toList();
 
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, idx) {
-                    final session = validItems[idx];
+                    if (idx >= recentItems.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final session = recentItems[idx];
                     final clientName = _clientName(
                       session,
                       unknownFallback: t.unknown,
                     );
-                    final rawType =
-                        (session['se_type'] ?? session['session_type'])
-                            ?.toString() ??
-                        '';
+                    final rawType = _sessionType(session);
                     final sessionType = _localizedDashboardType(rawType, t);
-                    final rawStatus = session['se_status']?.toString() ?? '';
+                    final rawStatus = _sessionStatus(session);
                     final localizedStatus = _localizedDashboardStatus(
                       rawStatus,
                       t,
                     );
-                    final sessionDate =
-                        (session['se_date'] ?? session['session_date'])
-                            ?.toString() ??
-                        '';
+                    final sessionDate = _formatSessionDate(
+                      _sessionValue(session, const [
+                        'se_date',
+                        'session_date',
+                        'date',
+                        'created_at',
+                        'start_at',
+                      ]),
+                    );
+                    final duration = _sessionValue(session, const [
+                      'se_duration',
+                      'duration',
+                      'call_duration',
+                      'timef',
+                    ]);
+                    final price = _sessionValue(session, const [
+                      'totalf',
+                      'pricef',
+                      'price',
+                    ]);
 
-                    final statusColor = rawStatus.toLowerCase() == 'completed'
+                    final statusColor = rawStatus == 'completed'
                         ? AppColors.success
-                        : rawStatus.toLowerCase() == 'cancelled'
+                        : rawStatus == 'cancelled'
                             ? AppColors.error
-                            : AppColors.mediumPurple;
-                    final statusIcon = rawStatus.toLowerCase() == 'completed'
+                            : rawStatus == 'pending'
+                                ? AppColors.warning
+                                : AppColors.mediumPurple;
+                    final statusIcon = rawStatus == 'completed'
                         ? Icons.check_circle_outline
-                        : rawStatus.toLowerCase() == 'cancelled'
+                        : rawStatus == 'cancelled'
                             ? Icons.cancel_outlined
                             : Icons.schedule;
 
-                    final typeIcon = rawType.toLowerCase() == 'phone'
+                    final typeIcon = rawType == 'phone'
                         ? Icons.phone_in_talk_outlined
-                        : rawType.toLowerCase() == 'chat'
+                        : rawType == 'chat'
                             ? Icons.chat_bubble_outline
                             : Icons.videocam_outlined;
 
@@ -379,6 +428,49 @@ class _ProfessionalDashboardScreenState
                                   ],
                                 ),
                               ],
+                              if (duration.isNotEmpty || price.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    if (duration.isNotEmpty) ...[
+                                      const Icon(
+                                        Icons.schedule,
+                                        size: 13,
+                                        color: AppColors.textMuted,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        duration,
+                                        style: GoogleFonts.manrope(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                    if (duration.isNotEmpty &&
+                                        price.isNotEmpty) ...[
+                                      const SizedBox(width: 14),
+                                    ],
+                                    if (price.isNotEmpty) ...[
+                                      const Icon(
+                                        Icons.payments_outlined,
+                                        size: 13,
+                                        color: AppColors.textMuted,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        price,
+                                        style: GoogleFonts.manrope(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -430,6 +522,87 @@ class _ProfessionalDashboardScreenState
     );
   }
 
+  /// Accepts a session silently (used for phone, where the backend routes the
+  /// call directly without any accept/reject prompt).
+  void _acceptCallDirect(IncomingCall call) {
+    final ws = ref.read(webSocketServiceProvider);
+    final notifier = ref.read(incomingCallProvider.notifier);
+    notifier.markAccepted();
+    ws.send('session_callaccepted', {
+      'callParams': call.toCallParams(),
+      'isGroupSession': call.appointmentId != null,
+    });
+    notifier.clear();
+  }
+
+  /// Shows a non-blocking banner for an incoming chat session instead of a
+  /// ringing call modal. Auto-dismisses after 20s.
+  void _showIncomingChatBanner(BuildContext context, IncomingCall call) {
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(incomingCallProvider.notifier);
+    final customerName = call.customerFullname ?? 'Customer';
+
+    _bannerTimer?.cancel();
+    _bannerTimer = Timer(const Duration(seconds: 20), () {
+      if (mounted && ref.read(incomingCallProvider) != null) {
+        notifier.clear();
+      }
+      messenger.hideCurrentMaterialBanner();
+    });
+
+    messenger
+      ..hideCurrentMaterialBanner()
+      ..showMaterialBanner(
+        MaterialBanner(
+          backgroundColor: AppColors.surfaceCard,
+          leading: const Icon(
+            Icons.chat_bubble_outline,
+            color: AppColors.mediumPurple,
+            size: 28,
+          ),
+          content: Text(
+            'New chat session from $customerName',
+            style: GoogleFonts.manrope(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _bannerTimer?.cancel();
+                messenger.hideCurrentMaterialBanner();
+                _acceptCallDirect(call);
+              },
+              child: Text(
+                'Open',
+                style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                _bannerTimer?.cancel();
+                messenger.hideCurrentMaterialBanner();
+                notifier.clear();
+              },
+              child: Text(
+                'Dismiss',
+                style: GoogleFonts.manrope(color: AppColors.textMuted),
+              ),
+            ),
+          ],
+        ),
+      );
+  }
+
+  void _startRingtone() {
+    ref.read(ringtoneServiceProvider).start();
+  }
+
+  void _stopRingtone() {
+    ref.read(ringtoneServiceProvider).stop();
+  }
+
   void _navigateToSession(BuildContext context, SessionStartedEvent event) {
     final seId = event.seId;
     final coId = event.coIdCustomer.isNotEmpty
@@ -445,7 +618,7 @@ class _ProfessionalDashboardScreenState
     } else if (seType == 'chat') {
       final chgrId = event.chgrId;
       if (chgrId != null && chgrId.isNotEmpty) {
-        context.push('/chat/$chgrId');
+        context.push('/chat/$chgrId?seId=$seId&coId=$coId');
         return;
       }
       context.push('/session/chat/$seId/$coId');
@@ -602,19 +775,245 @@ String _displayName(
 }
 
 List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
-  return items.whereType<Map<String, dynamic>>().toList();
+  return items.whereType<Map<String, dynamic>>().where((item) {
+    final type =
+        (item['type'] ?? item['se_type'] ?? item['subtype'] ?? '')
+            .toString()
+            .toLowerCase();
+    if (type.isNotEmpty) return type == 'session';
+    return item.containsKey('se_id') ||
+        item.containsKey('se_status') ||
+        item.containsKey('se_type') ||
+        item.containsKey('se_date') ||
+        item.containsKey('id');
+  }).toList();
+}
+
+/// Reads the first non-empty value for any of the given keys, checking the
+/// nested `session` map first (legacy backend shape) then the item itself.
+String _sessionValue(Map<String, dynamic> item, List<String> keys) {
+  final nested = item['session'];
+  final maps = [
+    if (nested is Map<String, dynamic>) nested,
+    item,
+  ];
+  for (final map in maps) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value == null) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+  }
+  return '';
 }
 
 String _clientName(
   Map<String, dynamic> session, {
   String unknownFallback = 'Unknown',
 }) {
-  return (session['co_fullname'] ??
-              session['co_display_name'] ??
-              session['customer_name'] ??
-              session['client_name'])
-          ?.toString() ??
-      unknownFallback;
+  final name = _sessionValue(session, const [
+    'co_fullname',
+    'co_display_name',
+    'customer_name',
+    'client_name',
+    'co_name',
+    'name',
+  ]);
+  if (name.isNotEmpty) return name;
+  final fromTitle = _nameFromTitle(session['title']?.toString() ?? '');
+  return fromTitle.isEmpty ? unknownFallback : fromTitle;
+}
+
+/// Extracts the customer name from backend `title` values. The backend either
+/// returns the customer name directly ("Client QA Ghazi") or a French label
+/// like "Séance vidéo avec Jean Dupont" / "Session with John Smith" — in the
+/// latter case the name is the part after "avec"/"with".
+String _nameFromTitle(String title) {
+  final text = title.trim();
+  if (text.isEmpty) return '';
+  final match =
+      RegExp(r'(?:avec|with)\s+([^:\-–—]+)$', caseSensitive: false)
+          .firstMatch(text);
+  if (match == null) return text;
+  final name = match.group(1)?.trim() ?? '';
+  if (name.isEmpty || name.toLowerCase().contains('session')) return text;
+  return name;
+}
+
+String _sessionType(Map<String, dynamic> session) {
+  final raw = _sessionValue(session, const [
+    'se_type',
+    'se_type_label',
+    'session_type',
+    'session_type_label',
+    'subtype',
+    'typecall',
+    'type',
+    'se_mode',
+  ]);
+  final normalized = normalizeSessionType(raw);
+  return normalized ?? raw.toLowerCase();
+}
+
+String _sessionStatus(Map<String, dynamic> session) {
+  final raw = _sessionValue(session, const [
+    'se_status',
+    'seStatus',
+    'session_status',
+    'status',
+    'state',
+    'se_state',
+  ]);
+  var normalized = _canonicalStatus(raw);
+  if (_isKnownHistoryStatus(normalized)) return normalized;
+
+  final duration = _sessionValue(session, const [
+    'se_duration',
+    'duration',
+    'call_duration',
+    'timef',
+  ]);
+  final endedAt = _sessionValue(session, const [
+    'ended_at',
+    'end_at',
+    'se_end_at',
+  ]);
+  final isEnded = session['is_ended'] == true || session['ended'] == true;
+  final date = _sessionValue(session, const [
+    'se_date',
+    'date',
+    'created_at',
+    'start_at',
+  ]);
+  final type = (session['type'] ?? session['subtype'] ?? '')
+      .toString()
+      .toLowerCase();
+  final price = (session['pricef'] ?? session['price'] ?? session['totalf'] ?? '')
+      .toString();
+
+  if (isEnded ||
+      endedAt.isNotEmpty ||
+      (duration.isNotEmpty && duration != '--') ||
+      (type == 'session' && date.isNotEmpty) ||
+      (type == 'session' && price.startsWith('-'))) {
+    return 'completed';
+  }
+  return normalized.isEmpty ? 'pending' : normalized;
+}
+
+String _canonicalStatus(String value) {
+  if (value.isEmpty) return '';
+
+  final raw = value.toLowerCase().trim();
+  final compact = raw
+      .replaceAll(RegExp(r'[\s_\-]+'), '')
+      .replaceAll('é', 'e')
+      .replaceAll('è', 'e')
+      .replaceAll('ê', 'e')
+      .replaceAll('ë', 'e')
+      .replaceAll('à', 'a')
+      .replaceAll('â', 'a')
+      .replaceAll('î', 'i')
+      .replaceAll('ï', 'i')
+      .replaceAll('ô', 'o')
+      .replaceAll('ö', 'o')
+      .replaceAll('ù', 'u')
+      .replaceAll('û', 'u')
+      .replaceAll('ü', 'u');
+
+  if (compact == 'completed' ||
+      compact == 'complete' ||
+      compact == 'done' ||
+      compact == 'finished' ||
+      compact == 'close' ||
+      compact == 'closed' ||
+      compact == 'success' ||
+      compact == 'terminee' ||
+      compact == 'termine') {
+    return 'completed';
+  }
+  if (compact == 'cancelled' ||
+      compact == 'canceled' ||
+      compact == 'rejected' ||
+      compact == 'annulee' ||
+      compact == 'annule') {
+    return 'cancelled';
+  }
+  if (compact == 'pending' ||
+      compact == 'waiting' ||
+      compact == 'queued' ||
+      compact == 'enattente') {
+    return 'pending';
+  }
+  if (compact == 'inprogress' ||
+      compact == 'active' ||
+      compact == 'ongoing' ||
+      compact == 'encours') {
+    return 'inprogress';
+  }
+  if (compact == 'calling' || compact == 'appelencours') return 'calling';
+  if (compact == 'accepted' || compact == 'acceptee' || compact == 'accepte') {
+    return 'accepted';
+  }
+  return compact;
+}
+
+bool _isKnownHistoryStatus(String status) {
+  return status == 'completed' ||
+      status == 'cancelled' ||
+      status == 'canceled' ||
+      status == 'pending' ||
+      status == 'accepted' ||
+      status == 'calling' ||
+      status == 'inprogress';
+}
+
+String _formatSessionDate(String raw) {
+  if (raw.isEmpty) return raw;
+  final normalized = raw.replaceFirst(' ', 'T');
+  final parsed = DateTime.tryParse(normalized);
+  if (parsed == null) return raw;
+  final mm = parsed.month.toString().padLeft(2, '0');
+  final dd = parsed.day.toString().padLeft(2, '0');
+  final hh = parsed.hour.toString().padLeft(2, '0');
+  final min = parsed.minute.toString().padLeft(2, '0');
+  return '${parsed.year}-$mm-$dd $hh:$min';
+}
+
+DateTime? _parseSessionDateTime(String raw) {
+  if (raw.isEmpty) return null;
+  return DateTime.tryParse(raw.replaceFirst(' ', 'T'));
+}
+
+/// Sort sessions by their date/time, newest first, so the Recent Sessions
+/// section always shows the latest consultations regardless of API ordering.
+int _compareSessionsNewestFirst(
+  Map<String, dynamic> a,
+  Map<String, dynamic> b,
+) {
+  final da = _parseSessionDateTime(
+    _sessionValue(a, const [
+      'se_date',
+      'session_date',
+      'date',
+      'created_at',
+      'start_at',
+    ]),
+  );
+  final db = _parseSessionDateTime(
+    _sessionValue(b, const [
+      'se_date',
+      'session_date',
+      'date',
+      'created_at',
+      'start_at',
+    ]),
+  );
+  if (da != null && db != null) return db.compareTo(da);
+  if (da != null) return -1;
+  if (db != null) return 1;
+  return 0;
 }
 
 String _localizedDashboardType(String type, dynamic t) {
@@ -635,11 +1034,18 @@ String _localizedDashboardStatus(String status, dynamic t) {
     case 'completed':
       return t.completed;
     case 'cancelled':
+    case 'canceled':
       return t.cancelled;
     case 'pending':
       return t.pending;
+    case 'accepted':
+      return t.sessionStatusAcceptedLabel;
+    case 'calling':
+      return t.sessionStatusCallingLabel;
+    case 'inprogress':
+      return t.sessionStatusInProgressLabel;
     default:
-      return status;
+      return status.isEmpty ? t.unknown : status;
   }
 }
 

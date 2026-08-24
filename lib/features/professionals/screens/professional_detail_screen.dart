@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -16,6 +19,7 @@ import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 String? _resolveImageUrl(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
@@ -96,57 +100,25 @@ class _ProfessionalDetailScreenState
       _favoriteController.reverse();
     });
 
-    try {
-      await ref
-          .read(professionalsRepositoryProvider)
-          .setProfessionalFavorite(coId, nextValue);
-
-      ref.invalidate(professionalsListProvider);
-      ref.invalidate(professionalDetailProvider(widget.coId));
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            nextValue
-                ? ref.read(translationsProvider).addedFavorites
-                : ref.read(translationsProvider).removedFavorites,
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: nextValue
-              ? AppColors.rosePink
-              : AppColors.mediumPurple,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          nextValue
+              ? ref.read(translationsProvider).addedFavorites
+              : ref.read(translationsProvider).removedFavorites,
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
         ),
-      );
-    } catch (_) {
-      setState(() {
-        _isFavorite = currentlyFavorite;
-      });
-      ref
-          .read(favoriteProfessionalIdsProvider.notifier)
-          .setFavorite(coId, currentlyFavorite);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(translationsProvider).couldNotUpdateFavorite,
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+        backgroundColor: nextValue
+            ? AppColors.rosePink
+            : AppColors.mediumPurple,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-      );
-    }
+      ),
+    );
   }
 
   void _bookSession(BuildContext context, dynamic pro) {
@@ -220,6 +192,25 @@ class _ProfessionalDetailScreenState
         message.contains('take an appointment');
   }
 
+  /// Ends a stale/ghost session (wrong pro, wrong type, or stuck) so it stops
+  /// blocking new session launches via 409 `session_already_launched`.
+  ///
+  /// The backend exposes no REST endpoint to terminate a session; the app's own
+  /// hang-up path uses the WebSocket `session_stop` event, so reuse it here.
+  Future<void> _forceEndStaleSession(String seId) async {
+    try {
+      final ws = ref.read(webSocketServiceProvider);
+      if (ws.isConnected) {
+        ws.send('session_stop', {'se_id': seId});
+      } else {
+        await ws.connect();
+        ws.send('session_stop', {'se_id': seId});
+      }
+      // Give the backend a moment to mark the session as completed.
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+    } catch (_) {}
+  }
+
   void _startSession(
     BuildContext context,
     Professional pro, {
@@ -228,67 +219,143 @@ class _ProfessionalDetailScreenState
     final t = ref.read(translationsProvider);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          t.startSession,
-          style: GoogleFonts.jost(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.deepIndigo.withValues(alpha: 0.25),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+            ],
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t.chooseSessionType,
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.card,
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+                ),
+                padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.accent,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.mediumPurple.withValues(alpha: 0.3),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.bolt_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                t.startSession,
+                                style: GoogleFonts.jost(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                t.chooseSessionType,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    if (_supportsSessionType('phone', pro, fromList: fromList)) ...[
+                      _SessionTypeOption(
+                        icon: Icons.phone_rounded,
+                        label: t.phoneCall,
+                        price: _sessionTypePrice('phone', pro, fromList: fromList),
+                        onTap: () => _startSessionType(ctx, pro, 'phone'),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    if (_supportsSessionType('video', pro, fromList: fromList)) ...[
+                      _SessionTypeOption(
+                        icon: Icons.videocam_rounded,
+                        label: t.videoCall,
+                        price: _sessionTypePrice('video', pro, fromList: fromList),
+                        onTap: () => _startSessionType(ctx, pro, 'video'),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    if (_supportsSessionType('chat', pro, fromList: fromList)) ...[
+                      _SessionTypeOption(
+                        icon: Icons.chat_bubble_rounded,
+                        label: t.textChat,
+                        price: _sessionTypePrice('chat', pro, fromList: fromList),
+                        onTap: () => _startSessionType(ctx, pro, 'chat'),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: AppColors.surfaceElevated,
+                          foregroundColor: AppColors.textMuted,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: const BorderSide(
+                              color: AppColors.borderSubtle,
+                            ),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          t.cancel,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            if (_supportsSessionType('phone', pro, fromList: fromList)) ...[
-              _SessionTypeOption(
-                icon: Icons.phone,
-                label: t.phoneCall,
-                price: _sessionTypePrice('phone', pro, fromList: fromList),
-                onTap: () => _startSessionType(ctx, pro, 'phone'),
-              ),
-              const SizedBox(height: 8),
-            ],
-            if (_supportsSessionType('video', pro, fromList: fromList)) ...[
-              _SessionTypeOption(
-                icon: Icons.videocam,
-                label: t.videoCall,
-                price: _sessionTypePrice('video', pro, fromList: fromList),
-                onTap: () => _startSessionType(ctx, pro, 'video'),
-              ),
-              const SizedBox(height: 8),
-            ],
-            if (_supportsSessionType('chat', pro, fromList: fromList)) ...[
-              _SessionTypeOption(
-                icon: Icons.chat_bubble_outline,
-                label: t.textChat,
-                price: _sessionTypePrice('chat', pro, fromList: fromList),
-                onTap: () => _startSessionType(ctx, pro, 'chat'),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              t.cancel,
-              style: GoogleFonts.montserrat(color: AppColors.textMuted),
-            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -315,11 +382,30 @@ class _ProfessionalDetailScreenState
 
     final activeSeId = await _recoverRecentSessionId(
       expectedCoId: pro.coId.toString(),
+      expectedType: normalizedType,
     );
     if (!mounted) return;
     if (activeSeId != null && activeSeId.isNotEmpty) {
       context.push('/session/wait/$normalizedType/$activeSeId/${pro.coId}');
       return;
+    }
+
+    // Pre-session balance gate (POST /web/1.0/check-balance).
+    // If the check itself fails, fall through and let the server gate the call.
+    try {
+      final balance = await ref
+          .read(walletRepositoryProvider)
+          .checkBalance(
+            professionalId: pro.coId.toString(),
+            type: normalizedType,
+          );
+      if (!mounted) return;
+      if (balance.isInsufficient || (!balance.success && balance.error != null)) {
+        _showInsufficientBalanceDialog(context, ref);
+        return;
+      }
+    } catch (_) {
+      // Balance service unreachable — proceed; server still enforces on /call.
     }
 
     try {
@@ -384,11 +470,39 @@ class _ProfessionalDetailScreenState
         String? seId, {
         String? fallbackType,
         String? fallbackChgrId,
+        String? expectedProCoId,
+        String? expectedType,
       }) async {
         if (seId == null || seId.isEmpty) return false;
         final status = await getJoinableStatus(seId);
         if (!mounted) return true;
         if (status == null) return false;
+
+        // Bug #1: never rejoin a session that belongs to a DIFFERENT
+        // professional or is a DIFFERENT type than what the customer asked for.
+        // Such a session is a stale/ghost session (e.g. a phone session with an
+        // AI assistant) that blocks new launches via 409. Force-end it instead
+        // so the caller can create a fresh session with the requested pro.
+        final expectedProId = expectedProCoId?.trim();
+        final normalizedExpectedType = normalizeSessionType(expectedType);
+        final existingProId = status.professionalCoId?.trim();
+        final existingType = normalizeSessionType(status.sessionType);
+
+        final proMatches = expectedProId == null ||
+            expectedProId.isEmpty ||
+            existingProId == null ||
+            existingProId.isEmpty ||
+            existingProId == expectedProId;
+        final typeMatches = normalizedExpectedType == null ||
+            existingType == null ||
+            existingType == normalizedExpectedType;
+
+        if (!proMatches || !typeMatches) {
+          await _forceEndStaleSession(seId);
+          if (!mounted) return false;
+          return false;
+        }
+
         openSessionStatus(
           context,
           status,
@@ -405,6 +519,8 @@ class _ProfessionalDetailScreenState
           e.resolvedSessionId,
           fallbackType: e.seType,
           fallbackChgrId: e.chgrId,
+          expectedProCoId: pro.coId.toString(),
+          expectedType: normalizedType,
         )) {
           return;
         }
@@ -413,7 +529,13 @@ class _ProfessionalDetailScreenState
       // Fallback 1: canResume if session ID present (old format, for backward compat)
       if (e.canResume &&
           (e.seStatus == null || _isResumableStatus(e.seStatus))) {
-        if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
+        if (await tryOpenIfJoinable(
+          e.resolvedSessionId,
+          expectedProCoId: pro.coId.toString(),
+          expectedType: normalizedType,
+        )) {
+          return;
+        }
       }
 
       // Fallback 2: Search history if 409 but no details in exception
@@ -422,14 +544,27 @@ class _ProfessionalDetailScreenState
           e.toString().toLowerCase().contains('session_already_launched');
       if (isDuplicateLaunch) {
         if (e.canResume) {
-          if (await tryOpenIfJoinable(e.resolvedSessionId)) return;
+          if (await tryOpenIfJoinable(
+            e.resolvedSessionId,
+            expectedProCoId: pro.coId.toString(),
+            expectedType: normalizedType,
+          )) {
+            return;
+          }
         }
 
         final recoveredSeId = await _recoverRecentSessionId(
           expectedCoId: pro.coId.toString(),
+          expectedType: normalizedType,
         );
         if (!mounted) return;
-        if (await tryOpenIfJoinable(recoveredSeId)) return;
+        if (await tryOpenIfJoinable(
+          recoveredSeId,
+          expectedProCoId: pro.coId.toString(),
+          expectedType: normalizedType,
+        )) {
+          return;
+        }
 
         try {
           final freshLaunch = await ref
@@ -573,7 +708,10 @@ class _ProfessionalDetailScreenState
     );
   }
 
-  Future<String?> _recoverRecentSessionId({String? expectedCoId}) async {
+  Future<String?> _recoverRecentSessionId({
+    String? expectedCoId,
+    String? expectedType,
+  }) async {
     String normalize(String? value) =>
         (value ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
 
@@ -593,6 +731,12 @@ class _ProfessionalDetailScreenState
       final history = await ref.read(customerHistoryProvider.future);
       for (final item in history) {
         if (item is! Map<String, dynamic>) continue;
+
+        // The history payload mixes sessions and invoices; only consider
+        // entries that are actually sessions.
+        final itemType = item['type']?.toString().toLowerCase() ?? '';
+        if (itemType.isNotEmpty && itemType != 'session') continue;
+
         final nestedSession = item['session'];
         final session = nestedSession is Map<String, dynamic>
             ? nestedSession
@@ -635,7 +779,28 @@ class _ProfessionalDetailScreenState
           final liveStatus = await ref
               .read(sessionsRepositoryProvider)
               .getSessionStatus(seId);
-          if (!liveStatus.isTerminal) {
+          if (liveStatus.isTerminal) {
+            continue;
+          }
+
+          // Bug #1: never recover a session that belongs to a different
+          // professional or is a different type than the one requested. The
+          // history payload does not expose `co_id`/`se_status`, so only the
+          // live status can tell us who the session really belongs to.
+          final normalizedExpectedType = normalizeSessionType(expectedType);
+          final liveProId = liveStatus.professionalCoId?.trim();
+          final liveType = normalizeSessionType(liveStatus.sessionType);
+
+          final proMatches = expectedCoId == null ||
+              expectedCoId.isEmpty ||
+              liveProId == null ||
+              liveProId.isEmpty ||
+              liveProId == expectedCoId.trim();
+          final typeMatches = normalizedExpectedType == null ||
+              liveType == null ||
+              liveType == normalizedExpectedType;
+
+          if (proMatches && typeMatches) {
             return seId;
           }
         } catch (_) {
@@ -654,7 +819,7 @@ class _ProfessionalDetailScreenState
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
     final detailAsync = ref.watch(professionalDetailProvider(widget.coId));
-    final listAsync = ref.watch(professionalsListProvider);
+    final listAsync = ref.watch(professionalsListProvider(''));
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
     final isMarkedFavorite = favoriteIds.contains(widget.coId) || _isFavorite;
 
@@ -690,30 +855,43 @@ class _ProfessionalDetailScreenState
         error: (e, _) => Container(
           decoration: const BoxDecoration(gradient: AppGradients.background),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.rosePink,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  t.unableLoadProfile,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.rosePink,
+                    size: 48,
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'An error occurred. Please try again.',
-                  style: TextStyle(color: AppColors.textSecondary),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    t.unableLoadProfile,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SelectableText(
+                    e.toString(),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      color: AppColors.rosePink,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  GradientButton(
+                    onPressed: () {
+                      ref.invalidate(professionalDetailProvider(widget.coId));
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -745,6 +923,42 @@ class _ProfessionalDetailScreenState
           final availabilityLabel = effectiveAvailableNow
               ? t.availableNow
               : (effectiveAvailabilityText ?? t.noAvailabilityAtMoment);
+
+          // Stats shown only from real data (no fake placeholders).
+          final statCells = <Widget>[];
+          if (pro.rating != null && pro.rating! > 0) {
+            statCells.add(
+              _StatCell(
+                value: pro.rating!.toStringAsFixed(1),
+                sub: t.reviews,
+                icon: Icons.star_rounded,
+                iconColor: AppColors.gold,
+                hasDivider: false,
+              ),
+            );
+          }
+          if (pro.experienceYears != null && pro.experienceYears! > 0) {
+            statCells.add(
+              _StatCell(
+                value: '${pro.experienceYears}',
+                sub: t.experience,
+                icon: Icons.workspace_premium_outlined,
+                iconColor: AppColors.mediumPurple,
+                hasDivider: statCells.isNotEmpty,
+              ),
+            );
+          }
+          if (pro.languages.isNotEmpty) {
+            statCells.add(
+              _StatCell(
+                value: '${pro.languages.length}',
+                sub: t.languages,
+                icon: Icons.translate_rounded,
+                iconColor: AppColors.magentaRose,
+                hasDivider: statCells.isNotEmpty,
+              ),
+            );
+          }
 
           // Initialize favorite status from data
           if (!_isFavorite && pro.isFavorite) {
@@ -935,8 +1149,8 @@ class _ProfessionalDetailScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── Stats Row (Rating / Reviews / Response) ──
-                          if (pro.rating != null && pro.rating! > 0)
+                          // ── Stats Row (Rating / Experience / Languages) ──
+                          if (statCells.isNotEmpty)
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -953,33 +1167,9 @@ class _ProfessionalDetailScreenState
                                   width: 1,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  _StatCell(
-                                    value: pro.rating!.toStringAsFixed(1),
-                                    sub: 'Reviews',
-                                    icon: Icons.star_rounded,
-                                    iconColor: AppColors.gold,
-                                    hasDivider: false,
-                                  ),
-                                  _StatCell(
-                                    value: '8+ Yrs',
-                                    sub: 'Experience',
-                                    icon: Icons.workspace_premium_outlined,
-                                    iconColor: AppColors.mediumPurple,
-                                    hasDivider: true,
-                                  ),
-                                  _StatCell(
-                                    value: '15 min',
-                                    sub: 'Response',
-                                    icon: Icons.bolt_outlined,
-                                    iconColor: AppColors.magentaRose,
-                                    hasDivider: true,
-                                  ),
-                                ],
-                              ),
+                              child: Row(children: statCells),
                             ),
-                          if (pro.rating != null && pro.rating! > 0)
+                          if (statCells.isNotEmpty)
                             const SizedBox(height: 20),
 
                           // ── Availability Banner ──
@@ -1042,7 +1232,7 @@ class _ProfessionalDetailScreenState
                           // ── EXPERTISE Section ──
                           if (pro.specialty != null && pro.specialty!.isNotEmpty) ...[
                             Text(
-                              'EXPERTISE',
+                              t.expertise.toUpperCase(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -1694,15 +1884,21 @@ class _SessionTypeOption extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white.withValues(alpha: 0.75),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: AppColors.textMuted.withValues(alpha: 0.2),
-            width: 1,
+            color: AppColors.mediumPurple.withValues(alpha: 0.18),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.mediumPurple.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -1710,14 +1906,17 @@ class _SessionTypeOption extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.online.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.online.withValues(alpha: 0.3),
-                  width: 1.5,
-                ),
+                gradient: AppGradients.accent,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.mediumPurple.withValues(alpha: 0.28),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: AppColors.online, size: 24),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1727,17 +1926,17 @@ class _SessionTypeOption extends StatelessWidget {
                   Text(
                     label,
                     style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   if (priceText != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       priceText,
                       style: GoogleFonts.montserrat(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textMuted,
                       ),
@@ -1746,10 +1945,18 @@ class _SessionTypeOption extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.textMuted.withValues(alpha: 0.5),
-              size: 16,
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: AppColors.mediumPurple,
+                size: 15,
+              ),
             ),
           ],
         ),

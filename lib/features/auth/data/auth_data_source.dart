@@ -24,6 +24,19 @@ class AuthDataSource {
     }
   }
 
+  Future<void> forgetPassword({required String email}) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.forgetPassword,
+        data: {'co_email1': email},
+      );
+      final body = _asMap(response.data);
+      _throwIfApiError(body);
+    } on DioException catch (e) {
+      throw _readableDioException(e, 'Password reset request failed');
+    }
+  }
+
   Future<LoginResponse> signUp({required Map<String, dynamic> body}) async {
     try {
       final response = await _dio.post(ApiEndpoints.createAccount, data: body);

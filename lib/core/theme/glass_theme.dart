@@ -9,9 +9,9 @@ abstract final class GlassTheme {
   static const Color glassOverlay = Color(0xECFFFFFF);
   static const Color glassSubtle = Color(0xE6FFFFFF);
 
-  static const Color purpleLight = Color(0xFFA78BFA);
-  static const Color purpleMid = Color(0xFF9B61FF);
-  static const Color purpleDark = Color(0xFF7B61FF);
+  static const Color purpleLight = Color(0xFFC2879F);
+  static const Color purpleMid = Color(0xFF9B3366);
+  static const Color purpleDark = Color(0xFF5C2B63);
 
   static const Color textPrimary = Color(0xFF111111);
   static const Color textSecondary = Color(0xFF666666);
@@ -21,7 +21,7 @@ abstract final class GlassTheme {
   static const Color borderLight = Color(0x14000000);
   static const Color borderGlass = Color(0x24FFFFFF);
   static const Color divider = Color(0x0F000000);
-  static const Color shadowGlow = Color(0x337B61FF);
+  static const Color shadowGlow = Color(0x335C2B63);
 
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
@@ -50,7 +50,7 @@ abstract final class GlassTheme {
   );
 
   static const RadialGradient purpleRadialGradient = RadialGradient(
-    colors: [Color(0x809B61FF), Color(0x007B61FF)],
+    colors: [Color(0x809B3366), Color(0x005C2B63)],
     center: Alignment.center,
     radius: 0.85,
   );

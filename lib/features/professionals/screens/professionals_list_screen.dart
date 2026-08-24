@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,6 +52,8 @@ class ProfessionalsListScreen extends ConsumerStatefulWidget {
 class _ProfessionalsListScreenState
     extends ConsumerState<ProfessionalsListScreen> {
   final _searchCtrl = TextEditingController();
+  Timer? _searchDebounce;
+  String _serverSearchQuery = '';
   String _selectedSpecialty = 'All';
   String _selectedType = 'All';
   String _selectedExperience = 'All';
@@ -59,7 +63,26 @@ class _ProfessionalsListScreenState
   final Set<String> _selectedSessionTypes = <String>{};
 
   @override
+  void initState() {
+    super.initState();
+    // Debounced server-side search (API_REST §10.1 `search` param).
+    _searchCtrl.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final query = _searchCtrl.text.trim();
+      if (query == _serverSearchQuery) return;
+      setState(() => _serverSearchQuery = query);
+    });
+  }
+
+  @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchCtrl.removeListener(_onSearchChanged);
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -227,7 +250,9 @@ class _ProfessionalsListScreenState
 
   @override
   Widget build(BuildContext context) {
-    final professionalsAsync = ref.watch(professionalsListProvider);
+    final professionalsAsync = ref.watch(
+      professionalsListProvider(_serverSearchQuery),
+    );
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
 
     final t = ref.watch(translationsProvider);
@@ -274,7 +299,8 @@ class _ProfessionalsListScreenState
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton.icon(
-                  onPressed: () => ref.refresh(professionalsListProvider),
+                  onPressed: () =>
+                      ref.refresh(professionalsListProvider(_serverSearchQuery)),
                   icon: const Icon(Icons.refresh),
                   label: Text(t.tryAgain),
                 ),
@@ -348,8 +374,8 @@ class _ProfessionalsListScreenState
           return RefreshIndicator(
             color: AppColors.mediumPurple,
             onRefresh: () async {
-              ref.invalidate(professionalsListProvider);
-              await ref.read(professionalsListProvider.future);
+              ref.invalidate(professionalsListProvider(_serverSearchQuery));
+              await ref.read(professionalsListProvider(_serverSearchQuery).future);
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

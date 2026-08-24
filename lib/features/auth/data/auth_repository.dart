@@ -20,6 +20,14 @@ class AuthRepository {
     return _persistAndHydrate(response);
   }
 
+  Future<void> forgetPassword({required String email}) async {
+    if (kUseMockBackend) {
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      return;
+    }
+    return _dataSource.forgetPassword(email: email);
+  }
+
   Future<LoginResponse> signUp({
     required Map<String, dynamic> body,
     required String email,
@@ -31,7 +39,9 @@ class AuthRepository {
 
     final response = await _dataSource.signUp(body: body);
     if (response.accessToken.isEmpty) {
-      return login(email: email, password: password);
+      // Account created (server returns 200 with `err: null` but no token).
+      // Do not auto-login here: the user must sign in on the login screen.
+      return response;
     }
 
     return _persistAndHydrate(response);

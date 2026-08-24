@@ -7,13 +7,14 @@ class ChatDataSource {
 
   ChatDataSource(this._dio);
 
-  Future<List<ChatGroup>> getGroups() async {
+  Future<List<ChatGroup>> getGroups({String? myCoId, String? myRole}) async {
     final response = await _dio.get(ApiEndpoints.chatGroups);
     final body = response.data as Map<String, dynamic>;
     _throwIfApiError(body);
     final list = body['data'] as List? ?? [];
     return list
-        .map((e) => ChatGroup.fromJson(e as Map<String, dynamic>))
+        .map((e) =>
+            ChatGroup.fromJson(e as Map<String, dynamic>, myCoId: myCoId, myRole: myRole))
         .toList();
   }
 

@@ -208,7 +208,11 @@ class Professional {
   }
 
   factory Professional.fromJson(Map<String, dynamic> json) {
-    final firstName = _readString(json, ['co_first_name', 'co_firstname']);
+    final firstName = _readString(json, [
+      'co_first_name',
+      'co_firstname',
+      'co_fullname',
+    ]);
     final lastName = _readString(json, [
       'co_last_name',
       'co_name',
@@ -375,6 +379,7 @@ class ProfessionalDetail extends Professional {
       firstName: Professional._readString(json, [
         'co_first_name',
         'co_firstname',
+        'co_fullname',
       ]),
       lastName: Professional._readString(json, [
         'co_last_name',

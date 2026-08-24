@@ -100,12 +100,12 @@ class _CrystalHomeScreenState extends State<CrystalHomeScreen> {
                       GlassStatCard(
                         value: '24 ms',
                         label: 'Temps perçu',
-                        accent: Color(0xFF6366F1),
+                        accent: Color(0xFF9B3366),
                       ),
                       GlassStatCard(
                         value: '4.9',
                         label: 'Note moyenne',
-                        accent: Color(0xFF8B5CF6),
+                        accent: Color(0xFF5C2B63),
                       ),
                     ],
                   ),
@@ -226,7 +226,7 @@ class _CrystalHomeScreenState extends State<CrystalHomeScreen> {
       'Exploration d’une interface fluide pour attirer l’attention dès le premier écran.',
       'Brand',
       LinearGradient(
-        colors: [Color(0xFF7B61FF), Color(0xFFA78BFA)],
+        colors: [Color(0xFF5C2B63), Color(0xFF9B3366)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -236,7 +236,7 @@ class _CrystalHomeScreenState extends State<CrystalHomeScreen> {
       'Cartes, overlays et hiérarchie visuelle pour une expérience plus premium.',
       'UX',
       LinearGradient(
-        colors: [Color(0xFF1D4ED8), Color(0xFF7C3AED)],
+        colors: [Color(0xFF1D193E), Color(0xFF9B3366)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -246,7 +246,7 @@ class _CrystalHomeScreenState extends State<CrystalHomeScreen> {
       'Un tableau de bord doux, lisible et orienté contenu plutôt que décor.',
       'Product',
       LinearGradient(
-        colors: [Color(0xFF0F172A), Color(0xFF8B5CF6)],
+        colors: [Color(0xFF1D193E), Color(0xFF9B3366)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),

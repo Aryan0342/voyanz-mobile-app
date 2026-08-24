@@ -70,7 +70,11 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/chat')) return 1;
     if (location.startsWith('/history')) return 2;
     if (location.startsWith('/reviews')) return 3;
-    if (location.startsWith('/pricing') || location.startsWith('/profile')) {
+    if (location.startsWith('/pricing') ||
+        location.startsWith('/profile') ||
+        location.startsWith('/support') ||
+        location.startsWith('/privacy') ||
+        location.startsWith('/about')) {
       return 4;
     }
     return 0;
@@ -83,7 +87,10 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/clients')) return 3;
     if (location.startsWith('/profile') ||
         location.startsWith('/professional-account') ||
-        location.startsWith('/wallet')) return 4;
+        location.startsWith('/wallet') ||
+        location.startsWith('/support') ||
+        location.startsWith('/privacy') ||
+        location.startsWith('/about')) return 4;
     return 0; // dashboard (home)
   }
 
@@ -246,8 +253,21 @@ class HomeShell extends ConsumerWidget {
 }
 
 /// Profile / Account screen.
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(walletLiveBalanceProvider);
+    });
+  }
 
   Future<void> _showEditProfileDialog(
     BuildContext context,
@@ -258,6 +278,7 @@ class ProfileScreen extends ConsumerWidget {
     final firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
     final lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
     final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final siretCtrl = TextEditingController(text: user?.siret ?? '');
     final descCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -299,6 +320,11 @@ class ProfileScreen extends ConsumerWidget {
                 if (user?.isProfessional == true) ...[
                   const SizedBox(height: 12),
                   TextFormField(
+                    controller: siretCtrl,
+                    decoration: InputDecoration(labelText: t.siretNumber),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
                     controller: descCtrl,
                     decoration: InputDecoration(
                       labelText: t.descriptionOptional,
@@ -335,9 +361,12 @@ class ProfileScreen extends ConsumerWidget {
 
     try {
       await ref.read(accountRepositoryProvider).updateAccount(user.coId, {
-        'co_first_name': firstNameCtrl.text.trim(),
-        'co_last_name': lastNameCtrl.text.trim(),
-        'co_mobile': phoneCtrl.text.trim(),
+        'co_firstname': firstNameCtrl.text.trim(),
+        'co_name': lastNameCtrl.text.trim(),
+        'co_mobile1': phoneCtrl.text.trim(),
+        if (user.isProfessional == true &&
+            siretCtrl.text.trim().isNotEmpty)
+          'co_siret': siretCtrl.text.trim(),
       });
 
       if (user.isProfessional == true && descCtrl.text.trim().isNotEmpty) {
@@ -368,10 +397,9 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).valueOrNull;
     final isProfessional = user?.isProfessional ?? false;
-    final agency = ref.watch(agencyProvider);
     final t = ref.watch(translationsProvider);
     final name = '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim();
     final email = user?.email ?? '';
@@ -564,7 +592,9 @@ class ProfileScreen extends ConsumerWidget {
                                 for (final review in reviews) {
                                   final reviewMap =
                                       review as Map<String, dynamic>;
-                                  final rating = reviewMap['re_rating'] as num?;
+                                  final rating =
+                                      reviewMap['rv_note'] as num? ??
+                                      reviewMap['re_rating'] as num?;
                                   if (rating != null) {
                                     totalRating += rating.toDouble();
                                   }
@@ -635,9 +665,10 @@ class ProfileScreen extends ConsumerWidget {
                             loading: () => null,
                             error: (_, __) => null,
                           );
-                          final liveBalance = isProfessional
-                              ? null
-                              : ref.watch(walletLiveBalanceProvider).valueOrNull;
+                          final liveBalanceAsync = isProfessional
+                              ? const AsyncValue<dynamic>.data(null)
+                              : ref.watch(walletLiveBalanceProvider);
+                          final liveBalance = liveBalanceAsync.valueOrNull;
                           final creditStr = liveBalance != null
                               ? liveBalance.display
                               : _formatEuro(user?.credit ?? credit);
@@ -731,24 +762,6 @@ class ProfileScreen extends ConsumerWidget {
                       subtitle: t.updateInfo,
                       onTap: () => _showEditProfileDialog(context, ref, user),
                     ),
-                    const SizedBox(height: 10),
-                    _ProfileTile(
-                      icon: Icons.notifications_outlined,
-                      title: t.notifications,
-                      subtitle: t.managePreferences,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              t.notificationSettingsComingSoon,
-                              style: GoogleFonts.montserrat(fontSize: 14),
-                            ),
-                            backgroundColor: AppColors.mediumPurple,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
                     if (user?.isProfessional != true) ...[
                       const SizedBox(height: 10),
                       _ProfileTile(
@@ -801,45 +814,56 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.help_outline,
                       title: t.helpCenter,
                       subtitle: t.faqsGuides,
-                      onTap: () {
-                        _showAboutDialog(
-                          context,
-                          title: t.helpCenter,
-                          content: t.helpCenterContent,
-                        );
-                      },
+                      onTap: () => context.push('/support'),
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.privacy_tip_outlined,
                       title: t.privacyPolicy,
                       subtitle: t.readOurTerms,
-                      onTap: () {
-                        final termsUrl = agency?.termsUrl?.trim();
-                        _showAboutDialog(
-                          context,
-                          title: t.privacyPolicy,
-                          content: (termsUrl != null && termsUrl.isNotEmpty)
-                              ? termsUrl
-                              : t.privacyPolicyContent,
-                        );
-                      },
+                      onTap: () => context.push('/privacy'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.description_outlined,
+                      title: t.termsOfUse,
+                      subtitle: t.readOurTerms,
+                      onTap: () => context.push('/terms'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.receipt_long_outlined,
+                      title: t.termsOfService,
+                      subtitle: t.readOurTerms,
+                      onTap: () => context.push('/service'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.account_balance_outlined,
+                      title: t.legalNotice,
+                      subtitle: t.legalNoticeSubtitle,
+                      onTap: () => context.push('/legal'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.verified_outlined,
+                      title: t.trustQuality,
+                      subtitle: t.trustQualitySubtitle,
+                      onTap: () => context.push('/trust'),
+                    ),
+                    const SizedBox(height: 10),
+                    _ProfileTile(
+                      icon: Icons.mail_outline,
+                      title: t.contactSupport,
+                      subtitle: t.contactSupportSubtitle,
+                      onTap: () => context.push('/contact'),
                     ),
                     const SizedBox(height: 10),
                     _ProfileTile(
                       icon: Icons.info_outline,
                       title: t.aboutVoyanz,
                       subtitle: t.version100,
-                      onTap: () {
-                        final aboutText = agency?.aboutText?.trim();
-                        _showAboutDialog(
-                          context,
-                          title: t.aboutVoyanz,
-                          content: (aboutText != null && aboutText.isNotEmpty)
-                              ? aboutText
-                              : t.aboutVoyanzContent,
-                        );
-                      },
+                      onTap: () => context.push('/about'),
                     ),
                   ],
                 ),
@@ -932,53 +956,6 @@ double _parseDuration(String durationStr) {
   }
 
   return totalMinutes;
-}
-
-/// Show an about dialog with title and content
-void _showAboutDialog(
-  BuildContext context, {
-  required String title,
-  required String content,
-}) {
-  final t = ProviderScope.containerOf(
-    context,
-    listen: false,
-  ).read(translationsProvider);
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.surfaceCard.withValues(alpha: 0.95),
-      title: Text(
-        title,
-        style: GoogleFonts.jost(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-      ),
-      content: Text(
-        content,
-        style: GoogleFonts.montserrat(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-          height: 1.6,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(
-            t.close,
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.mediumPurple,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 class _StatCard extends StatelessWidget {
@@ -1169,6 +1146,8 @@ String? _normalizeSessionType(Map<String, dynamic> item) {
     source['session_type'],
     source['session_type_label'],
     source['typecall'],
+    source['type_call'],
+    source['call_type'],
     source['type'],
     source['se_mode'],
   ];
@@ -1202,15 +1181,39 @@ String? _normalizeSessionTypeValue(dynamic raw) {
   if (text == '2') return 'video';
   if (text == '3') return 'chat';
 
-  if (text.contains('video') || text.contains('visio')) return 'video';
-  if (text.contains('phone') ||
-      text.contains('tel') ||
-      text.contains('audio')) {
+  final clean = text
+      .replaceAll('é', 'e')
+      .replaceAll('è', 'e')
+      .replaceAll('ê', 'e')
+      .replaceAll('ë', 'e')
+      .replaceAll('à', 'a')
+      .replaceAll('â', 'a')
+      .replaceAll('ä', 'a')
+      .replaceAll('î', 'i')
+      .replaceAll('ï', 'i')
+      .replaceAll('ô', 'o')
+      .replaceAll('ö', 'o')
+      .replaceAll('ù', 'u')
+      .replaceAll('û', 'u')
+      .replaceAll('ü', 'u')
+      .replaceAll('ç', 'c');
+
+  if (clean.contains('video') ||
+      clean.contains('visio') ||
+      clean.contains('cam')) {
+    return 'video';
+  }
+  if (clean.contains('phone') ||
+      clean.contains('tel') ||
+      clean.contains('audio') ||
+      clean.contains('voice') ||
+      clean.contains('appel') ||
+      clean.contains('telephone')) {
     return 'phone';
   }
-  if (text.contains('chat') ||
-      text.contains('text') ||
-      text.contains('message')) {
+  if (clean.contains('chat') ||
+      clean.contains('text') ||
+      clean.contains('message')) {
     return 'chat';
   }
 

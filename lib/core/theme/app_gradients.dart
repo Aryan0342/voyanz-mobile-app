@@ -3,6 +3,17 @@ import 'package:voyanz/core/theme/app_colors.dart';
 
 /// Restrained gradients used for brand moments and selected states.
 abstract final class AppGradients {
+  static const brandBackground = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.darkPurple,
+      AppColors.deepIndigo,
+      Color(0xFF9B3366),
+    ],
+    stops: [0.0, 0.05, 1.0],
+  );
+
   static const hero = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -32,7 +43,7 @@ abstract final class AppGradients {
   static const headerTint = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFFFEDF5), Color(0xFFF1EEFF), Color(0x00FFFFFF)],
+    colors: [Color(0xFFF9EAF2), Color(0xFFEDE4EF), Color(0x00FFFFFF)],
     stops: [0.0, 0.58, 1.0],
   );
 
@@ -52,6 +63,6 @@ abstract final class AppGradients {
   static const surfaceGlow = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [Color(0x147C5CE0), Color(0x1010B8C4)],
+    colors: [Color(0x145C2B63), Color(0x109B3366)],
   );
 }

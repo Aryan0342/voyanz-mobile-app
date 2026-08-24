@@ -9,6 +9,7 @@ class User {
   final String? phone;
   final String? avatar;
   final double? credit;
+  final String? siret;
 
   bool get isProfessional => role == 'professional';
 
@@ -21,6 +22,7 @@ class User {
     this.phone,
     this.avatar,
     this.credit,
+    this.siret,
   });
 
   User copyWith({double? credit}) => User(
@@ -32,6 +34,7 @@ class User {
         phone: phone,
         avatar: avatar,
         credit: credit ?? this.credit,
+        siret: siret,
       );
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -64,6 +67,10 @@ class User {
           json['co_mobile'] as String? ??
           json['co_mobile1'] as String?,
       avatar: json['co_avatar'] as String?,
+      siret:
+          json['co_siret'] as String? ??
+          json['co_immatriculation'] as String? ??
+          json['siret'] as String?,
       credit: _parseCredit(json),
     );
   }

@@ -153,9 +153,12 @@ class IncomingCallNotifier extends StateNotifier<IncomingCall?> {
   final WebSocketService _ws;
   late final WebSocketEventHandler _sessionCalledHandler;
 
+  bool _accepted = false;
+
   IncomingCallNotifier(this._ws) : super(null) {
     _sessionCalledHandler = (event) {
       final callParams = event['callParams'] as Map<String, dynamic>? ?? {};
+      _accepted = false;
       state = IncomingCall.fromCallParams(callParams);
     };
     _setupListeners();
@@ -164,6 +167,13 @@ class IncomingCallNotifier extends StateNotifier<IncomingCall?> {
   void _setupListeners() {
     _ws.on('session_called', _sessionCalledHandler);
   }
+
+  /// Whether the current incoming call was explicitly accepted by the user.
+  bool get accepted => _accepted;
+
+  void markAccepted() => _accepted = true;
+
+  void resetAccepted() => _accepted = false;
 
   void clear() {
     state = null;

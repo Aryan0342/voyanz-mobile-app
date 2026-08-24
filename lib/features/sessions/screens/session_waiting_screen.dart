@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -13,6 +14,7 @@ import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 class SessionWaitingScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -47,10 +49,13 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     final t = ref.watch(translationsProvider);
     final isProfessional =
         ref.watch(authStateProvider).valueOrNull?.isProfessional ?? false;
-    final statusAsync = ref.watch(sessionStatusPollingProvider(widget.seId));
+    // Use the live polling provider (continues until terminal) so a freshly
+    // created video session keeps updating while we wait for the professional
+    // to actually join.
+    final statusAsync = ref.watch(sessionStatusLivePollingProvider(widget.seId));
 
     ref.listen<AsyncValue<SessionStatus>>(
-      sessionStatusPollingProvider(widget.seId),
+      sessionStatusLivePollingProvider(widget.seId),
       (previous, next) {
         next.whenOrNull(
           error: (error, _) async {
@@ -71,7 +76,18 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           },
         );
         next.whenData((status) {
-          if (!mounted || _hasNavigated || !status.isActive) return;
+          if (!mounted || _hasNavigated) return;
+          if (!status.isActive) return;
+
+          final resolvedType =
+              normalizeSessionType(status.sessionType) ??
+              normalizeSessionType(widget.type);
+          final isVideo = resolvedType == 'video';
+
+          // Bug #2: for video, only advance to the call screen once the
+          // professional is actually present. A REST-created session is
+          // `inprogress` immediately even though nobody has joined yet.
+          if (isVideo && !status.isProfessionalPresent) return;
 
           _hasNavigated = true;
           _navigateToSession(context, status: status);
@@ -128,7 +144,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           const SizedBox(height: 18),
           ElevatedButton.icon(
             onPressed: () =>
-                ref.invalidate(sessionStatusPollingProvider(widget.seId)),
+                ref.invalidate(sessionStatusLivePollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
             label: Text(t.retry),
           ),
@@ -143,7 +159,16 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     AppTranslations t,
     bool isProfessional,
   ) {
-    final isWaiting = status.isWaiting;
+    // Bug #2: an `inprogress` video session whose professional has NOT joined
+    // yet must be presented as "waiting", not as "session is live / connected".
+    final resolvedType =
+        normalizeSessionType(status.sessionType) ??
+        normalizeSessionType(widget.type);
+    final waitingForPro =
+        resolvedType == 'video' &&
+        status.isInProgress &&
+        !status.isProfessionalPresent;
+    final isWaiting = status.isWaiting || waitingForPro;
     final hasTimedOut =
         isWaiting && DateTime.now().difference(_enteredAt) >= _waitTimeout;
     final elapsed = DateTime.now().difference(_enteredAt);
@@ -159,7 +184,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: _endSessionAndLeave,
               ),
               const Spacer(),
               Container(
@@ -256,18 +281,31 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         Text(
           hasTimedOut
               ? t.sessionWaitTimedOutMessage
+              : waitingForPro
+              ? t.waitingForJoinTitle(isProfessional: isProfessional)
               : status.localizedMessage(t, isProfessional: isProfessional),
           textAlign: TextAlign.center,
           style: GoogleFonts.montserrat(color: AppColors.textSecondary),
         ),
         const Spacer(),
-        if (isWaiting && !hasTimedOut)
+        if (isWaiting && !hasTimedOut) ...[
           OutlinedButton.icon(
             onPressed: () =>
-                ref.invalidate(sessionStatusPollingProvider(widget.seId)),
+                ref.invalidate(sessionStatusLivePollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
             label: Text(t.refreshNow),
           ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _endSessionAndLeave,
+            icon: const Icon(Icons.call_end_outlined),
+            label: Text(t.endSession),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: const BorderSide(color: AppColors.error),
+            ),
+          ),
+        ],
         if (isWaiting && hasTimedOut) ...[
           ElevatedButton.icon(
             onPressed: _rebookSession,
@@ -277,9 +315,19 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () =>
-                ref.invalidate(sessionStatusPollingProvider(widget.seId)),
+                ref.invalidate(sessionStatusLivePollingProvider(widget.seId)),
             icon: const Icon(Icons.refresh),
             label: Text(t.retryStatusCheck),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _endSessionAndLeave,
+            icon: const Icon(Icons.call_end_outlined),
+            label: Text(t.endSession),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: const BorderSide(color: AppColors.error),
+            ),
           ),
         ],
         if (!isWaiting)
@@ -312,6 +360,82 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     );
   }
 
+  /// Terminates the current session server-side and leaves the waiting screen.
+  ///
+  /// A REST-created session stays `inprogress` forever if the professional never
+  /// joins, blocking new launches with `409 SESSION_ALREADY_LAUNCHED` (and being
+  /// billed for the wait if the backend ever finalizes it). Leaving the screen
+  /// must therefore explicitly close the session.
+  Future<void> _endSessionAndLeave() async {
+    final t = ref.read(translationsProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          t.endSessionConfirmTitle,
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          t.endSessionConfirmMessage,
+          style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              t.cancel,
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              t.endSession,
+              style: GoogleFonts.montserrat(
+                color: AppColors.error,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final ws = ref.read(webSocketServiceProvider);
+    if (!ws.isConnected) {
+      await ws.connect();
+    }
+    final currentUser = ref.read(authStateProvider).valueOrNull;
+    final resolvedType = normalizeSessionType(widget.type);
+    if (resolvedType == 'video') {
+      ws.send('session_videoaborted', {
+        'co_id': widget.coId,
+        'who': currentUser?.isProfessional == true
+            ? 'professional'
+            : 'customer',
+      });
+    }
+    ws.send('session_stop', {'se_id': widget.seId});
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.sessionEnded),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    if (mounted) {
+      context.go('/home');
+    }
+  }
+
   Future<void> _rebookSession() async {
     try {
       final resolvedType = normalizeSessionType(widget.type);
@@ -327,6 +451,32 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
         );
         return;
       }
+
+      // Close the stale `inprogress` session first so the rebook does not hit
+      // `409 SESSION_ALREADY_LAUNCHED`.
+      final ws = ref.read(webSocketServiceProvider);
+      if (!ws.isConnected) {
+        await ws.connect();
+      }
+      ws.send('session_stop', {'se_id': widget.seId});
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+
+      // Pre-session balance gate (POST /web/1.0/check-balance).
+      // If the check itself fails, fall through and let the server gate the call.
+      try {
+        final balance = await ref
+            .read(walletRepositoryProvider)
+            .checkBalance(professionalId: widget.coId, type: resolvedType);
+        if (!mounted) return;
+        if (balance.isInsufficient ||
+            (!balance.success && balance.error != null)) {
+          _showInsufficientBalanceDialog();
+          return;
+        }
+      } catch (_) {
+        // Balance service unreachable — proceed; server still enforces on /call.
+      }
+
       final launch = await ref
           .read(sessionsRepositoryProvider)
           .createSessionCall(typeCall: resolvedType, coId: widget.coId);

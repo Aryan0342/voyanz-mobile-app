@@ -7,7 +7,7 @@ class ProfessionalsRepository {
 
   ProfessionalsRepository(this._ds);
 
-  Future<List<Professional>> getProfessionals() async {
+  Future<List<Professional>> getProfessionals({String search = ''}) async {
     if (kUseMockBackend) {
       return const [
         Professional(
@@ -39,7 +39,7 @@ class ProfessionalsRepository {
         ),
       ];
     }
-    return _ds.getProfessionals();
+    return _ds.getProfessionals(search: search);
   }
 
   Future<ProfessionalDetail> getProfessionalInfos(String coId) async {
@@ -186,6 +186,7 @@ class ProfessionalsRepository {
           },
         ],
         'appointments': const [],
+        'disponibilities': const [],
       };
     }
     return _ds.getProfessionalBookingSlots(coId);

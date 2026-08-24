@@ -6,11 +6,13 @@ abstract final class AppColors {
   static const deepIndigo = Color(0xFF0D094C);
   static const darkPurple = Color(0xFF1D193E);
   static const darkOverlay = Color(0xFF2B2545);
+  static const brandPink = Color(0xFFFF43BD);
 
   // Accents
   static const rosePink = Color(0xFFF5A8C4);
-  static const mediumPurple = Color(0xFF7C5CE0);
-  static const magentaRose = Color(0xFFB23A70);
+  static const mediumPurple = Color(0xFF5C2B63);
+  static const brandMagenta = Color(0xFF9B3366);
+  static const magentaRose = Color(0xFF9B3366);
   static const aqua = Color(0xFF10B8C4);
   static const gold = Color(0xFFF59E0B);
 

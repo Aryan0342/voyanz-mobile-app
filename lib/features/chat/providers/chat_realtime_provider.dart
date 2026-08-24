@@ -4,12 +4,15 @@ import 'package:voyanz/features/chat/models/chat_models.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
 
-/// Registers real-time chat handlers on the WebSocket and invalidates
-/// chat providers when new messages arrive so UI refreshes automatically.
+/// Registers real-time chat handlers on the WebSocket, feeds unread badges
+/// from the `notreaded` payload and invalidates chat providers so UI
+/// refreshes automatically.
 final chatRealtimeProvider = Provider<void>((ref) {
   final ws = ref.watch(webSocketServiceProvider);
 
   void handler(Map<String, dynamic> event) {
+    _applyUnreadSnapshot(ref, event);
+
     final messages = _extractMessages(event);
     if (messages.isNotEmpty) {
       final chgrIds = messages
@@ -34,10 +37,10 @@ final chatRealtimeProvider = Provider<void>((ref) {
       ref.invalidate(chatGroupsProvider);
       return;
     }
-
   }
 
-  void unreadHandler(Map<String, dynamic> _) {
+  void unreadHandler(Map<String, dynamic> event) {
+    _applyUnreadSnapshot(ref, event);
     ref.invalidate(chatGroupsProvider);
   }
 
@@ -51,6 +54,32 @@ final chatRealtimeProvider = Provider<void>((ref) {
     } catch (_) {}
   });
 });
+
+/// The server sends the recipient's current unread rows as
+/// `[{chme_id, chgr_id, co_id}, ...]`. Treat it as an authoritative
+/// snapshot per group and store counts for badge rendering.
+void _applyUnreadSnapshot(Ref ref, Map<String, dynamic> event) {
+  final raw = event['notreaded'];
+  if (raw is! List) return;
+
+  final counts = <String, int>{};
+  for (final row in raw) {
+    if (row is! Map<String, dynamic>) continue;
+    final chgrId = row['chgr_id']?.toString();
+    if (chgrId == null || chgrId.isEmpty) continue;
+    counts[chgrId] = (counts[chgrId] ?? 0) + 1;
+  }
+
+  // Groups that had a badge but are absent now are read -> drop to zero.
+  final current = ref.read(chatUnreadCountsProvider);
+  final merged = <String, int>{...current};
+  for (final id in merged.keys.toList()) {
+    if (!counts.containsKey(id)) merged[id] = 0;
+  }
+  merged.addAll(counts);
+
+  ref.read(chatUnreadCountsProvider.notifier).state = merged;
+}
 
 List<ChatMessage> _extractMessages(Map<String, dynamic> event) {
   final rawMessages = event['messages'];

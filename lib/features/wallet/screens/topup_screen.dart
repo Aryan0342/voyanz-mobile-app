@@ -536,7 +536,7 @@ class _PackCard extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: isSelected ? AppColors.mediumPurple : const Color(0xFFF3EEFC),
+                color: isSelected ? AppColors.mediumPurple : const Color(0xFFF1E8F1),
                 width: isSelected ? 2 : 1.5,
               ),
               boxShadow: [
@@ -681,7 +681,7 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
           child: Container(
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFFF6F3FF),
+              color: const Color(0xFFF5EDF4),
               borderRadius: BorderRadius.circular(24),
             ),
             child: TextField(
@@ -738,7 +738,7 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEBE4FF),
+            backgroundColor: const Color(0xFFE8D9EB),
             foregroundColor: AppColors.mediumPurple,
             elevation: 0,
             shape: RoundedRectangleBorder(

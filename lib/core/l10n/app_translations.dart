@@ -23,6 +23,22 @@ class AppTranslations {
   String get signUp => _fr ? "S'inscrire" : 'Sign Up';
   String get forgotPassword =>
       _fr ? 'Mot de passe oublié ?' : 'Forgot Password?';
+  String get resetPasswordSubtitle => _fr
+      ? "Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe."
+      : "Enter your email address and we'll send you a link to reset your password.";
+  String get sendResetLink =>
+      _fr ? 'Envoyer le lien' : 'Send Reset Link';
+  String get resetLinkSent => _fr
+      ? 'Un e-mail vous a été envoyé pour réinitialiser votre mot de passe.'
+      : 'An email has been sent to reset your password.';
+  String get noAccountWithEmail => _fr
+      ? 'Aucun compte trouvé avec cette adresse e-mail.'
+      : 'No account found with this email address.';
+  String resetLinkFailed(String err) => _fr
+      ? "Échec de l'envoi du lien : $err"
+      : 'Failed to send reset link: $err';
+  String get backToLogin =>
+      _fr ? 'Retour à la connexion' : 'Back to Login';
 
   // ── Auth – register ─────────────────────────────────────────────────────────
   String get createAccount => _fr ? 'Créer un compte' : 'Create Account';
@@ -97,6 +113,16 @@ class AppTranslations {
   String get invalidLegalStructure => _fr
       ? 'Structure legale invalide.'
       : 'Invalid legal structure.';
+  String get siretNumber =>
+      _fr ? 'Numéro d\'immatriculation (SIRET / RNE)' : 'Registration number (SIRET / RNE)';
+  String get invalidSiret => _fr
+      ? 'Un numéro d\'immatriculation valide est obligatoire.'
+      : 'A valid registration number is required.';
+  String get companyName =>
+      _fr ? 'Nom de la société' : 'Company name';
+  String get societyRequired => _fr
+      ? 'Le nom de la société est obligatoire pour une société.'
+      : 'A company name is required for a company.';
   String get emailAlreadyRegistered => _fr
       ? 'Cette adresse e-mail est deja inscrite.'
       : 'This email is already registered.';
@@ -164,18 +190,26 @@ class AppTranslations {
   String profileUpdateFailed(String err) => _fr
       ? 'Échec de la mise à jour du profil : $err'
       : 'Failed to update profile: $err';
-  String get notifications => _fr ? 'Notifications' : 'Notifications';
-  String get managePreferences =>
-      _fr ? 'Gérer les préférences' : 'Manage preferences';
-  String get notificationSettingsComingSoon => _fr
-      ? 'Paramètres de notification bientôt disponibles'
-      : 'Notification Settings Coming Soon';
   String get paymentMethods => _fr ? 'Moyens de paiement' : 'Payment Methods';
   String get cardsBilling =>
       _fr ? 'Cartes et facturation' : 'Cards and billing';
   String get support => _fr ? 'Assistance' : 'Support';
   String get helpCenter => _fr ? "Centre d'aide" : 'Help Center';
   String get faqsGuides => _fr ? 'FAQ et guides' : 'FAQs and guides';
+  String get termsOfUse => _fr ? 'Conditions d\'utilisation (CGU)' : 'Terms of Use (CGU)';
+  String get termsOfService => _fr ? 'Conditions de service (CGS)' : 'Terms of Service (CGS)';
+  String get legalNotice => _fr ? 'Mentions légales' : 'Legal Notice';
+  String get legalNoticeSubtitle => _fr
+      ? 'Informations légales et éditeur du service'
+      : 'Legal and publisher information';
+  String get contactSupport => _fr ? 'Contacter le support' : 'Contact Support';
+  String get contactSupportSubtitle => _fr
+      ? 'Assistance par e-mail ou formulaire'
+      : 'Help via email or contact form';
+  String get trustQuality => _fr ? 'Confiance & qualité' : 'Trust & Quality';
+  String get trustQualitySubtitle => _fr
+      ? 'Professionnels vérifiés et avis'
+      : 'Verified professionals and reviews';
   String get sessionsLabel => _fr ? 'Sessions' : 'Sessions';
   String get totalTime => _fr ? 'Temps total' : 'Total Time';
   String get rating => _fr ? 'Note' : 'Rating';
@@ -288,6 +322,8 @@ class AppTranslations {
   String get availableServices =>
       _fr ? 'Services disponibles' : 'Available Services';
   String get about => _fr ? 'À propos' : 'About';
+  String get expertise => _fr ? 'Expertise' : 'Expertise';
+  String get languages => _fr ? 'Langues' : 'Languages';
   String get pricePerMinute => _fr ? 'Prix par minute' : 'Price per minute';
   String get startSessionNow =>
       _fr ? 'Démarrer la session' : 'Start Session Now';
@@ -312,8 +348,25 @@ class AppTranslations {
   String get slotAddedSuccess => _fr
       ? 'Créneau de disponibilité ajouté avec succès'
       : 'Availability slot added successfully';
+  String get slotUpdatedSuccess => _fr
+      ? 'Créneau de disponibilité mis à jour avec succès'
+      : 'Availability slot updated successfully';
+  String get slotDeletedSuccess => _fr
+      ? 'Créneau de disponibilité supprimé avec succès'
+      : 'Availability slot deleted successfully';
   String failedAddSlot(String err) =>
       _fr ? "Échec de l'ajout du créneau : $err" : 'Failed to add slot: $err';
+  String failedUpdateSlot(String err) =>
+      _fr ? "Échec de la mise à jour du créneau : $err" : 'Failed to update slot: $err';
+  String failedDeleteSlot(String err) =>
+      _fr ? "Échec de la suppression du créneau : $err" : 'Failed to delete slot: $err';
+  String get editSlot => _fr ? 'Modifier le créneau' : 'Edit Slot';
+  String get deleteSlot => _fr ? 'Supprimer le créneau' : 'Delete Slot';
+  String get deleteSlotConfirm => _fr
+      ? 'Voulez-vous vraiment supprimer ce créneau de disponibilité ?'
+      : 'Are you sure you want to delete this availability slot?';
+  String get edit => _fr ? 'Modifier' : 'Edit';
+  String get delete => _fr ? 'Supprimer' : 'Delete';
   String get failedLoadAvailability => _fr
       ? 'Impossible de charger les disponibilités'
       : 'Failed to load availability';
@@ -323,6 +376,19 @@ class AppTranslations {
       ? 'Appuyez sur "Ajouter un créneau" pour définir vos disponibilités.'
       : 'Tap "Add Slot" to set your availability.';
   String get refresh => _fr ? 'Actualiser' : 'Refresh';
+  String get weeklySlots => _fr ? 'Créneaux hebdomadaires' : 'Weekly Slots';
+  String get yourAvailability => _fr
+      ? 'Votre disponibilité'
+      : 'Your Availability';
+  String get availabilitySubtitle => _fr
+      ? 'Définissez les heures pendant lesquelles vos clients peuvent vous joindre.'
+      : 'Set the hours when your clients can reach you.';
+  String get daysCount => _fr ? 'jours' : 'days';
+  String get slotsCount => _fr ? 'créneaux' : 'slots';
+  String get managed => _fr ? 'gérés' : 'managed';
+  String slotsCountFor(int count) => _fr
+      ? '$count créneau${count > 1 ? 'x' : ''}'
+      : '$count slot${count > 1 ? 's' : ''}';
 
   // Days of week
   String get monday => _fr ? 'Lundi' : 'Monday';
@@ -361,6 +427,19 @@ class AppTranslations {
       _fr ? 'ID du professionnel (optionnel)' : 'Professional ID (optional)';
   String get reviewSessionIdHint =>
       _fr ? 'ID de session (optionnel)' : 'Session ID (optional)';
+  String get reviewProfessionalLabel =>
+      _fr ? 'Professionnel' : 'Professional';
+  String get reviewSessionLabel => _fr ? 'Session' : 'Session';
+  String get selectProfessional =>
+      _fr ? 'Choisir un professionnel' : 'Select a professional';
+  String get selectSession =>
+      _fr ? 'Choisir une session' : 'Select a session';
+  String get noProfessionalsAvailable => _fr
+      ? 'Aucun professionnel disponible'
+      : 'No professionals available';
+  String get noSessionsForProfessional => _fr
+      ? 'Aucune session pour ce professionnel'
+      : 'No sessions for this professional';
   String get ratingRequired =>
       _fr ? 'La note est requise' : 'Rating is required';
   String get reviewSubmitted =>
@@ -476,11 +555,38 @@ class AppTranslations {
   String get phonePstnNoInAppAudio => _fr
       ? 'L\'audio se fait par appel telephonique classique, pas dans l\'app.'
       : 'Audio happens through a regular phone call, not inside the app.';
+  String get phonePstnPressKeyInstruction => _fr
+      ? 'Quand vous repondez, appuyez sur la touche 1 pour confirmer que vous etes bien la.'
+      : 'When you answer, press key 1 to confirm you are really there.';
+  String phonePstnPressKeyCountdown(int seconds) => _fr
+      ? 'Confirmez dans $seconds s, sinon la session sera annulee.'
+      : 'Confirm within $seconds s, or the session will be cancelled.';
+  String get phonePstnCallConfirmed => _fr
+      ? 'Appel confirme.'
+      : 'Call confirmed.';
+  String get sessionStatusNoStarConfirmLabel => _fr
+      ? 'Appel non confirme'
+      : 'Call not confirmed';
+  String get sessionStatusNoStarConfirmMessage => _fr
+      ? 'Le professionnel n\'a pas appuye sur la touche 1 pour confirmer. La session a ete annulee.'
+      : 'The professional did not press key 1 to confirm. The session was cancelled.';
+  String get phoneEndReasonProfessionalUnavailable => _fr
+      ? 'La ligne du professionnel n\'a pas repondu (messagerie).'
+      : 'The professional\'s line was unavailable (voicemail).';
+  String get phoneEndReasonCustomerNoAnswer => _fr
+      ? 'Le client n\'a pas repondu. La session a ete annulee.'
+      : 'The customer did not answer. The session was cancelled.';
   String get chatSession => _fr ? 'Session chat' : 'Chat Session';
   String get sessionReady => _fr ? 'Session prête' : 'Session ready';
   String get openConversations =>
       _fr ? 'Ouvrir les conversations' : 'Open conversations';
   String get endSession => _fr ? 'Terminer la session' : 'End Session';
+  String get endSessionConfirmTitle =>
+      _fr ? 'Terminer la session ?' : 'End session?';
+  String get endSessionConfirmMessage => _fr
+      ? 'Voulez-vous vraiment terminer cette session ?'
+      : 'Do you really want to end this session?';
+  String get sessionEnded => _fr ? 'Session terminée' : 'Session ended';
   String get sessionStatusCallingLabel => _fr ? 'Appel en cours' : 'Calling';
   String get sessionStatusAcceptedLabel => _fr ? 'Acceptée' : 'Accepted';
   String get sessionStatusPendingLabel => _fr ? 'En attente' : 'Pending';
@@ -604,6 +710,11 @@ class AppTranslations {
   String get aboutVoyanzContent => _fr
       ? 'Voyanz - Votre plateforme de confiance pour les consultations professionnelles.\n\nVersion : 1.0.0\nConçu avec Flutter & ❤️'
       : 'Voyanz - Your trusted platform for professional consultations.\n\nVersion: 1.0.0\nBuilt with Flutter & ❤️';
+  String get contactUs => _fr ? 'Contactez-nous' : 'Contact us';
+  String get liveChat => _fr ? 'Chat en direct' : 'Live chat';
+  String get openFullPolicy =>
+      _fr ? 'Ouvrir la politique complète en ligne' : 'Open the full policy online';
+  String get supportChannels => _fr ? 'Canaux de contact' : 'Contact channels';
 
   // ── Wallet / Top-Up ──────────────────────────────────────────────────────
   String get wallet => _fr ? 'Portefeuille' : 'Wallet';
@@ -699,6 +810,9 @@ class AppTranslations {
   String get appointmentPayFailed =>
       _fr ? 'Le paiement du rendez-vous a échoué'
           : 'Appointment payment failed';
+  String get appointmentPayPending =>
+      _fr ? 'Paiement reçu, réservation en cours de confirmation...'
+          : 'Payment received, booking confirmation pending...';
   String get appointmentRateInfo =>
       _fr ? 'Tarif : ~%s/min — facturé selon la durée réelle'
           : 'Rate: ~%s/min — charged for actual duration';
@@ -713,6 +827,9 @@ class AppTranslations {
   String get registrationFailed =>
       _fr ? 'Échec de l\'inscription au créneau'
           : 'Slot registration failed';
+  String get alreadyRegistered =>
+      _fr ? 'Vous êtes déjà inscrit(e) à cette séance.'
+          : 'You are already registered for this session.';
   String get consultationSlotInfo =>
       _fr ? 'Créneau de consultation 1-à-1 — facturé par minute. Lancez la session depuis le profil.'
           : '1-on-1 consultation slot — billed per minute. Start the session from the profile.';

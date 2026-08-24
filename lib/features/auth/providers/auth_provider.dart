@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:voyanz/core/network/auth_interceptor.dart';
 import 'package:voyanz/core/providers.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/auth/data/auth_data_source.dart';
@@ -29,6 +30,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<bool>? _restoreFuture;
 
   AuthNotifier(this._ref, this._repo) : super(const AsyncValue.data(null)) {
+    // CHAT_AUDIO §1.7 / WEBSOCKET §8: a rejected token (REST 401) means the
+    // session is dead — force logout; the router then redirects to /login and
+    // the next successful login restarts the WebSocket with a fresh token.
+    AuthInterceptor.onSessionExpired = () => logout();
     restoreSession();
   }
 
@@ -42,22 +47,32 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     });
   }
 
-  Future<void> signUp({
+  Future<bool> signUp({
     required Map<String, dynamic> body,
     required String email,
     required String password,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final response = await _repo.signUp(
         body: body,
         email: email,
         password: password,
       );
+      if (response.accessToken.isEmpty) {
+        // Account created but no session token issued: stay logged out so the
+        // user signs in on the login screen.
+        state = const AsyncValue.data(null);
+        return false;
+      }
       _ref.read(agencyProvider.notifier).state = response.agency;
       await _restartWebSocket();
-      return response.user;
-    });
+      state = AsyncValue.data(response.user);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
   }
 
   Future<void> fetchUser() async {

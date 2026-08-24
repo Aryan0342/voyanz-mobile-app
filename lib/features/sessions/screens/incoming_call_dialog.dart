@@ -100,20 +100,23 @@ class IncomingCallDialog extends ConsumerWidget {
     final ws = ref.read(webSocketServiceProvider);
     final notifier = ref.read(incomingCallProvider.notifier);
 
-    // Send session_callaccepted to backend
+    // Remember the call was accepted so the dashboard only navigates to the
+    // session after the user answers, instead of being overridden by an early
+    // `session_started` event.
+    notifier.markAccepted();
+
+    // Send session_callaccepted to backend.
+    // WEBSOCKET §5.2: isGroupSession is true only for scheduled group
+    // sessions (ap_id set) — appointmentId is the client-side signal.
     ws.send('session_callaccepted', {
       'callParams': call.toCallParams(),
-      'isGroupSession': false,
+      'isGroupSession': call.appointmentId != null,
     });
 
-    // Clear the incoming call notification
-    notifier.clear();
-
-    // Close dialog
+    // Close the dialog first, then clear the notification (clearing triggers
+    // dashboard navigation when a session_started event was already received).
     Navigator.of(context).pop();
-
-    // The professional will then receive session_started event
-    // which triggers navigation to the video/phone/chat screen
+    notifier.clear();
   }
 
   void _handleReject(BuildContext context, WidgetRef ref, IncomingCall call) {

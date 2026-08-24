@@ -23,7 +23,7 @@ void openSessionRoute(
       !wait &&
       chgrId != null &&
       chgrId.trim().isNotEmpty) {
-    route = '/chat/${chgrId.trim()}';
+    route = '/chat/${chgrId.trim()}?seId=$seId&coId=$coId';
   } else if (normalizedType == 'chat' && !wait) {
     route = '/session/chat/$seId/$coId';
   } else if (normalizedType == 'video' ||
@@ -50,12 +50,19 @@ void openLaunchResult(
 }) {
   final type = normalizeSessionType(result.seType) ?? fallbackType;
   final status = result.seStatus?.trim().toLowerCase();
-  final shouldWait =
-      status != null &&
-      status.isNotEmpty &&
-      status != 'inprogress' &&
-      status != 'active' &&
-      status != 'started';
+  final isVideo = type == 'video';
+
+  // Bug #2: a freshly created REST session is reported `inprogress` immediately,
+  // but the professional has not actually joined yet. For video, always route
+  // through the waiting screen so the customer is not dumped into a fake
+  // "session is live / you are connected" screen. The waiting screen advances
+  // to the call only once the pro is present (heartbeat/presence).
+  final shouldWait = isVideo ||
+      (status != null &&
+          status.isNotEmpty &&
+          status != 'inprogress' &&
+          status != 'active' &&
+          status != 'started');
 
   openSessionRoute(
     context,
@@ -77,6 +84,15 @@ void openSessionStatus(
   bool replace = false,
 }) {
   final type = normalizeSessionType(status.sessionType) ?? fallbackType;
+  final isVideo = type == 'video';
+
+  // Bug #2: an `inprogress` session should only open the live call screen when
+  // the professional is actually present. Otherwise keep the customer on the
+  // waiting screen (e.g. rejoin of a stale ghost session, or a session the pro
+  // has not joined yet).
+  final shouldWait = !status.isActive ||
+      (isVideo && !status.isProfessionalPresent);
+
   openSessionRoute(
     context,
     type: type,
@@ -84,6 +100,6 @@ void openSessionStatus(
     coId: coId,
     chgrId: status.chgrId ?? fallbackChgrId,
     replace: replace,
-    wait: !status.isActive,
+    wait: shouldWait,
   );
 }

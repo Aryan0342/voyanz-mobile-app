@@ -19,18 +19,32 @@ class ChatGroup {
     this.lastMessageRead,
   });
 
-  factory ChatGroup.fromJson(Map<String, dynamic> json) {
+  factory ChatGroup.fromJson(
+    Map<String, dynamic> json, {
+    String? myCoId,
+    String? myRole,
+  }) {
     final contacts = json['contacts'];
+    final myType = myRole?.toString().trim().toLowerCase();
     Map<String, dynamic>? firstContact;
+    Map<String, dynamic>? otherContact;
     if (contacts is List) {
       for (final item in contacts) {
-        if (item is Map<String, dynamic>) {
-          firstContact = item;
-          break;
+        if (item is! Map<String, dynamic>) continue;
+        firstContact ??= item;
+        final coId = item['co_id']?.toString();
+        final type = item['co_type']?.toString().trim().toLowerCase();
+        final isSelf =
+            (myCoId != null && myCoId.isNotEmpty && coId == myCoId) ||
+            (myType != null && myType.isNotEmpty && type == myType);
+        if (!isSelf) {
+          otherContact ??= item;
         }
       }
     }
+    final other = otherContact ?? firstContact;
 
+    final rawOtherName = json['other_user_name']?.toString();
     return ChatGroup(
       chgrId: json['chgr_id']?.toString() ?? '',
       name: json['chgr_name'] as String?,
@@ -41,9 +55,10 @@ class ChatGroup {
           json['lastmessagedate'] as String? ??
           json['chgr_last_message_date'] as String?,
       otherUserName:
-          json['other_user_name'] as String? ??
-          firstContact?['co_fullname'] as String? ??
-          firstContact?['co_firstname'] as String?,
+          (rawOtherName != null && rawOtherName.isNotEmpty)
+              ? rawOtherName
+              : other?['co_fullname']?.toString() ??
+                    other?['co_firstname']?.toString(),
       otherUserAvatar: json['other_user_avatar'] as String?,
       isArchived: _readBool(json['archived']) ?? false,
       lastMessageRead: _readBool(json['lastmessageread']),

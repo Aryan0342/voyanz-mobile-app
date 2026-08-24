@@ -7,8 +7,17 @@ class ProfessionalsDataSource {
 
   ProfessionalsDataSource(this._dio);
 
-  Future<List<Professional>> getProfessionals() async {
-    final response = await _dio.get(ApiEndpoints.professionals);
+  /// API_REST §10.1: supports server-side filters (`search`,
+  /// `filterTypes`, `filterSpecialities`, `filterLanguages`, `filterPrices`).
+  /// The app currently uses `search`; remaining params can be passed through
+  /// later without contract changes.
+  Future<List<Professional>> getProfessionals({String search = ''}) async {
+    final response = await _dio.get(
+      ApiEndpoints.professionals,
+      queryParameters: {
+        if (search.trim().isNotEmpty) 'search': search.trim(),
+      },
+    );
     final body = response.data as Map<String, dynamic>;
 
     final topLevelError = body['error'];
@@ -94,6 +103,7 @@ class ProfessionalsDataSource {
     return {
       'nextdisponibilities': extract('nextdisponibilities'),
       'appointments': extract('appointments'),
+      'disponibilities': extract('disponibilities'),
     };
   }
 
@@ -177,9 +187,9 @@ class ProfessionalsDataSource {
     String diId,
     Map<String, dynamic> data,
   ) async {
-    final response = await _dio.put(
-      ApiEndpoints.updateDisponibility(diId),
-      data: data,
+    final response = await _dio.post(
+      ApiEndpoints.createDisponibilities,
+      data: {...data, 'di_id': int.tryParse(diId)},
     );
 
     final raw = response.data;

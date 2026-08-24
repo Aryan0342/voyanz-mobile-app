@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -8,8 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
-import 'package:voyanz/features/appointments/providers/appointments_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
@@ -54,20 +55,7 @@ class _AppointmentBookingScreenState
   ) async {
     final t = ref.read(translationsProvider);
     setState(() => _isProcessing = true);
-
-    try {
-      await ref.read(appointmentsRepositoryProvider).register(apId);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.registrationFailed),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
+    var paymentSheetCompleted = false;
 
     if (!StripeConfig.isInitialized) {
       try {
@@ -116,15 +104,23 @@ class _AppointmentBookingScreenState
       );
 
       await Stripe.instance.presentPaymentSheet();
+      paymentSheetCompleted = true;
 
       final piParts = intent.clientSecret.split('_secret_');
       final piId = piParts.isNotEmpty ? piParts[0] : '';
 
       if (piId.isNotEmpty) {
-        final status = await repo.confirmPayment(piId);
+        // The payment was already captured by Stripe at this point. The status
+        // endpoint can briefly return "processing" while the webhook finalizes
+        // the registration. Poll instead of reporting a failure immediately.
+        var status = await repo.confirmPayment(piId);
+        for (var attempt = 0; attempt < 5 && status.isProcessing; attempt++) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+          status = await repo.confirmPayment(piId);
+        }
         if (!mounted) return;
 
-        if (status.isSuccess) {
+        if (status.isSuccess || status.isProcessing) {
           context.pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -143,9 +139,17 @@ class _AppointmentBookingScreenState
       }
     } catch (e) {
       if (!mounted) return;
+      final isAlreadyRegistered =
+          e is DioException && e.response?.statusCode == 400;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${t.appointmentPayFailed}: $e'),
+          content: Text(
+            paymentSheetCompleted
+                ? t.appointmentPayPending
+                : isAlreadyRegistered
+                ? t.alreadyRegistered
+                : '${t.appointmentPayFailed}: $e',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -193,21 +197,46 @@ class _AppointmentBookingScreenState
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: AppColors.mediumPurple.withValues(
-                          alpha: 0.2,
-                        ),
-                        child: Text(
-                          pro.displayName.isNotEmpty
-                              ? pro.displayName[0].toUpperCase()
-                              : '?',
-                          style: GoogleFonts.jost(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppGradients.accent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.mediumPurple.withValues(
+                                    alpha: 0.28,
+                                  ),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              pro.displayName.isNotEmpty
+                                  ? pro.displayName[0].toUpperCase()
+                                  : '?',
+                              style: GoogleFonts.jost(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.mediumPurple,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -451,45 +480,90 @@ class _AppointmentBookingScreenState
                               ],
                             );
                           }
-                          return GradientButton(
-                            width: double.infinity,
-                            onPressed: _isProcessing
-                                ? null
-                                : () async {
-                                    await _registerAndPay(
-                                      apId,
-                                      pro.displayName,
-                                      rateStr ?? '',
-                                    );
-                                  },
-                            child: _isProcessing
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (_selectedSlot!['ap_price'] is num &&
+                                  (_selectedSlot!['ap_price'] as num) > 0) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mediumPurple.withValues(
+                                      alpha: 0.1,
                                     ),
-                                  )
-                                : Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
                                     children: [
                                       Icon(
-                                        Icons.lock_outline,
-                                        color: Colors.white,
+                                        Icons.payments_outlined,
                                         size: 20,
+                                        color: AppColors.mediumPurple,
                                       ),
                                       const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          t.amountToPay,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
                                       Text(
-                                        t.registerAndPay,
+                                        '€${((_selectedSlot!['ap_price'] as num) / 100).toStringAsFixed(2)}',
                                         style: GoogleFonts.montserrat(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ],
                                   ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              GradientButton(
+                                width: double.infinity,
+                                onPressed: _isProcessing
+                                    ? null
+                                    : () async {
+                                        await _registerAndPay(
+                                          apId,
+                                          pro.displayName,
+                                          rateStr ?? '',
+                                        );
+                                      },
+                                child: _isProcessing
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.lock_outline,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            t.registerAndPay,
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ],
                           );
                         },
                       ),

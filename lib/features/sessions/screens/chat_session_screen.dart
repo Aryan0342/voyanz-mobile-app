@@ -1,15 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 class ChatSessionScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -64,12 +68,17 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
               chgrId != null &&
               chgrId.isNotEmpty) {
             _conversationOpened = true;
-            context.go('/chat/$chgrId');
+            context.go('/chat/$chgrId?seId=${widget.seId}&coId=${widget.coId}');
             return;
           }
 
           if (_sessionEndedHandled || !status.isTerminal) return;
           _sessionEndedHandled = true;
+
+          // PAYMENT Q12: billing is computed when the session closes, so the
+          // wallet must be refreshed after completion.
+          ref.invalidate(walletLiveBalanceProvider);
+          ref.invalidate(walletHistoryProvider);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -184,7 +193,9 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
                     final status = liveStatusAsync.valueOrNull;
                     final chgrId = status?.chgrId;
                     if (chgrId != null && chgrId.isNotEmpty) {
-                      context.go('/chat/$chgrId');
+                      context.go(
+                        '/chat/$chgrId?seId=${widget.seId}&coId=${widget.coId}',
+                      );
                       return;
                     }
                     context.go('/chat');
@@ -194,7 +205,14 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    final ws = ref.read(webSocketServiceProvider);
+                    if (!ws.isConnected) {
+                      unawaited(ws.connect());
+                    }
+                    ws.send('session_stop', {'se_id': widget.seId});
+                    Navigator.of(context).pop();
+                  },
                   icon: const Icon(Icons.close),
                   label: Text(t.endSession),
                 ),

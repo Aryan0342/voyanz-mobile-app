@@ -134,17 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF5B21B6),
-                        Color(0xFF7C3AED),
-                        Color(0xFF8B5CF6),
-                        Color(0xFFA855F7),
-                      ],
-                      stops: [0.0, 0.3, 0.65, 1.0],
-                    ),
+                    gradient: AppGradients.brandBackground,
                   ),
                   child: SafeArea(
                     bottom: false,
@@ -154,58 +144,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Frosted logo circle
-                            Container(
-                              width: 74,
-                              height: 74,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.35),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.14),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 8),
+                            if (logo != null && logo.isNotEmpty) ...[
+                              // Agency logo (frosted circle)
+                              Container(
+                                width: 74,
+                                height: 74,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                    width: 1.5,
                                   ),
-                                ],
-                              ),
-                              child: (logo != null && logo.isNotEmpty)
-                                  ? Image.network(
-                                      logo,
-                                      fit: BoxFit.contain,
-                                      color: Colors.white,
-                                      errorBuilder: (_, __, ___) =>
-                                          Image.asset(
-                                            'assets/images/voyanz-logo.png',
-                                            fit: BoxFit.contain,
-                                            color: Colors.white,
-                                          ),
-                                    )
-                                  : Image.asset(
-                                      'assets/images/voyanz-logo.png',
-                                      fit: BoxFit.contain,
-                                      color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.14),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 8),
                                     ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Brand name
-                            Text(
-                              (agencyName != null && agencyName.isNotEmpty)
-                                  ? agencyName
-                                  : 'Voyanz',
-                              style: GoogleFonts.jost(
-                                fontSize: 40,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
+                                  ],
+                                ),
+                                child: Image.network(
+                                  logo,
+                                  fit: BoxFit.contain,
+                                  color: Colors.white,
+                                  errorBuilder: (_, __, ___) => Image.asset(
+                                    'assets/images/voyanz-mark.png',
+                                    fit: BoxFit.contain,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
+                              const SizedBox(height: 16),
+                              // Brand name
+                              Text(
+                                (agencyName != null && agencyName.isNotEmpty)
+                                    ? agencyName
+                                    : 'Voyanz',
+                                style: GoogleFonts.jost(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                            ] else ...[
+                              // Full Voyanz logo
+                              Image.asset(
+                                'assets/images/voyanz-full-logo.png',
+                                width: 220,
+                                fit: BoxFit.contain,
+                              ),
+                            ],
                             // Tagline
                             Text(
                               t.tagline,
@@ -326,7 +318,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () =>
+                                      context.push('/forgot-password'),
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 4,

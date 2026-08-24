@@ -15,6 +15,7 @@ import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 class PricingScreen extends ConsumerStatefulWidget {
   final String? coId;
@@ -344,6 +345,24 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       return;
     }
 
+    // Pre-session balance gate (POST /web/1.0/check-balance).
+    // If the check itself fails, fall through and let the server gate the call.
+    try {
+      final balance = await ref
+          .read(walletRepositoryProvider)
+          .checkBalance(
+            professionalId: widget.coId!,
+            type: normalizedType,
+          );
+      if (!mounted) return;
+      if (balance.isInsufficient || (!balance.success && balance.error != null)) {
+        _showInsufficientBalanceDialog();
+        return;
+      }
+    } catch (_) {
+      // Balance service unreachable — proceed; server still enforces on /call.
+    }
+
     try {
       final launch = await ref
           .read(sessionsRepositoryProvider)
@@ -514,6 +533,11 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('insufficient_balance')) {
+        _showInsufficientBalanceDialog();
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('An error occurred. Please try again.'),
@@ -521,6 +545,46 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
         ),
       );
     }
+  }
+
+  void _showInsufficientBalanceDialog() {
+    final t = ref.read(translationsProvider);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          t.insufficientBalance,
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          t.topUpNow,
+          style: GoogleFonts.montserrat(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              t.cancel,
+              style: GoogleFonts.montserrat(color: AppColors.textMuted),
+            ),
+          ),
+          GradientButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/wallet/topup');
+            },
+            child: Text(t.topUpNow),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<String?> _recoverRecentSessionId({String? expectedCoId}) async {
@@ -614,7 +678,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       final professionalAsync = ref.watch(
         professionalDetailProvider(widget.coId!),
       );
-      final listAsync = ref.watch(professionalsListProvider);
+      final listAsync = ref.watch(professionalsListProvider(''));
 
       return GradientScaffold(
         appBar: VoyanzAppBar(

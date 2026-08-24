@@ -29,6 +29,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  final _siretCtrl = TextEditingController();
+  final _companyNameCtrl = TextEditingController();
   final _firstNameFocusNode = FocusNode();
   final _lastNameFocusNode = FocusNode();
   final _displayNameFocusNode = FocusNode();
@@ -36,6 +38,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
+  final _siretFocusNode = FocusNode();
+  final _companyNameFocusNode = FocusNode();
   String _role = 'customer';
   String _gender = 'other';
   String _legalStructure = 'individual';
@@ -61,6 +65,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut));
     _fadeCtrl.forward();
+    _mobileCtrl.addListener(_ensurePhonePrefix);
   }
 
   @override
@@ -73,6 +78,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
+    _mobileCtrl.removeListener(_ensurePhonePrefix);
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _displayNameCtrl.dispose();
@@ -82,6 +88,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
+    _siretCtrl.dispose();
+    _companyNameCtrl.dispose();
     super.dispose();
   }
 
@@ -119,11 +127,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       return;
     }
 
-    await ref.read(authStateProvider.notifier).signUp(
+    final sessionEstablished = await ref
+        .read(authStateProvider.notifier)
+        .signUp(
           body: _buildSignUpBody(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
         );
+
+    // Account was created but no session token was issued (professional
+    // signups). Confirm and send the user to the login screen.
+    if (!sessionEstablished && !ref.read(authStateProvider).hasError) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.accountCreated)),
+      );
+      context.go('/login');
+    }
   }
 
   Map<String, dynamic> _buildSignUpBody() {
@@ -145,7 +165,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       if (trimmed.isNotEmpty) body[key] = trimmed;
     }
 
-    putIfNotEmpty('co_mobile1', _mobileCtrl.text);
+    putIfNotEmpty('co_mobile1', _normalizePhone(_mobileCtrl.text));
     putIfNotEmpty('co_birthday', _dobCtrl.text);
     putIfNotEmpty('co_display_name', _displayNameCtrl.text);
     body['co_gender'] = _gender;
@@ -156,9 +176,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (_role == 'professional') {
       body['charter_accepted'] = '1';
       body['co_legal_structure_type'] = _legalStructure;
+      final siret = _siretCtrl.text.replaceAll(RegExp(r'\D'), '');
+      if (siret.isNotEmpty) body['co_siret'] = siret;
+      if (_legalStructure == 'company') {
+        final society = _companyNameCtrl.text.trim();
+        if (society.isNotEmpty) body['co_society'] = society;
+      }
     }
 
     return body;
+  }
+
+  String _normalizePhone(String raw) {
+    var value = raw.trim();
+    final hasPlus = value.startsWith('+');
+    final digits = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (hasPlus) return '+$digits';
+    if (digits.startsWith('00')) return '+${digits.substring(2)}';
+    return digits;
+  }
+
+  void _ensurePhonePrefix() {
+    final text = _mobileCtrl.text;
+    if (text.isEmpty || text.startsWith('+')) return;
+    final newText = '+$text';
+    _mobileCtrl.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
   }
 
   String? _countryCodeFor(String value) {
@@ -216,6 +261,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (normalized.contains('charter_mandatory')) {
       return t.pleaseAcceptCharter;
     }
+    if (normalized.contains('invalid_siret_for_company') ||
+        normalized.contains('siret_mandatory')) {
+      return t.invalidSiret;
+    }
+    if (normalized.contains('society_required_for_company') ||
+        normalized.contains('society_mandatory')) {
+      return t.societyRequired;
+    }
     if (normalized.contains('invalid_legal_structure_type')) {
       return t.invalidLegalStructure;
     }
@@ -261,17 +314,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF5B21B6),
-                        Color(0xFF7C3AED),
-                        Color(0xFF8B5CF6),
-                        Color(0xFFA855F7),
-                      ],
-                      stops: [0.0, 0.3, 0.65, 1.0],
-                    ),
+                    gradient: AppGradients.brandBackground,
                   ),
                   child: SafeArea(
                     bottom: false,
@@ -302,7 +345,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ],
                               ),
                               child: Image.asset(
-                                'assets/images/voyanz-logo.png',
+                                'assets/images/voyanz-mark.png',
                                 fit: BoxFit.contain,
                                 color: Colors.white,
                               ),
@@ -774,6 +817,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                                   value ?? 'individual',
                                             ),
                                           ),
+                                          const SizedBox(height: 12),
+                                          _RegTextField(
+                                            controller: _siretCtrl,
+                                            focusNode: _siretFocusNode,
+                                            hintText: t.siretNumber,
+                                            prefixIcon: Icons.badge_outlined,
+                                            keyboardType:
+                                                TextInputType.number,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            autocorrect: false,
+                                            enableSuggestions: false,
+                                            validator: (v) {
+                                              final digits = (v ?? '')
+                                                  .replaceAll(
+                                                      RegExp(r'\D'), '');
+                                              if (digits.isEmpty) {
+                                                return t.required;
+                                              }
+                                              return digits.length == 14
+                                                  ? null
+                                                  : t.invalidSiret;
+                                            },
+                                          ),
+                                          if (_legalStructure == 'company') ...[
+                                            const SizedBox(height: 12),
+                                            _RegTextField(
+                                              controller:
+                                                  _companyNameCtrl,
+                                              focusNode:
+                                                  _companyNameFocusNode,
+                                              hintText: t.companyName,
+                                              prefixIcon: Icons
+                                                  .business_outlined,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              textCapitalization:
+                                                  TextCapitalization.words,
+                                              autocorrect: false,
+                                              enableSuggestions: false,
+                                              validator: (v) => (v == null ||
+                                                      v.trim().isEmpty)
+                                                  ? t.societyRequired
+                                                  : null,
+                                            ),
+                                          ],
                                           const SizedBox(height: 12),
                                           GestureDetector(
                                             onTap: () => setState(() =>
