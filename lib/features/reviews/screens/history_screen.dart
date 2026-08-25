@@ -44,19 +44,27 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         (item['ended_at'] ?? item['end_at'] ?? item['se_end_at'] ?? '')
             .toString()
             .trim();
-    final date = (item['se_date'] ?? item['date'] ?? '').toString().trim();
     final type = (item['type'] ?? '').toString().trim().toLowerCase();
     final price = (item['pricef'] ?? item['price'] ?? '').toString().trim();
     final isEnded = item['is_ended'] == true || item['ended'] == true;
+    final recordings = item['recording'];
+    final hasRecordings = recordings is List && recordings.isNotEmpty;
 
-    if (isEnded ||
-        endedAt.isNotEmpty ||
-        (duration.isNotEmpty && duration != '--') ||
-        (uiDuration.isNotEmpty && uiDuration != '--') ||
-        (type == 'session' && date.isNotEmpty) ||
-        (type == 'session' && price.startsWith('-'))) {
+    if (isEnded || endedAt.isNotEmpty) return 'completed';
+
+    if (duration.isNotEmpty && duration != '--') return 'completed';
+
+    if (uiDuration.isNotEmpty && uiDuration != '--' && uiDuration != '00s') {
       return 'completed';
     }
+
+    if (hasRecordings) return 'completed';
+
+    if (uiDuration.isEmpty || uiDuration == '00s' || uiDuration == '--') {
+      return 'cancelled';
+    }
+
+    if (type == 'session' && price.startsWith('-')) return 'completed';
 
     return 'pending';
   }
@@ -437,13 +445,26 @@ class _SessionCard extends ConsumerWidget {
         : rawStatus;
     var normalizedStatus = _canonicalStatus(nestedRawStatus);
     if (!_isKnownHistoryStatus(normalizedStatus)) {
-      final durationLooksReal =
-          durationValue.isNotEmpty && durationValue != '--';
       final endedAt = _value(item, const ['ended_at', 'end_at', 'se_end_at']);
       final isEnded = item['is_ended'] == true || item['ended'] == true;
-      normalizedStatus = (isEnded || endedAt.isNotEmpty || durationLooksReal)
-          ? 'completed'
-          : 'pending';
+      final recordings = item['recording'];
+      final hasRecordings = recordings is List && recordings.isNotEmpty;
+      final zeroDuration =
+          durationValue.isEmpty || durationValue == '00s' || durationValue == '--';
+
+      if (isEnded || endedAt.isNotEmpty) {
+        normalizedStatus = 'completed';
+      } else if (durationValue.isNotEmpty &&
+          durationValue != '--' &&
+          durationValue != '00s') {
+        normalizedStatus = 'completed';
+      } else if (hasRecordings) {
+        normalizedStatus = 'completed';
+      } else if (zeroDuration) {
+        normalizedStatus = 'cancelled';
+      } else {
+        normalizedStatus = 'pending';
+      }
     }
     final date = _formatHistoryDate(dateRaw);
     final duration = durationValue.isEmpty ? '--' : durationValue;

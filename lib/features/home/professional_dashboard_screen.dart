@@ -880,25 +880,25 @@ String _sessionStatus(Map<String, dynamic> session) {
     'se_end_at',
   ]);
   final isEnded = session['is_ended'] == true || session['ended'] == true;
-  final date = _sessionValue(session, const [
-    'se_date',
-    'date',
-    'created_at',
-    'start_at',
-  ]);
-  final type = (session['type'] ?? session['subtype'] ?? '')
-      .toString()
-      .toLowerCase();
   final price = (session['pricef'] ?? session['price'] ?? session['totalf'] ?? '')
       .toString();
+  final recordings = session['recording'];
+  final hasRecordings = recordings is List && recordings.isNotEmpty;
 
-  if (isEnded ||
-      endedAt.isNotEmpty ||
-      (duration.isNotEmpty && duration != '--') ||
-      (type == 'session' && date.isNotEmpty) ||
-      (type == 'session' && price.startsWith('-'))) {
+  if (isEnded || endedAt.isNotEmpty) return 'completed';
+
+  if (duration.isNotEmpty && duration != '--' && duration != '00s') {
     return 'completed';
   }
+
+  if (hasRecordings) return 'completed';
+
+  if (duration.isEmpty || duration == '00s' || duration == '--') {
+    return 'cancelled';
+  }
+
+  if (price.startsWith('-')) return 'completed';
+
   return normalized.isEmpty ? 'pending' : normalized;
 }
 
