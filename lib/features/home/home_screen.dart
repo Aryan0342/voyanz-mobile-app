@@ -770,13 +770,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         subtitle: t.topUpCredit,
                         onTap: () => context.push('/wallet'),
                       ),
-                      const SizedBox(height: 10),
-                      _ProfileTile(
-                        icon: Icons.payment_outlined,
-                        title: t.paymentMethods,
-                        subtitle: t.cardsBilling,
-                        onTap: () => context.push('/pricing'),
-                      ),
                     ],
                     if (user?.isProfessional == true) ...[
                       const SizedBox(height: 10),
@@ -787,6 +780,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onTap: () => context.push('/professional-account'),
                       ),
                     ],
+
                   ],
                 ),
               ),
