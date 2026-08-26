@@ -70,5 +70,7 @@
 	<string>Voyanz uses your camera for video consultation sessions.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Voyanz uses your microphone for video and phone consultation sessions.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Voyanz uses your photo library so you can attach images to chat messages.</string>
 </dict>
 </plist>

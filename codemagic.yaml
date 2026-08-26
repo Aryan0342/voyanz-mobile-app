@@ -6,16 +6,28 @@ workflows:
     integrations:
       app_store_connect: Steph van Hoffe
     environment:
-      flutter: stable
+      flutter: 3.44.0
       xcode: latest
       cocoapods: default
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.amaury.voyanz
     scripts:
+      - name: Set up iOS code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Get Flutter packages
         script: |
           flutter pub get
+
+      - name: Analyze Flutter code
+        script: |
+          flutter analyze
+
+      - name: Run Flutter tests
+        script: |
+          flutter test
 
       - name: Install CocoaPods
         script: |
@@ -25,7 +37,8 @@ workflows:
 
       - name: Build IPA for App Store distribution
         script: |
-          flutter build ipa --release
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
