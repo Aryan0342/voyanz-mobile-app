@@ -25,7 +25,9 @@ void main() async {
 }
 
 class VoyanzApp extends ConsumerStatefulWidget {
-  const VoyanzApp({super.key});
+  const VoyanzApp({super.key, this.initializeStripe = true});
+
+  final bool initializeStripe;
 
   @override
   ConsumerState<VoyanzApp> createState() => _VoyanzAppState();
@@ -37,7 +39,9 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initStripe();
+    if (widget.initializeStripe) {
+      _initStripe();
+    }
   }
 
   @override
