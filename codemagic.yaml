@@ -9,7 +9,7 @@ workflows:
       groups:
         - voyanz_signing
       vars:
-        BUNDLE_ID: com.amaury.voyanz
+        BUNDLE_ID: com.amaury.voyanzapp
       flutter: 3.44.0
       xcode: latest
       cocoapods: default
