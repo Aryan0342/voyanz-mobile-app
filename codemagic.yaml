@@ -4,18 +4,45 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: Steph van Hoffe
+      app_store_connect: Voyanz Amaury
     environment:
-      flutter: stable
+      groups:
+        - voyanz_signing
+      vars:
+        BUNDLE_ID: com.amaury.voyanzapp
+      flutter: 3.44.0
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.amaury.voyanz
     scripts:
+      - name: Initialize iOS signing keychain
+        script: |
+          keychain initialize
+
+      - name: Fetch or create iOS signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add iOS signing certificate
+        script: |
+          keychain add-certificates
+
+      - name: Configure Xcode code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Get Flutter packages
         script: |
           flutter pub get
+
+      - name: Analyze Flutter code
+        script: |
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Run Flutter tests
+        script: |
+          flutter test
 
       - name: Install CocoaPods
         script: |
@@ -25,7 +52,8 @@ workflows:
 
       - name: Build IPA for App Store distribution
         script: |
-          flutter build ipa --release
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
