@@ -67,6 +67,15 @@ final professionalsListProvider =
           .getProfessionals(search: search);
     });
 
+/// AI assistants filtered from the full professionals list (co_isassistant).
+final aiAssistantsProvider =
+    FutureProvider.family<List<Professional>, String>((ref, search) async {
+      final all = await ref.watch(
+        professionalsListProvider(search).future,
+      );
+      return all.where((p) => p.isAssistant).toList();
+    });
+
 final professionalDetailProvider =
     FutureProvider.family<ProfessionalDetail, String>((ref, coId) async {
       return ref

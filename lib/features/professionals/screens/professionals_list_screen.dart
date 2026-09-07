@@ -309,7 +309,8 @@ class _ProfessionalsListScreenState
           ),
         ),
         data: (pros) {
-          final filteredPros = _filterProfessionals(pros, favoriteIds);
+          final humanPros = pros.where((p) => !p.isAssistant).toList();
+          final filteredPros = _filterProfessionals(humanPros, favoriteIds);
           final featuredPros = [
             ...filteredPros.where((p) => p.isAvailableNow),
             ...filteredPros.where((p) => !p.isAvailableNow),
@@ -385,7 +386,7 @@ class _ProfessionalsListScreenState
                     delayMs: 20,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-                      child: _ExploreHero(totalCount: pros.length),
+                      child: _ExploreHero(totalCount: humanPros.length),
                     ),
                   ),
                 ),
@@ -419,8 +420,17 @@ class _ProfessionalsListScreenState
                 SliverToBoxAdapter(
                   child: _RevealIn(
                     delayMs: 120,
+                    child: _AiAssistantsSection(
+                      search: _serverSearchQuery,
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: _RevealIn(
+                    delayMs: 180,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
                       child: _SectionTitle(
                         title: t.featuredAdvisors,
                         subtitle: t.topProsReadyNow,
@@ -1529,6 +1539,227 @@ class _ProfessionalCard extends StatelessWidget {
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class _AiAssistantsSection extends ConsumerWidget {
+  final String search;
+
+  const _AiAssistantsSection({required this.search});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final aiAsync = ref.watch(aiAssistantsProvider(search));
+
+    return aiAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (ais) {
+        if (ais.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.mediumPurple,
+                          AppColors.aqua,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Try for free, 24/7!',
+                          style: GoogleFonts.jost(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'AI-powered guidance, always available',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 130,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (_, i) => _AiAssistantCard(
+                    professional: ais[i],
+                    index: i,
+                  ),
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemCount: ais.length,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AiAssistantCard extends StatelessWidget {
+  final Professional professional;
+  final int index;
+
+  const _AiAssistantCard({
+    required this.professional,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = _profileImageUrl(
+      rawAvatar: professional.avatar,
+      seed: professional.coId.isNotEmpty
+          ? professional.coId
+          : professional.displayName,
+    );
+
+    return GestureDetector(
+      onTap: () => context.push('/professional/${professional.coId}'),
+      child: Container(
+        width: 140,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.mediumPurple.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.mediumPurple.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.mediumPurple.withValues(alpha: 0.8),
+                        AppColors.aqua.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Text(
+                          professional.displayName.isNotEmpty
+                              ? professional.displayName[0].toUpperCase()
+                              : '?',
+                          style: GoogleFonts.jost(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppColors.mediumPurple,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              professional.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.jost(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                'Free',
+                style: GoogleFonts.montserrat(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.mediumPurple,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

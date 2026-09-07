@@ -21,6 +21,7 @@ class Professional {
   final bool isVerified;
   final bool isAvailableNow;
   final String? availabilityText;
+  final bool isAssistant;
 
   const Professional({
     required this.coId,
@@ -45,6 +46,7 @@ class Professional {
     this.isVerified = false,
     this.isAvailableNow = false,
     this.availabilityText,
+    this.isAssistant = false,
   });
 
   String get displayName =>
@@ -306,6 +308,8 @@ class Professional {
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
       availabilityText: availabilityText,
+      isAssistant:
+          _readBool(json, ['co_isassistant', 'is_assistant']) ?? false,
     );
   }
 }
