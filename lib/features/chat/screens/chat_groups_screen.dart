@@ -54,7 +54,10 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                 Text(
                   'An error occurred. Please try again.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(color: AppColors.error, fontSize: 12),
+                  style: GoogleFonts.montserrat(
+                    color: AppColors.error,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -162,7 +165,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                               color: AppColors.textMuted,
                             ),
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.6),
+                            fillColor: AppColors.surfaceElevated,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 14,
@@ -321,7 +324,7 @@ class _ConversationCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
@@ -494,7 +497,7 @@ class _EmptyState extends ConsumerWidget {
 
 class _PinnedSection extends StatelessWidget {
   final List<dynamic> groups;
-  
+
   const _PinnedSection({required this.groups});
 
   @override
@@ -528,12 +531,16 @@ class _PinnedSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final group = pinnedGroups[index];
               final name = group.otherUserName ?? group.name ?? 'Chat';
-              
+
               return _PinnedAvatar(
                 name: name,
                 image: group.otherUserAvatar,
-                icon: group.otherUserAvatar == null ? Icons.person_outline : null,
-                isOnline: index % 2 == 0, // Using mock online status for visual parity
+                icon: group.otherUserAvatar == null
+                    ? Icons.person_outline
+                    : null,
+                isOnline:
+                    index % 2 ==
+                    0, // Using mock online status for visual parity
               );
             },
           ),
@@ -549,7 +556,12 @@ class _PinnedAvatar extends StatelessWidget {
   final IconData? icon;
   final bool? isOnline;
 
-  const _PinnedAvatar({required this.name, this.image, this.icon, this.isOnline});
+  const _PinnedAvatar({
+    required this.name,
+    this.image,
+    this.icon,
+    this.isOnline,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -565,15 +577,19 @@ class _PinnedAvatar extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: image == null ? null : AppGradients.card,
-                  color: image == null ? Colors.white.withValues(alpha: 0.6) : null,
+                  color: image == null
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : null,
                 ),
-                padding: image != null ? const EdgeInsets.all(4) : EdgeInsets.zero,
+                padding: image != null
+                    ? const EdgeInsets.all(4)
+                    : EdgeInsets.zero,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: image != null
-                      ? ClipOval(child: Image.network(image!, fit: BoxFit.cover))
+                      ? ClipOval(
+                          child: Image.network(image!, fit: BoxFit.cover),
+                        )
                       : Icon(icon, color: AppColors.textPrimary, size: 26),
                 ),
               ),

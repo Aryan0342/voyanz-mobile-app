@@ -63,8 +63,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
   bool _sendingImage = false;
   bool _sessionEndedHandled = false;
 
-  bool get _hasSession =>
-      widget.seId != null && widget.seId!.trim().isNotEmpty;
+  bool get _hasSession => widget.seId != null && widget.seId!.trim().isNotEmpty;
 
   @override
   void dispose() {
@@ -87,7 +86,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ref.read(translationsProvider).sendMessageFailed('Please try again.'),
+              ref
+                  .read(translationsProvider)
+                  .sendMessageFailed('Please try again.'),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -191,9 +192,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
           }
 
           final b64 = base64Encode(bytes);
-          debugPrint(
-            '[chat-image] sending $mime (${bytes.length} bytes)',
-          );
+          debugPrint('[chat-image] sending $mime (${bytes.length} bytes)');
           await ref
               .read(chatMessagesNotifierProvider(widget.chgrId).notifier)
               .sendImage('data:image/$mime;base64,$b64');
@@ -357,13 +356,13 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
     final displayTitle = otherUserName ?? t.conversation;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: AppColors.surfaceHeader,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         titleSpacing: 0,
@@ -378,7 +377,11 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                     shape: BoxShape.circle,
                     gradient: AppGradients.accent,
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 24),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 Positioned(
                   right: 0,
@@ -404,7 +407,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                   style: GoogleFonts.jost(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
@@ -421,7 +424,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
@@ -435,262 +438,270 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
               onEnd: _confirmEndSession,
             ),
           Expanded(
-              child: messagesAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.mediumPurple,
-                  ),
-                ),
-                error: (e, _) => Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        t.failedLoadMessages,
-                        style: GoogleFonts.montserrat(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                data: (messages) {
-                  if (messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: AppGradients.accent.scale(0.3),
-                            ),
-                            child: const Icon(
-                              Icons.chat,
-                              size: 36,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            t.noMessagesYet,
-                            style: GoogleFonts.jost(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            t.startConversation,
-                            style: GoogleFonts.montserrat(
-                              color: AppColors.textMuted,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    unawaited(_markMessagesRead(messages));
-                  });
-
-                  return ListView.builder(
-                    controller: _scrollCtrl,
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                    itemCount: messages.length,
-                    itemBuilder: (_, i) {
-                      final msg = messages[messages.length - 1 - i];
-                      final currentUser = ref
-                          .watch(authStateProvider)
-                          .valueOrNull;
-                      final isMe =
-                          (msg.senderCoId != null &&
-                          msg.senderCoId == currentUser?.coId);
-                          
-                      bool showTime = true;
-                      if (i > 0) {
-                        final nextMsgDown = messages[messages.length - 1 - (i - 1)];
-                        if (nextMsgDown.senderCoId == msg.senderCoId) {
-                           showTime = false;
-                        }
-                      }
-
-                      return _RevealIn(
-                        delayMs: i * 18,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: showTime ? 16 : 4),
-                          child: _MessageBubble(message: msg, isMe: isMe, showTime: showTime),
-                        ),
-                      );
-                    },
-                  );
-                },
+            child: messagesAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.mediumPurple),
               ),
-            ),
-            // ── Message input ──
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              color: const Color(0xFFF8F9FA),
-              child: SafeArea(
-                top: false,
+              error: (e, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (_pendingImages.isNotEmpty) ...[
-                      SizedBox(
-                        height: 88,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _pendingImages.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final file = _pendingImages[index];
-                            return Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    file,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 2,
-                                  right: 2,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() => _pendingImages.removeAt(index));
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(3),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.black54,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        size: 14,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        constraints: const BoxConstraints(maxHeight: 120),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F1F3),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.add, color: Colors.black54),
-                              onPressed:
-                                  (_sending || _sendingImage)
-                                      ? null
-                                      : _pickImages,
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _msgCtrl,
-                                maxLines: null,
-                                textInputAction: TextInputAction.newline,
-                                style: GoogleFonts.manrope(
-                                  color: Colors.black87,
-                                  fontSize: 15,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Type a message...',
-                                  hintStyle: GoogleFonts.manrope(
-                                    color: Colors.black45,
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: GestureDetector(
-                                onTap: (_sending || _sendingImage)
-                                    ? null
-                                    : _onSendPressed,
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: (_sending || _sendingImage)
-                                        ? null
-                                        : const LinearGradient(
-                                            colors: [
-                                              Color(0xFF9B3366),
-                                              Color(0xFFB83280),
-                                            ],
-                                          ),
-                                    color: (_sending || _sendingImage)
-                                        ? AppColors.textMuted
-                                        : null,
-                                  ),
-                                  child: (_sending || _sendingImage)
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12.0),
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Icon(
-                                          _pendingImages.isNotEmpty &&
-                                                  _msgCtrl.text.trim().isEmpty
-                                              ? Icons.image
-                                              : Icons.send,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      t.failedLoadMessages,
+                      style: GoogleFonts.montserrat(
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
+              ),
+              data: (messages) {
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppGradients.accent.scale(0.3),
+                          ),
+                          child: const Icon(
+                            Icons.chat,
+                            size: 36,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          t.noMessagesYet,
+                          style: GoogleFonts.jost(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          t.startConversation,
+                          style: GoogleFonts.montserrat(
+                            color: AppColors.textMuted,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
+                  );
+                }
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  unawaited(_markMessagesRead(messages));
+                });
+
+                return ListView.builder(
+                  controller: _scrollCtrl,
+                  reverse: true,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  itemCount: messages.length,
+                  itemBuilder: (_, i) {
+                    final msg = messages[messages.length - 1 - i];
+                    final currentUser = ref
+                        .watch(authStateProvider)
+                        .valueOrNull;
+                    final isMe =
+                        (msg.senderCoId != null &&
+                        msg.senderCoId == currentUser?.coId);
+
+                    bool showTime = true;
+                    if (i > 0) {
+                      final nextMsgDown =
+                          messages[messages.length - 1 - (i - 1)];
+                      if (nextMsgDown.senderCoId == msg.senderCoId) {
+                        showTime = false;
+                      }
+                    }
+
+                    return _RevealIn(
+                      delayMs: i * 18,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: showTime ? 16 : 4),
+                        child: _MessageBubble(
+                          message: msg,
+                          isMe: isMe,
+                          showTime: showTime,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          // ── Message input ──
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            color: AppColors.surfaceDark,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_pendingImages.isNotEmpty) ...[
+                    SizedBox(
+                      height: 88,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _pendingImages.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final file = _pendingImages[index];
+                          return Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  file,
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 2,
+                                right: 2,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(
+                                      () => _pendingImages.removeAt(index),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.textSecondary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 120),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.add,
+                                  color: AppColors.textSecondary,
+                                ),
+                                onPressed: (_sending || _sendingImage)
+                                    ? null
+                                    : _pickImages,
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _msgCtrl,
+                                  maxLines: null,
+                                  textInputAction: TextInputAction.newline,
+                                  style: GoogleFonts.manrope(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 15,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Type a message...',
+                                    hintStyle: GoogleFonts.manrope(
+                                      color: AppColors.textMuted,
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: GestureDetector(
+                                  onTap: (_sending || _sendingImage)
+                                      ? null
+                                      : _onSendPressed,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: (_sending || _sendingImage)
+                                          ? null
+                                          : const LinearGradient(
+                                              colors: [
+                                                Color(0xFF9B3366),
+                                                Color(0xFFB83280),
+                                              ],
+                                            ),
+                                      color: (_sending || _sendingImage)
+                                          ? AppColors.textMuted
+                                          : null,
+                                    ),
+                                    child: (_sending || _sendingImage)
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(12.0),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Icon(
+                                            _pendingImages.isNotEmpty &&
+                                                    _msgCtrl.text.trim().isEmpty
+                                                ? Icons.image
+                                                : Icons.send,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -700,7 +711,11 @@ class _MessageBubble extends ConsumerWidget {
   final bool isMe;
   final bool showTime;
 
-  const _MessageBubble({required this.message, required this.isMe, this.showTime = true});
+  const _MessageBubble({
+    required this.message,
+    required this.isMe,
+    this.showTime = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -723,10 +738,14 @@ class _MessageBubble extends ConsumerWidget {
     final isPending = message.chmeId.startsWith('local-');
 
     return Column(
-      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: isMe
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment: isMe
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Flexible(
@@ -736,12 +755,14 @@ class _MessageBubble extends ConsumerWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  gradient: isMe ? const LinearGradient(
-                    colors: [Color(0xFF9B3366), Color(0xFFB83280)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ) : null,
-                  color: isMe ? null : const Color(0xFFEBEBEB),
+                  gradient: isMe
+                      ? const LinearGradient(
+                          colors: [Color(0xFF9B3366), Color(0xFFB83280)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : null,
+                  color: isMe ? null : AppColors.surfaceElevated,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -785,7 +806,7 @@ class _MessageBubble extends ConsumerWidget {
                         message.content ?? '',
                         style: GoogleFonts.manrope(
                           fontSize: 15,
-                          color: isMe ? Colors.white : const Color(0xFF2A2A2A),
+                          color: isMe ? Colors.white : AppColors.textPrimary,
                           height: 1.4,
                         ),
                       ),
@@ -859,10 +880,7 @@ class _ChatSessionEndBar extends ConsumerWidget {
   final String sessionId;
   final VoidCallback onEnd;
 
-  const _ChatSessionEndBar({
-    required this.sessionId,
-    required this.onEnd,
-  });
+  const _ChatSessionEndBar({required this.sessionId, required this.onEnd});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -892,7 +910,11 @@ class _ChatSessionEndBar extends ConsumerWidget {
               ),
               TextButton.icon(
                 onPressed: onEnd,
-                icon: const Icon(Icons.stop_circle_outlined, color: Colors.white, size: 18),
+                icon: const Icon(
+                  Icons.stop_circle_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 label: Text(
                   t.endSession,
                   style: GoogleFonts.manrope(
