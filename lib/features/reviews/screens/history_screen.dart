@@ -214,7 +214,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           children: [
                             Text(
                               t.sessionHistory,
-                              style: GoogleFonts.jost(
+                              style: GoogleFonts.lora(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
@@ -368,15 +368,16 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minWidth: 92),
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        constraints: const BoxConstraints(minWidth: 82),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.mediumPurple : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : AppColors.borderSubtle,
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? AppColors.brandPink : Colors.transparent,
+              width: 3,
+            ),
           ),
         ),
         child: Text(
@@ -450,7 +451,9 @@ class _SessionCard extends ConsumerWidget {
       final recordings = item['recording'];
       final hasRecordings = recordings is List && recordings.isNotEmpty;
       final zeroDuration =
-          durationValue.isEmpty || durationValue == '00s' || durationValue == '--';
+          durationValue.isEmpty ||
+          durationValue == '00s' ||
+          durationValue == '--';
 
       if (isEnded || endedAt.isNotEmpty) {
         normalizedStatus = 'completed';
@@ -545,10 +548,7 @@ class _SessionCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _statusColor(normalizedStatus).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -831,7 +831,7 @@ class _HistoryStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceCard,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(

@@ -49,11 +49,8 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           final historyAsync = ref.watch(customerHistoryProvider);
 
           final professionals =
-              professionalsAsync.valueOrNull ??
-              const <Professional>[];
-          final historyItems =
-              historyAsync.valueOrNull ??
-              const <dynamic>[];
+              professionalsAsync.valueOrNull ?? const <Professional>[];
+          final historyItems = historyAsync.valueOrNull ?? const <dynamic>[];
 
           return StatefulBuilder(
             builder: (ctx, setDialogState) {
@@ -63,81 +60,57 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
               );
 
               return AlertDialog(
-              backgroundColor: AppColors.surfaceCard,
-              title: Text(
-                t.writeReview,
-                style: GoogleFonts.jost(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                backgroundColor: AppColors.surfaceCard,
+                title: Text(
+                  t.writeReview,
+                  style: GoogleFonts.jost(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          t.yourRating,
-                          style: GoogleFonts.manrope(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            t.yourRating,
+                            style: GoogleFonts.manrope(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                        DropdownButton<double>(
-                          value: rating,
-                          items: [5, 4, 3, 2, 1]
-                              .map(
-                                (v) => DropdownMenuItem<double>(
-                                  value: v.toDouble(),
-                                  child: Text('$v star'),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) {
-                            if (v != null) {
-                              setDialogState(() => rating = v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: commentCtrl,
-                      maxLines: 4,
-                      decoration: InputDecoration(labelText: t.yourComment),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      t.reviewProfessionalLabel,
-                      style: GoogleFonts.manrope(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                          const Spacer(),
+                          DropdownButton<double>(
+                            value: rating,
+                            items: [5, 4, 3, 2, 1]
+                                .map(
+                                  (v) => DropdownMenuItem<double>(
+                                    value: v.toDouble(),
+                                    child: Text('$v star'),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) {
+                              if (v != null) {
+                                setDialogState(() => rating = v);
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildProfessionalPicker(
-                      t: t,
-                      professionals: professionals,
-                      loading: professionalsAsync.isLoading,
-                      error: professionalsAsync.hasError,
-                      selected: selectedProfessional,
-                      onChanged: (pro) {
-                        setDialogState(() {
-                          selectedProfessional = pro;
-                          selectedSession = null;
-                        });
-                      },
-                    ),
-                    if (selectedProfessional != null) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: commentCtrl,
+                        maxLines: 4,
+                        decoration: InputDecoration(labelText: t.yourComment),
+                      ),
                       const SizedBox(height: 14),
                       Text(
-                        t.reviewSessionLabel,
+                        t.reviewProfessionalLabel,
                         style: GoogleFonts.manrope(
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
@@ -145,45 +118,69 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      _buildSessionPicker(
+                      _buildProfessionalPicker(
                         t: t,
-                        sessions: sessionsForPro,
-                        selected: selectedSession,
-                        onChanged: (session) {
-                          setDialogState(() => selectedSession = session);
+                        professionals: professionals,
+                        loading: professionalsAsync.isLoading,
+                        error: professionalsAsync.hasError,
+                        selected: selectedProfessional,
+                        onChanged: (pro) {
+                          setDialogState(() {
+                            selectedProfessional = pro;
+                            selectedSession = null;
+                          });
                         },
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: Text(t.cancel),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    if (selectedProfessional == null) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(
-                          content: Text(t.selectProfessional),
-                          backgroundColor: AppColors.error,
+                      if (selectedProfessional != null) ...[
+                        const SizedBox(height: 14),
+                        Text(
+                          t.reviewSessionLabel,
+                          style: GoogleFonts.manrope(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
-                      );
-                      return;
-                    }
-                    Navigator.of(ctx).pop(true);
-                  },
-                  child: Text(t.submitReview),
+                        const SizedBox(height: 6),
+                        _buildSessionPicker(
+                          t: t,
+                          sessions: sessionsForPro,
+                          selected: selectedSession,
+                          onChanged: (session) {
+                            setDialogState(() => selectedSession = session);
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ],
-            );
-          },
-        );
-      },
-    ),
-  );
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(t.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      if (selectedProfessional == null) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text(t.selectProfessional),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.of(ctx).pop(true);
+                    },
+                    child: Text(t.submitReview),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
 
     if (shouldSubmit != true) return;
 
@@ -198,8 +195,8 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           'co_id_customer': currentUser.coId,
         },
         if (selectedSession != null) ...{
-          'se_id':
-              (selectedSession!['se_id'] ?? selectedSession!['id'])?.toString(),
+          'se_id': (selectedSession!['se_id'] ?? selectedSession!['id'])
+              ?.toString(),
         },
       };
 
@@ -251,10 +248,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     if (error || professionals.isEmpty) {
       return Text(
         t.noProfessionalsAvailable,
-        style: GoogleFonts.manrope(
-          fontSize: 13,
-          color: AppColors.textMuted,
-        ),
+        style: GoogleFonts.manrope(fontSize: 13, color: AppColors.textMuted),
       );
     }
 
@@ -290,11 +284,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
               height: 40,
               child: Row(
                 children: [
-                  _Avatar(
-                    imageUrl: imageUrl,
-                    name: pro.displayName,
-                    size: 28,
-                  ),
+                  _Avatar(imageUrl: imageUrl, name: pro.displayName, size: 28),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -345,10 +335,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     if (sessions.isEmpty) {
       return Text(
         t.noSessionsForProfessional,
-        style: GoogleFonts.manrope(
-          fontSize: 13,
-          color: AppColors.textMuted,
-        ),
+        style: GoogleFonts.manrope(fontSize: 13, color: AppColors.textMuted),
       );
     }
 
@@ -506,7 +493,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                           children: [
                             Text(
                               widget.isProfessional ? t.myReviews : t.reviews,
-                              style: GoogleFonts.jost(
+                              style: GoogleFonts.lora(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
@@ -710,7 +697,8 @@ List<Map<String, dynamic>> _sessionsForProfessional(
     if (!_isSessionHistoryItem(item)) continue;
 
     final matchesById = _historyProfessionalIds(item).any(
-      (id) => id.isNotEmpty &&
+      (id) =>
+          id.isNotEmpty &&
           (id == proId || id.replaceFirst(RegExp(r'^0+'), '') == proId),
     );
     if (matchesById) {
@@ -817,17 +805,18 @@ String _profileImageUrl({String? rawAvatar, required String seed}) {
   if (resolved != null) return resolved;
 
   final encodedSeed = Uri.encodeComponent(seed);
-  return 'https://i.pravatar.cc/300?u=voyanz-$encodedSeed';
+  return '${EnvConfig.current.baseUrl}/api/1.0/image/$encodedSeed/400/400/cover';
 }
 
 String _sessionTypeLabel(Map<String, dynamic> session) {
-  final raw = (session['se_type'] ??
-          session['session_type'] ??
-          session['type_call'] ??
-          session['call_type'] ??
-          session['subtype'] ??
-          session['type'])
-      ?.toString() ??
+  final raw =
+      (session['se_type'] ??
+              session['session_type'] ??
+              session['type_call'] ??
+              session['call_type'] ??
+              session['subtype'] ??
+              session['type'])
+          ?.toString() ??
       '';
   return raw.trim();
 }
@@ -849,11 +838,12 @@ IconData _sessionIcon(String type) {
 }
 
 String _sessionDateLabel(Map<String, dynamic> session) {
-  final raw = (session['se_date'] ??
-          session['date'] ??
-          session['session_date'] ??
-          session['start_at'])
-      ?.toString() ??
+  final raw =
+      (session['se_date'] ??
+              session['date'] ??
+              session['session_date'] ??
+              session['start_at'])
+          ?.toString() ??
       '';
   if (raw.isEmpty) return '';
   final normalized = raw.replaceFirst(' ', 'T');
@@ -871,16 +861,11 @@ class _Avatar extends StatelessWidget {
   final String name;
   final double size;
 
-  const _Avatar({
-    required this.imageUrl,
-    required this.name,
-    this.size = 36,
-  });
+  const _Avatar({required this.imageUrl, required this.name, this.size = 36});
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
     return Container(
       width: size,
       height: size,
@@ -991,9 +976,7 @@ class _RatingBar extends StatelessWidget {
                 minHeight: 7,
                 value: value,
                 backgroundColor: AppColors.surfaceElevated,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.gold,
-                ),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
               ),
             ),
           ),
@@ -1019,12 +1002,13 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.mediumPurple : AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : AppColors.borderSubtle,
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? AppColors.brandPink : Colors.transparent,
+              width: 3,
+            ),
           ),
         ),
         child: Text(
@@ -1050,7 +1034,10 @@ class _ReviewCard extends ConsumerWidget {
     final currentUser = ref.watch(authStateProvider).valueOrNull;
     final rating = _reviewRating(review);
     final comment = _reviewText(review);
-    final author = _reviewAuthor(review, currentUserName: _userDisplayName(currentUser));
+    final author = _reviewAuthor(
+      review,
+      currentUserName: _userDisplayName(currentUser),
+    );
     final date = _reviewDate(review);
 
     return AppCard(
@@ -1073,7 +1060,11 @@ class _ReviewCard extends ConsumerWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded, size: 16, color: AppColors.gold),
+                  const Icon(
+                    Icons.star_rounded,
+                    size: 16,
+                    color: AppColors.gold,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     rating.toStringAsFixed(1),
@@ -1142,7 +1133,9 @@ String _reviewAuthor(Map<String, dynamic> review, {String? currentUserName}) {
   final customer = review['customer'];
   if (customer is Map<String, dynamic>) {
     final name =
-        customer['co_fullname']?.toString() ?? customer['co_name']?.toString() ?? '';
+        customer['co_fullname']?.toString() ??
+        customer['co_name']?.toString() ??
+        '';
     if (name.isNotEmpty) return name;
   }
   // Customer side: the reviewer is the logged-in user. The API does not
@@ -1153,7 +1146,8 @@ String _reviewAuthor(Map<String, dynamic> review, {String? currentUserName}) {
   }
   final professional = review['professional'];
   if (professional is Map<String, dynamic>) {
-    final name = professional['co_fullname']?.toString() ??
+    final name =
+        professional['co_fullname']?.toString() ??
         professional['co_name']?.toString() ??
         '';
     if (name.isNotEmpty) return name;
@@ -1178,7 +1172,8 @@ String _userDisplayName(dynamic user) {
 String _reviewSubject(Map<String, dynamic> review) {
   final professional = review['professional'];
   if (professional is Map<String, dynamic>) {
-    final name = professional['co_fullname']?.toString() ??
+    final name =
+        professional['co_fullname']?.toString() ??
         professional['co_name']?.toString() ??
         '';
     if (name.isNotEmpty) return name;
@@ -1264,4 +1259,3 @@ class _RevealIn extends StatelessWidget {
     );
   }
 }
-

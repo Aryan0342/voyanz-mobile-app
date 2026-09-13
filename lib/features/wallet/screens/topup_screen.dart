@@ -30,7 +30,7 @@ class TopUpScreen extends ConsumerWidget {
     final liveCredit = liveBalanceAsync.valueOrNull;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF9FF),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -41,7 +41,11 @@ class TopUpScreen extends ConsumerWidget {
               color: AppColors.mediumPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back, color: AppColors.mediumPurple, size: 20),
+            child: const Icon(
+              Icons.arrow_back,
+              color: AppColors.mediumPurple,
+              size: 20,
+            ),
           ),
           onPressed: () => context.pop(),
         ),
@@ -98,13 +102,13 @@ class TopUpScreen extends ConsumerWidget {
                               Text(
                                 liveCredit != null
                                     ? liveCredit.display
-                                        .replaceAll('€', '')
-                                        .trim()
+                                          .replaceAll('€', '')
+                                          .trim()
                                     : credit != null
-                                        ? credit
-                                            .toStringAsFixed(2)
-                                            .replaceAll('.', ',')
-                                        : '0,00',
+                                    ? credit
+                                          .toStringAsFixed(2)
+                                          .replaceAll('.', ',')
+                                    : '0,00',
                                 style: GoogleFonts.jost(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -153,19 +157,27 @@ class TopUpScreen extends ConsumerWidget {
                         ),
                       ),
                       error: (e, _) {
-                        final msg = e.toString().replaceFirst('Exception: ', '');
+                        final msg = e.toString().replaceFirst(
+                          'Exception: ',
+                          '',
+                        );
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(32),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.error_outline,
-                                    size: 48, color: AppColors.error),
+                                const Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: AppColors.error,
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   msg,
-                                  style: GoogleFonts.montserrat(color: AppColors.error),
+                                  style: GoogleFonts.montserrat(
+                                    color: AppColors.error,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -183,7 +195,11 @@ class TopUpScreen extends ConsumerWidget {
                                   t: t,
                                   isSelected: selectedPack?.id == pack.id,
                                   onTap: () =>
-                                      ref.read(selectedPackProvider.notifier).state =
+                                      ref
+                                              .read(
+                                                selectedPackProvider.notifier,
+                                              )
+                                              .state =
                                           pack,
                                 ),
                               ),
@@ -198,7 +214,7 @@ class TopUpScreen extends ConsumerWidget {
             if (selectedPack != null)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceDark,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
@@ -219,15 +235,23 @@ class TopUpScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _OrderSummary(pack: selectedPack, t: t),
                     const SizedBox(height: 12),
-                    _TermsLink(t: t, onTap: () => _showTermsDialog(context, ref)),
+                    _TermsLink(
+                      t: t,
+                      onTap: () => _showTermsDialog(context, ref),
+                    ),
                     const SizedBox(height: 24),
                     GradientButton(
                       width: double.infinity,
-                      onPressed: () => _handlePayment(context, ref, selectedPack),
+                      onPressed: () =>
+                          _handlePayment(context, ref, selectedPack),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.credit_card, color: Colors.white, size: 20),
+                          const Icon(
+                            Icons.credit_card,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             t.payWithCard,
@@ -262,7 +286,10 @@ class TopUpScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Terms & Conditions',
-          style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: GoogleFonts.jost(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -271,24 +298,36 @@ class TopUpScreen extends ConsumerWidget {
               if (cgu != null && cgu.isNotEmpty) ...[
                 Text(
                   'Terms of Use',
-                  style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: GoogleFonts.jost(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   cgu.replaceAll(RegExp(r'<[^>]*>'), ''),
-                  style: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
+                  style: GoogleFonts.montserrat(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ],
               if (cgs != null && cgs.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
                   'Terms of Service',
-                  style: GoogleFonts.jost(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: GoogleFonts.jost(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   cgs.replaceAll(RegExp(r'<[^>]*>'), ''),
-                  style: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
+                  style: GoogleFonts.montserrat(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ],
@@ -307,7 +346,11 @@ class TopUpScreen extends ConsumerWidget {
     );
   }
 
-  void _applyNewBalance(WidgetRef ref, PaymentStatusResponse status, TopUpPack pack) {
+  void _applyNewBalance(
+    WidgetRef ref,
+    PaymentStatusResponse status,
+    TopUpPack pack,
+  ) {
     double? newCredit;
     if (status.jackpotf != null) {
       final raw = status.jackpotf!
@@ -373,7 +416,9 @@ class TopUpScreen extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Payment is temporarily unavailable. Please try again later.'),
+              content: Text(
+                'Payment is temporarily unavailable. Please try again later.',
+              ),
               backgroundColor: AppColors.error,
             ),
           );
@@ -386,10 +431,7 @@ class TopUpScreen extends ConsumerWidget {
       final intent = await _runWithLoading(
         navigator,
         t.processingPayment,
-        () => repo.createPaymentIntent(
-          item: pack.id,
-          code: promoCode,
-        ),
+        () => repo.createPaymentIntent(item: pack.id, code: promoCode),
       );
 
       if (kUseMockBackend) {
@@ -402,10 +444,10 @@ class TopUpScreen extends ConsumerWidget {
           _applyNewBalance(ref, status, pack);
         }
         if (context.mounted) {
-          context.push('/wallet/success', extra: {
-            'amount': pack.tocomptabilizef,
-            'packName': pack.name,
-          });
+          context.push(
+            '/wallet/success',
+            extra: {'amount': pack.tocomptabilizef, 'packName': pack.name},
+          );
         }
         return;
       }
@@ -431,10 +473,10 @@ class TopUpScreen extends ConsumerWidget {
         if (status.isSuccess) {
           _applyNewBalance(ref, status, pack);
           if (context.mounted) {
-            context.push('/wallet/success', extra: {
-              'amount': pack.tocomptabilizef,
-              'packName': pack.name,
-            });
+            context.push(
+              '/wallet/success',
+              extra: {'amount': pack.tocomptabilizef, 'packName': pack.name},
+            );
           }
         } else if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -523,7 +565,10 @@ class _PackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPremium = pack.promotion > 0 || pack.isFirstPurchaseBonus || pack.name.toLowerCase().contains('premium');
+    final isPremium =
+        pack.promotion > 0 ||
+        pack.isFirstPurchaseBonus ||
+        pack.name.toLowerCase().contains('premium');
 
     return GestureDetector(
       onTap: onTap,
@@ -533,10 +578,10 @@ class _PackCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surfaceCard,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: isSelected ? AppColors.mediumPurple : const Color(0xFFF1E8F1),
+                color: isSelected ? AppColors.aqua : AppColors.borderSubtle,
                 width: isSelected ? 2 : 1.5,
               ),
               boxShadow: [
@@ -559,7 +604,9 @@ class _PackCard extends StatelessWidget {
                         style: GoogleFonts.jost(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.mediumPurple : AppColors.textPrimary,
+                          color: isSelected
+                              ? AppColors.mediumPurple
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -619,7 +666,9 @@ class _PackCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? AppColors.mediumPurple : AppColors.borderStrong,
+                      color: isSelected
+                          ? AppColors.mediumPurple
+                          : AppColors.borderStrong,
                       width: isSelected ? 6 : 1.5,
                     ),
                   ),
@@ -632,7 +681,10 @@ class _PackCard extends StatelessWidget {
               top: -12,
               right: 24,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.magentaRose,
                   borderRadius: BorderRadius.circular(16),
@@ -681,7 +733,7 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
           child: Container(
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFFF5EDF4),
+              color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(24),
             ),
             child: TextField(
@@ -693,7 +745,10 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
               ),
               style: GoogleFonts.montserrat(
                 color: AppColors.mediumPurple,
@@ -712,8 +767,9 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                   try {
                     final repo = ref.read(walletRepositoryProvider);
                     await repo.validatePromoCode(_controller.text.trim());
-                    ref.read(promoCodeProvider.notifier).state =
-                        _controller.text.trim();
+                    ref.read(promoCodeProvider.notifier).state = _controller
+                        .text
+                        .trim();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -738,8 +794,8 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE8D9EB),
-            foregroundColor: AppColors.mediumPurple,
+            backgroundColor: AppColors.surfaceLight,
+            foregroundColor: AppColors.aqua,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
@@ -857,7 +913,8 @@ class _TermsLink extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(walletRepositoryProvider);
-    final hasTerms = (repo.htmlTextCgu != null && repo.htmlTextCgu!.isNotEmpty) ||
+    final hasTerms =
+        (repo.htmlTextCgu != null && repo.htmlTextCgu!.isNotEmpty) ||
         (repo.htmlTextCgs != null && repo.htmlTextCgs!.isNotEmpty);
 
     if (!hasTerms) return const SizedBox.shrink();
