@@ -114,16 +114,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final t = ref.read(translationsProvider);
 
     if (!_acceptCgu || !_acceptCgs) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.pleaseAcceptCguCgs)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.pleaseAcceptCguCgs)));
       return;
     }
 
     if (_role == 'professional' && !_acceptCharter) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.pleaseAcceptCharter)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.pleaseAcceptCharter)));
       return;
     }
 
@@ -139,9 +139,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     // signups). Confirm and send the user to the login screen.
     if (!sessionEstablished && !ref.read(authStateProvider).hasError) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.accountCreated)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.accountCreated)));
       context.go('/login');
     }
   }
@@ -283,9 +283,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.accountCreated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(t.accountCreated)));
         context.go('/home');
       }
       if (next.hasError) {
@@ -301,7 +301,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.canvas,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: SlideTransition(
@@ -383,7 +383,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surfaceDark,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(34),
                     ),
@@ -433,15 +433,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                     value: 'customer',
                                     label: Text(t.customer),
                                     icon: const Icon(
-                                        Icons.person_outline,
-                                        size: 18),
+                                      Icons.person_outline,
+                                      size: 18,
+                                    ),
                                   ),
                                   ButtonSegment(
                                     value: 'professional',
                                     label: Text(t.professional),
                                     icon: const Icon(
-                                        Icons.auto_awesome,
-                                        size: 18),
+                                      Icons.auto_awesome,
+                                      size: 18,
+                                    ),
                                   ),
                                 ],
                                 selected: {_role},
@@ -493,16 +495,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                           controller: _firstNameCtrl,
                                           focusNode: _firstNameFocusNode,
                                           hintText: t.firstName,
-                                          textInputAction:
-                                              TextInputAction.next,
+                                          textInputAction: TextInputAction.next,
                                           textCapitalization:
                                               TextCapitalization.words,
                                           autocorrect: false,
                                           enableSuggestions: false,
                                           validator: (v) =>
                                               (v == null || v.isEmpty)
-                                                  ? t.required
-                                                  : null,
+                                              ? t.required
+                                              : null,
                                         ),
                                       ],
                                     ),
@@ -519,16 +520,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                           controller: _lastNameCtrl,
                                           focusNode: _lastNameFocusNode,
                                           hintText: t.lastName,
-                                          textInputAction:
-                                              TextInputAction.next,
+                                          textInputAction: TextInputAction.next,
                                           textCapitalization:
                                               TextCapitalization.words,
                                           autocorrect: false,
                                           enableSuggestions: false,
                                           validator: (v) =>
                                               (v == null || v.isEmpty)
-                                                  ? t.required
-                                                  : null,
+                                              ? t.required
+                                              : null,
                                         ),
                                       ],
                                     ),
@@ -582,7 +582,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               DropdownButtonFormField<String>(
                                 initialValue: null,
                                 decoration: _dropdownDecoration(
-                                    t.country, Icons.flag_outlined),
+                                  t.country,
+                                  Icons.flag_outlined,
+                                ),
                                 items: t.countryList
                                     .map(
                                       (c) => DropdownMenuItem<String>(
@@ -594,10 +596,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 onChanged: (value) {
                                   _countryCtrl.text = value ?? '';
                                 },
-                                validator: (_) =>
-                                    _countryCtrl.text.isEmpty
-                                        ? t.required
-                                        : null,
+                                validator: (_) => _countryCtrl.text.isEmpty
+                                    ? t.required
+                                    : null,
                               ),
                               const SizedBox(height: 14),
 
@@ -656,8 +657,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 autocorrect: false,
                                 enableSuggestions: false,
                                 suffixIcon: GestureDetector(
-                                  onTap: () => setState(() =>
-                                      _obscurePassword = !_obscurePassword),
+                                  onTap: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                   child: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_off_outlined
@@ -666,10 +668,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                     size: 20,
                                   ),
                                 ),
-                                validator: (v) =>
-                                    (v != null && v.length >= 6)
-                                        ? null
-                                        : t.min6Chars,
+                                validator: (v) => (v != null && v.length >= 6)
+                                    ? null
+                                    : t.min6Chars,
                               ),
                               const SizedBox(height: 14),
 
@@ -687,7 +688,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 enableSuggestions: false,
                                 suffixIcon: GestureDetector(
                                   onTap: () => setState(
-                                      () => _obscureConfirm = !_obscureConfirm),
+                                    () => _obscureConfirm = !_obscureConfirm,
+                                  ),
                                   child: Icon(
                                     _obscureConfirm
                                         ? Icons.visibility_off_outlined
@@ -696,24 +698,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                     size: 20,
                                   ),
                                 ),
-                                validator: (v) =>
-                                    v == _passwordCtrl.text
-                                        ? null
-                                        : t.passwordsNoMatch,
+                                validator: (v) => v == _passwordCtrl.text
+                                    ? null
+                                    : t.passwordsNoMatch,
                               ),
                               const SizedBox(height: 14),
 
                               // CGU checkbox
                               GestureDetector(
-                                onTap: () => setState(() => _acceptCgu = !_acceptCgu),
+                                onTap: () =>
+                                    setState(() => _acceptCgu = !_acceptCgu),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Checkbox(
                                       value: _acceptCgu,
-                                      onChanged: (v) => setState(() => _acceptCgu = v ?? false),
+                                      onChanged: (v) => setState(
+                                        () => _acceptCgu = v ?? false,
+                                      ),
                                       activeColor: AppColors.mediumPurple,
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                       visualDensity: VisualDensity.compact,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(4),
@@ -740,15 +745,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                               // CGS checkbox
                               GestureDetector(
-                                onTap: () => setState(() => _acceptCgs = !_acceptCgs),
+                                onTap: () =>
+                                    setState(() => _acceptCgs = !_acceptCgs),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Checkbox(
                                       value: _acceptCgs,
-                                      onChanged: (v) => setState(() => _acceptCgs = v ?? false),
+                                      onChanged: (v) => setState(
+                                        () => _acceptCgs = v ?? false,
+                                      ),
                                       activeColor: AppColors.mediumPurple,
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                       visualDensity: VisualDensity.compact,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(4),
@@ -774,8 +783,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                               // Professional-only fields
                               AnimatedSwitcher(
-                                duration:
-                                    const Duration(milliseconds: 240),
+                                duration: const Duration(milliseconds: 240),
                                 switchInCurve: Curves.easeOutCubic,
                                 switchOutCurve: Curves.easeInCubic,
                                 child: _role == 'professional'
@@ -791,28 +799,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                             initialValue: _legalStructure,
                                             decoration: _dropdownDecoration(
                                               t.legalStructure,
-                                              Icons
-                                                  .business_center_outlined,
+                                              Icons.business_center_outlined,
                                             ),
                                             items: [
                                               DropdownMenuItem(
                                                 value: 'individual',
-                                                child: Text(
-                                                    t.legalIndividual),
+                                                child: Text(t.legalIndividual),
                                               ),
                                               DropdownMenuItem(
                                                 value: 'company',
-                                                child:
-                                                    Text(t.legalCompany),
+                                                child: Text(t.legalCompany),
                                               ),
                                               DropdownMenuItem(
                                                 value: 'association',
-                                                child: Text(
-                                                    t.legalAssociation),
+                                                child: Text(t.legalAssociation),
                                               ),
                                             ],
-                                            onChanged: (value) =>
-                                                setState(
+                                            onChanged: (value) => setState(
                                               () => _legalStructure =
                                                   value ?? 'individual',
                                             ),
@@ -823,8 +826,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                             focusNode: _siretFocusNode,
                                             hintText: t.siretNumber,
                                             prefixIcon: Icons.badge_outlined,
-                                            keyboardType:
-                                                TextInputType.number,
+                                            keyboardType: TextInputType.number,
                                             textInputAction:
                                                 TextInputAction.next,
                                             autocorrect: false,
@@ -832,7 +834,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                             validator: (v) {
                                               final digits = (v ?? '')
                                                   .replaceAll(
-                                                      RegExp(r'\D'), '');
+                                                    RegExp(r'\D'),
+                                                    '',
+                                                  );
                                               if (digits.isEmpty) {
                                                 return t.required;
                                               }
@@ -844,20 +848,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                           if (_legalStructure == 'company') ...[
                                             const SizedBox(height: 12),
                                             _RegTextField(
-                                              controller:
-                                                  _companyNameCtrl,
-                                              focusNode:
-                                                  _companyNameFocusNode,
+                                              controller: _companyNameCtrl,
+                                              focusNode: _companyNameFocusNode,
                                               hintText: t.companyName,
-                                              prefixIcon: Icons
-                                                  .business_outlined,
+                                              prefixIcon:
+                                                  Icons.business_outlined,
                                               textInputAction:
                                                   TextInputAction.next,
                                               textCapitalization:
                                                   TextCapitalization.words,
                                               autocorrect: false,
                                               enableSuggestions: false,
-                                              validator: (v) => (v == null ||
+                                              validator: (v) =>
+                                                  (v == null ||
                                                       v.trim().isEmpty)
                                                   ? t.societyRequired
                                                   : null,
@@ -865,50 +868,50 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                           ],
                                           const SizedBox(height: 12),
                                           GestureDetector(
-                                            onTap: () => setState(() =>
-                                                _acceptCharter =
-                                                    !_acceptCharter),
+                                            onTap: () => setState(
+                                              () => _acceptCharter =
+                                                  !_acceptCharter,
+                                            ),
                                             child: Row(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Checkbox(
                                                   value: _acceptCharter,
-                                                  onChanged: (v) =>
-                                                      setState(
+                                                  onChanged: (v) => setState(
                                                     () => _acceptCharter =
                                                         v ?? false,
                                                   ),
-                                                  activeColor: AppColors
-                                                      .mediumPurple,
+                                                  activeColor:
+                                                      AppColors.mediumPurple,
                                                   materialTapTargetSize:
                                                       MaterialTapTargetSize
                                                           .shrinkWrap,
                                                   visualDensity:
-                                                      VisualDensity
-                                                          .compact,
-                                                  shape:
-                                                      RoundedRectangleBorder(
+                                                      VisualDensity.compact,
+                                                  shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadius
-                                                            .circular(4),
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Expanded(
                                                   child: Padding(
                                                     padding:
-                                                        const EdgeInsets
-                                                            .only(top: 2),
+                                                        const EdgeInsets.only(
+                                                          top: 2,
+                                                        ),
                                                     child: Text(
                                                       t.acceptCharter,
-                                                      style: GoogleFonts
-                                                          .manrope(
-                                                        fontSize: 13,
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                        height: 1.45,
-                                                      ),
+                                                      style:
+                                                          GoogleFonts.manrope(
+                                                            fontSize: 13,
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            height: 1.45,
+                                                          ),
                                                     ),
                                                   ),
                                                 ),
@@ -924,8 +927,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                               // CTA Button
                               GradientButton(
-                                onPressed:
-                                    authState.isLoading ? null : _submit,
+                                onPressed: authState.isLoading ? null : _submit,
                                 width: double.infinity,
                                 height: 56,
                                 borderRadius: BorderRadius.circular(32),
@@ -983,8 +985,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                           vertical: 4,
                                         ),
                                         minimumSize: Size.zero,
-                                        tapTargetSize: MaterialTapTargetSize
-                                            .shrinkWrap,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
                                       ),
                                       child: Text(
                                         t.logIn,
@@ -1023,19 +1025,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       ),
       prefixIconConstraints: const BoxConstraints(minWidth: 52),
       filled: true,
-      fillColor: const Color(0xFFF4F5F9),
+      fillColor: AppColors.surfaceElevated,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+        borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+        borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide:
-            const BorderSide(color: AppColors.mediumPurple, width: 1.6),
+        borderSide: const BorderSide(color: AppColors.mediumPurple, width: 1.6),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -1126,13 +1127,14 @@ class _RegTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle:
-            GoogleFonts.manrope(color: AppColors.textMuted, fontSize: 15),
+        hintStyle: GoogleFonts.manrope(
+          color: AppColors.textMuted,
+          fontSize: 15,
+        ),
         prefixIcon: prefixIcon != null
             ? Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                child:
-                    Icon(prefixIcon, color: AppColors.textMuted, size: 20),
+                child: Icon(prefixIcon, color: AppColors.textMuted, size: 20),
               )
             : null,
         prefixIconConstraints: prefixIcon != null
@@ -1146,16 +1148,20 @@ class _RegTextField extends StatelessWidget {
             : null,
         suffixIconConstraints: const BoxConstraints(minWidth: 48),
         filled: true,
-        fillColor: const Color(0xFFF4F5F9),
+        fillColor: AppColors.surfaceElevated,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+          borderSide: const BorderSide(
+            color: AppColors.borderSubtle,
+            width: 1.2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+          borderSide: const BorderSide(
+            color: AppColors.borderSubtle,
+            width: 1.2,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -1166,13 +1172,11 @@ class _RegTextField extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: AppColors.error, width: 1.2),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide:
-              const BorderSide(color: AppColors.error, width: 1.6),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.6),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,

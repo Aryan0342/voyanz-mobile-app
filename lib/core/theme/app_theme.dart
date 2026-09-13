@@ -3,46 +3,46 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 
-/// Light, polished ThemeData used across the app.
+/// Dark Voyanz ThemeData matching the public website.
 abstract final class AppTheme {
   static ThemeData get dark {
     const radius = 16.0;
-    final baseText = GoogleFonts.manropeTextTheme(ThemeData.light().textTheme);
+    final baseText = GoogleFonts.manropeTextTheme(ThemeData.dark().textTheme);
 
     final textTheme = baseText.copyWith(
-      displayLarge: GoogleFonts.jost(
+      displayLarge: GoogleFonts.lora(
         fontSize: 38,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 0,
         height: 1.08,
       ),
-      displayMedium: GoogleFonts.jost(
+      displayMedium: GoogleFonts.lora(
         fontSize: 30,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 0,
         height: 1.12,
       ),
-      headlineLarge: GoogleFonts.jost(
+      headlineLarge: GoogleFonts.lora(
         fontSize: 27,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 0,
       ),
-      headlineMedium: GoogleFonts.jost(
+      headlineMedium: GoogleFonts.lora(
         fontSize: 23,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 0,
       ),
-      headlineSmall: GoogleFonts.jost(
+      headlineSmall: GoogleFonts.lora(
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         letterSpacing: 0,
       ),
-      titleLarge: GoogleFonts.jost(
+      titleLarge: GoogleFonts.lora(
         fontSize: 18,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
@@ -107,7 +107,7 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.canvas,
       textTheme: textTheme,
       fontFamily: GoogleFonts.manrope().fontFamily,
@@ -122,7 +122,7 @@ abstract final class AppTheme {
           TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
         },
       ),
-      colorScheme: const ColorScheme.light(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.mediumPurple,
         onPrimary: Colors.white,
         secondary: AppColors.magentaRose,
@@ -144,7 +144,7 @@ abstract final class AppTheme {
         centerTitle: false,
         titleSpacing: 0,
         toolbarHeight: kToolbarHeight,
-        titleTextStyle: GoogleFonts.jost(
+        titleTextStyle: GoogleFonts.lora(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -162,7 +162,7 @@ abstract final class AppTheme {
           return GoogleFonts.manrope(
             fontSize: 11,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-            color: selected ? AppColors.deepIndigo : AppColors.textMuted,
+            color: selected ? AppColors.aqua : AppColors.textMuted,
             letterSpacing: 0,
           );
         }),
@@ -176,8 +176,8 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceCard,
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.10),
+        elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.28),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
@@ -198,7 +198,10 @@ abstract final class AppTheme {
         ),
         prefixIconColor: AppColors.textMuted,
         suffixIconColor: AppColors.textMuted,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radius),
           borderSide: const BorderSide(color: AppColors.borderSubtle),
@@ -209,7 +212,10 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radius),
-          borderSide: const BorderSide(color: AppColors.mediumPurple, width: 1.6),
+          borderSide: const BorderSide(
+            color: AppColors.mediumPurple,
+            width: 1.6,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radius),
@@ -256,7 +262,7 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.deepIndigo,
+          foregroundColor: AppColors.textPrimary,
           minimumSize: const Size(52, 50),
           side: const BorderSide(color: AppColors.borderStrong),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -279,7 +285,9 @@ abstract final class AppTheme {
           disabledForegroundColor: AppColors.textMuted,
           minimumSize: const Size(42, 42),
           padding: const EdgeInsets.all(10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -292,7 +300,9 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surfaceCard,
         selectedColor: AppColors.mediumPurple.withValues(alpha: 0.11),
         disabledColor: AppColors.surfaceLight,
-        labelStyle: textTheme.labelMedium?.copyWith(color: AppColors.textSecondary),
+        labelStyle: textTheme.labelMedium?.copyWith(
+          color: AppColors.textSecondary,
+        ),
         secondaryLabelStyle: textTheme.labelMedium?.copyWith(
           color: AppColors.mediumPurple,
         ),
@@ -310,7 +320,7 @@ abstract final class AppTheme {
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return AppColors.deepIndigo;
+              return AppColors.aqua;
             }
             return AppColors.textSecondary;
           }),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -121,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.canvas,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: SlideTransition(
@@ -159,7 +159,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.14),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.14,
+                                      ),
                                       blurRadius: 24,
                                       offset: const Offset(0, 8),
                                     ),
@@ -223,7 +225,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surfaceDark,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(34),
                     ),
@@ -279,10 +281,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 autocorrect: false,
                                 enableSuggestions: false,
                                 textCapitalization: TextCapitalization.none,
-                                validator: (v) =>
-                                    (v == null || v.isEmpty)
-                                        ? t.emailRequired
-                                        : null,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.emailRequired
+                                    : null,
                               ),
                               const SizedBox(height: 14),
 
@@ -307,10 +308,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     size: 20,
                                   ),
                                 ),
-                                validator: (v) =>
-                                    (v == null || v.isEmpty)
-                                        ? t.passwordRequired
-                                        : null,
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? t.passwordRequired
+                                    : null,
                                 onFieldSubmitted: (_) => _submit(),
                               ),
 
@@ -342,8 +342,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                               // CTA Button - pill shaped
                               GradientButton(
-                                onPressed:
-                                    authState.isLoading ? null : _submit,
+                                onPressed: authState.isLoading ? null : _submit,
                                 width: double.infinity,
                                 height: 56,
                                 borderRadius: BorderRadius.circular(32),
@@ -483,14 +482,20 @@ class _LoginTextField extends StatelessWidget {
             : null,
         suffixIconConstraints: const BoxConstraints(minWidth: 48),
         filled: true,
-        fillColor: const Color(0xFFF4F5F9),
+        fillColor: AppColors.surfaceElevated,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+          borderSide: const BorderSide(
+            color: AppColors.borderSubtle,
+            width: 1.2,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE4E6EF), width: 1.2),
+          borderSide: const BorderSide(
+            color: AppColors.borderSubtle,
+            width: 1.2,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

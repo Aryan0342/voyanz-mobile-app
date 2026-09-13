@@ -26,8 +26,7 @@ class AppTranslations {
   String get resetPasswordSubtitle => _fr
       ? "Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe."
       : "Enter your email address and we'll send you a link to reset your password.";
-  String get sendResetLink =>
-      _fr ? 'Envoyer le lien' : 'Send Reset Link';
+  String get sendResetLink => _fr ? 'Envoyer le lien' : 'Send Reset Link';
   String get resetLinkSent => _fr
       ? 'Un e-mail vous a été envoyé pour réinitialiser votre mot de passe.'
       : 'An email has been sent to reset your password.';
@@ -37,8 +36,7 @@ class AppTranslations {
   String resetLinkFailed(String err) => _fr
       ? "Échec de l'envoi du lien : $err"
       : 'Failed to send reset link: $err';
-  String get backToLogin =>
-      _fr ? 'Retour à la connexion' : 'Back to Login';
+  String get backToLogin => _fr ? 'Retour à la connexion' : 'Back to Login';
 
   // ── Auth – register ─────────────────────────────────────────────────────────
   String get createAccount => _fr ? 'Créer un compte' : 'Create Account';
@@ -99,8 +97,7 @@ class AppTranslations {
   String get pleaseAcceptCguCgs => _fr
       ? 'Veuillez accepter les CGU et CGS pour continuer.'
       : 'Please accept CGU and CGS to continue.';
-  String get legalStructure =>
-      _fr ? 'Structure legale' : 'Legal structure';
+  String get legalStructure => _fr ? 'Structure legale' : 'Legal structure';
   String get legalIndividual => _fr ? 'Individuel' : 'Individual';
   String get legalCompany => _fr ? 'Societe' : 'Company';
   String get legalAssociation => _fr ? 'Association' : 'Association';
@@ -110,16 +107,15 @@ class AppTranslations {
   String get pleaseAcceptCharter => _fr
       ? 'Veuillez accepter la charte professionnelle pour continuer.'
       : 'Please accept the professional charter to continue.';
-  String get invalidLegalStructure => _fr
-      ? 'Structure legale invalide.'
-      : 'Invalid legal structure.';
-  String get siretNumber =>
-      _fr ? 'Numéro d\'immatriculation (SIRET / RNE)' : 'Registration number (SIRET / RNE)';
+  String get invalidLegalStructure =>
+      _fr ? 'Structure legale invalide.' : 'Invalid legal structure.';
+  String get siretNumber => _fr
+      ? 'Numéro d\'immatriculation (SIRET / RNE)'
+      : 'Registration number (SIRET / RNE)';
   String get invalidSiret => _fr
       ? 'Un numéro d\'immatriculation valide est obligatoire.'
       : 'A valid registration number is required.';
-  String get companyName =>
-      _fr ? 'Nom de la société' : 'Company name';
+  String get companyName => _fr ? 'Nom de la société' : 'Company name';
   String get societyRequired => _fr
       ? 'Le nom de la société est obligatoire pour une société.'
       : 'A company name is required for a company.';
@@ -132,9 +128,8 @@ class AppTranslations {
   String get signupRecaptchaRequired => _fr
       ? 'La verification anti-spam est requise pour creer ce compte.'
       : 'Anti-spam verification is required to create this account.';
-  String get accountCreated => _fr
-      ? 'Compte cree ! Bienvenue.'
-      : 'Account created! Welcome.';
+  String get accountCreated =>
+      _fr ? 'Compte cree ! Bienvenue.' : 'Account created! Welcome.';
   String createAccountFailed(String err) => _fr
       ? 'Échec de la création du compte : $err'
       : 'Failed to create account: $err';
@@ -196,8 +191,10 @@ class AppTranslations {
   String get support => _fr ? 'Assistance' : 'Support';
   String get helpCenter => _fr ? "Centre d'aide" : 'Help Center';
   String get faqsGuides => _fr ? 'FAQ et guides' : 'FAQs and guides';
-  String get termsOfUse => _fr ? 'Conditions d\'utilisation (CGU)' : 'Terms of Use (CGU)';
-  String get termsOfService => _fr ? 'Conditions de service (CGS)' : 'Terms of Service (CGS)';
+  String get termsOfUse =>
+      _fr ? 'Conditions d\'utilisation (CGU)' : 'Terms of Use (CGU)';
+  String get termsOfService =>
+      _fr ? 'Conditions de service (CGS)' : 'Terms of Service (CGS)';
   String get legalNotice => _fr ? 'Mentions légales' : 'Legal Notice';
   String get legalNoticeSubtitle => _fr
       ? 'Informations légales et éditeur du service'
@@ -252,6 +249,7 @@ class AppTranslations {
       ? 'Spécialité, expérience, prix, type de session, langue'
       : 'Specialty, experience, price, session type, language';
   String get specialties => _fr ? 'Spécialités' : 'Specialties';
+  String get categories => _fr ? 'Catégories' : 'Categories';
   String get pricingEurMin => _fr ? 'Prix (EUR/min)' : 'Price (EUR/min)';
   String get featuredAdvisors =>
       _fr ? 'Conseillers vedettes' : 'Featured Advisors';
@@ -298,6 +296,8 @@ class AppTranslations {
   String get phoneCall => _fr ? 'Appel téléphonique' : 'Phone Call';
   String get videoCall => _fr ? 'Appel vidéo' : 'Video Call';
   String get textChat => _fr ? 'Chat textuel' : 'Text Chat';
+  String get available24Hours => _fr ? 'Disponible 24H/24' : 'Available 24/7';
+  String get free => _fr ? 'Gratuit' : 'Free';
   String get cancel => _fr ? 'Annuler' : 'Cancel';
   String get addedFavorites =>
       _fr ? 'Ajouté aux favoris ❤️' : 'Added to favorites ❤️';
@@ -356,10 +356,12 @@ class AppTranslations {
       : 'Availability slot deleted successfully';
   String failedAddSlot(String err) =>
       _fr ? "Échec de l'ajout du créneau : $err" : 'Failed to add slot: $err';
-  String failedUpdateSlot(String err) =>
-      _fr ? "Échec de la mise à jour du créneau : $err" : 'Failed to update slot: $err';
-  String failedDeleteSlot(String err) =>
-      _fr ? "Échec de la suppression du créneau : $err" : 'Failed to delete slot: $err';
+  String failedUpdateSlot(String err) => _fr
+      ? "Échec de la mise à jour du créneau : $err"
+      : 'Failed to update slot: $err';
+  String failedDeleteSlot(String err) => _fr
+      ? "Échec de la suppression du créneau : $err"
+      : 'Failed to delete slot: $err';
   String get editSlot => _fr ? 'Modifier le créneau' : 'Edit Slot';
   String get deleteSlot => _fr ? 'Supprimer le créneau' : 'Delete Slot';
   String get deleteSlotConfirm => _fr
@@ -377,9 +379,8 @@ class AppTranslations {
       : 'Tap "Add Slot" to set your availability.';
   String get refresh => _fr ? 'Actualiser' : 'Refresh';
   String get weeklySlots => _fr ? 'Créneaux hebdomadaires' : 'Weekly Slots';
-  String get yourAvailability => _fr
-      ? 'Votre disponibilité'
-      : 'Your Availability';
+  String get yourAvailability =>
+      _fr ? 'Votre disponibilité' : 'Your Availability';
   String get availabilitySubtitle => _fr
       ? 'Définissez les heures pendant lesquelles vos clients peuvent vous joindre.'
       : 'Set the hours when your clients can reach you.';
@@ -427,16 +428,13 @@ class AppTranslations {
       _fr ? 'ID du professionnel (optionnel)' : 'Professional ID (optional)';
   String get reviewSessionIdHint =>
       _fr ? 'ID de session (optionnel)' : 'Session ID (optional)';
-  String get reviewProfessionalLabel =>
-      _fr ? 'Professionnel' : 'Professional';
+  String get reviewProfessionalLabel => _fr ? 'Professionnel' : 'Professional';
   String get reviewSessionLabel => _fr ? 'Session' : 'Session';
   String get selectProfessional =>
       _fr ? 'Choisir un professionnel' : 'Select a professional';
-  String get selectSession =>
-      _fr ? 'Choisir une session' : 'Select a session';
-  String get noProfessionalsAvailable => _fr
-      ? 'Aucun professionnel disponible'
-      : 'No professionals available';
+  String get selectSession => _fr ? 'Choisir une session' : 'Select a session';
+  String get noProfessionalsAvailable =>
+      _fr ? 'Aucun professionnel disponible' : 'No professionals available';
   String get noSessionsForProfessional => _fr
       ? 'Aucune session pour ce professionnel'
       : 'No sessions for this professional';
@@ -561,12 +559,10 @@ class AppTranslations {
   String phonePstnPressKeyCountdown(int seconds) => _fr
       ? 'Confirmez dans $seconds s, sinon la session sera annulee.'
       : 'Confirm within $seconds s, or the session will be cancelled.';
-  String get phonePstnCallConfirmed => _fr
-      ? 'Appel confirme.'
-      : 'Call confirmed.';
-  String get sessionStatusNoStarConfirmLabel => _fr
-      ? 'Appel non confirme'
-      : 'Call not confirmed';
+  String get phonePstnCallConfirmed =>
+      _fr ? 'Appel confirme.' : 'Call confirmed.';
+  String get sessionStatusNoStarConfirmLabel =>
+      _fr ? 'Appel non confirme' : 'Call not confirmed';
   String get sessionStatusNoStarConfirmMessage => _fr
       ? 'Le professionnel n\'a pas appuye sur la touche 1 pour confirmer. La session a ete annulee.'
       : 'The professional did not press key 1 to confirm. The session was cancelled.';
@@ -712,15 +708,15 @@ class AppTranslations {
       : 'Voyanz - Your trusted platform for professional consultations.\n\nVersion: 1.0.0\nBuilt with Flutter & ❤️';
   String get contactUs => _fr ? 'Contactez-nous' : 'Contact us';
   String get liveChat => _fr ? 'Chat en direct' : 'Live chat';
-  String get openFullPolicy =>
-      _fr ? 'Ouvrir la politique complète en ligne' : 'Open the full policy online';
+  String get openFullPolicy => _fr
+      ? 'Ouvrir la politique complète en ligne'
+      : 'Open the full policy online';
   String get supportChannels => _fr ? 'Canaux de contact' : 'Contact channels';
 
   // ── Wallet / Top-Up ──────────────────────────────────────────────────────
   String get wallet => _fr ? 'Portefeuille' : 'Wallet';
   String get topUp => _fr ? 'Recharger' : 'Top Up';
-  String get topUpCredit =>
-      _fr ? 'Recharger mon solde' : 'Top Up Balance';
+  String get topUpCredit => _fr ? 'Recharger mon solde' : 'Top Up Balance';
   String get buyPack => _fr ? 'Acheter' : 'Buy';
   String get selectPack => _fr ? 'Choisir un pack' : 'Select a pack';
   String get creditReceived => _fr ? 'Crédit reçu' : 'Credit received';
@@ -731,8 +727,7 @@ class AppTranslations {
   String get payWithCard => _fr ? 'Payer par carte' : 'Pay with Card';
   String get processingPayment =>
       _fr ? 'Paiement en cours...' : 'Processing payment...';
-  String get paymentSuccess =>
-      _fr ? 'Paiement réussi' : 'Payment Successful';
+  String get paymentSuccess => _fr ? 'Paiement réussi' : 'Payment Successful';
   String get paymentFailed => _fr ? 'Paiement échoué' : 'Payment Failed';
   String get insufficientBalance =>
       _fr ? 'Solde insuffisant' : 'Insufficient Balance';
@@ -742,22 +737,19 @@ class AppTranslations {
   String get noTransactionsYet =>
       _fr ? 'Aucune transaction' : 'No transactions yet';
   String get newBalance => _fr ? 'Nouveau solde' : 'New balance';
-  String get backToWallet =>
-      _fr ? 'Retour au portefeuille' : 'Back to Wallet';
+  String get backToWallet => _fr ? 'Retour au portefeuille' : 'Back to Wallet';
   String get youPay => _fr ? 'Vous payez' : 'You pay';
   String get youReceive => _fr ? 'Vous recevez' : 'You receive';
 
   // ── Professional Stripe Account ──────────────────────────────────────────
   String get stripeAccount => _fr ? 'Compte Stripe' : 'Stripe Account';
-  String get setUpPayments => _fr
-      ? 'Configurer les paiements'
-      : 'Set Up Payments';
+  String get setUpPayments =>
+      _fr ? 'Configurer les paiements' : 'Set Up Payments';
   String get stripeOnboardingDescription => _fr
       ? 'Connectez votre compte Stripe pour recevoir les paiements de vos sessions. Vous serez redirigé vers Stripe pour finaliser la configuration.'
       : 'Connect your Stripe account to receive payments for your sessions. You will be redirected to Stripe to complete setup.';
-  String get startOnboarding => _fr
-      ? 'Commencer la configuration'
-      : 'Start Onboarding';
+  String get startOnboarding =>
+      _fr ? 'Commencer la configuration' : 'Start Onboarding';
   String get stripeAccountActive =>
       _fr ? 'Compte Stripe actif' : 'Stripe Account Active';
   String get stripeAccountPending =>
@@ -783,56 +775,50 @@ class AppTranslations {
   String get stripeOnboardingInfo => _fr
       ? 'Vous serez redirigé vers Stripe pour configurer votre compte de paiement.'
       : 'You will be redirected to Stripe to set up your payment account.';
-  String get failedLoadAccount =>
-      _fr ? 'Impossible de charger les informations du compte'
-          : 'Failed to load account info';
+  String get failedLoadAccount => _fr
+      ? 'Impossible de charger les informations du compte'
+      : 'Failed to load account info';
   String get noOnboardingUrlAvailable => _fr
       ? 'Aucune URL d\'onboarding disponible. Réessayez plus tard.'
       : 'No onboarding URL available. Try again later.';
-  String get invalidOnboardingUrl => _fr
-      ? 'URL d\'onboarding invalide.'
-      : 'Invalid onboarding URL.';
+  String get invalidOnboardingUrl =>
+      _fr ? 'URL d\'onboarding invalide.' : 'Invalid onboarding URL.';
   String get failedToOpenUrl =>
       _fr ? 'Impossible d\'ouvrir le lien.' : 'Failed to open link.';
 
   // ── Appointment Booking ─────────────────────────────────────────────────
   String get bookAppointment =>
       _fr ? 'Prendre rendez-vous' : 'Book Appointment';
-  String get availableSlots =>
-      _fr ? 'Créneaux disponibles' : 'Available Slots';
+  String get availableSlots => _fr ? 'Créneaux disponibles' : 'Available Slots';
   String get noSlotsAvailable =>
       _fr ? 'Aucun créneau disponible' : 'No slots available';
-  String get registerAndPay =>
-      _fr ? 'S\'inscrire et payer' : 'Register & Pay';
-  String get appointmentPaidSuccess =>
-      _fr ? 'Rendez-vous réservé et payé avec succès !'
-          : 'Appointment booked & paid successfully!';
-  String get appointmentPayFailed =>
-      _fr ? 'Le paiement du rendez-vous a échoué'
-          : 'Appointment payment failed';
-  String get appointmentPayPending =>
-      _fr ? 'Paiement reçu, réservation en cours de confirmation...'
-          : 'Payment received, booking confirmation pending...';
-  String get appointmentRateInfo =>
-      _fr ? 'Tarif : ~%s/min — facturé selon la durée réelle'
-          : 'Rate: ~%s/min — charged for actual duration';
-  String get slotDate =>
-      _fr ? 'Date' : 'Date';
-  String get slotTime =>
-      _fr ? 'Horaire' : 'Time';
+  String get registerAndPay => _fr ? 'S\'inscrire et payer' : 'Register & Pay';
+  String get appointmentPaidSuccess => _fr
+      ? 'Rendez-vous réservé et payé avec succès !'
+      : 'Appointment booked & paid successfully!';
+  String get appointmentPayFailed => _fr
+      ? 'Le paiement du rendez-vous a échoué'
+      : 'Appointment payment failed';
+  String get appointmentPayPending => _fr
+      ? 'Paiement reçu, réservation en cours de confirmation...'
+      : 'Payment received, booking confirmation pending...';
+  String get appointmentRateInfo => _fr
+      ? 'Tarif : ~%s/min — facturé selon la durée réelle'
+      : 'Rate: ~%s/min — charged for actual duration';
+  String get slotDate => _fr ? 'Date' : 'Date';
+  String get slotTime => _fr ? 'Horaire' : 'Time';
   String get confirmBooking =>
       _fr ? 'Confirmer la réservation' : 'Confirm Booking';
   String get processingRegistration =>
       _fr ? 'Inscription en cours...' : 'Registering...';
   String get registrationFailed =>
-      _fr ? 'Échec de l\'inscription au créneau'
-          : 'Slot registration failed';
-  String get alreadyRegistered =>
-      _fr ? 'Vous êtes déjà inscrit(e) à cette séance.'
-          : 'You are already registered for this session.';
-  String get consultationSlotInfo =>
-      _fr ? 'Créneau de consultation 1-à-1 — facturé par minute. Lancez la session depuis le profil.'
-          : '1-on-1 consultation slot — billed per minute. Start the session from the profile.';
+      _fr ? 'Échec de l\'inscription au créneau' : 'Slot registration failed';
+  String get alreadyRegistered => _fr
+      ? 'Vous êtes déjà inscrit(e) à cette séance.'
+      : 'You are already registered for this session.';
+  String get consultationSlotInfo => _fr
+      ? 'Créneau de consultation 1-à-1 — facturé par minute. Lancez la session depuis le profil.'
+      : '1-on-1 consultation slot — billed per minute. Start the session from the profile.';
   String get continueToProfile =>
       _fr ? 'Continuer vers le profil' : 'Continue to profile';
 }

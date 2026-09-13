@@ -3,24 +3,24 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 abstract final class GlassTheme {
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color crystalWhite = Color(0xFFFAFAFA);
-  static const Color glassSurface = Color(0xF5FFFFFF);
-  static const Color glassOverlay = Color(0xECFFFFFF);
-  static const Color glassSubtle = Color(0xE6FFFFFF);
+  static const Color background = Color(0xFF100B2E);
+  static const Color crystalWhite = Color(0xFF171039);
+  static const Color glassSurface = Color(0xE6211747);
+  static const Color glassOverlay = Color(0xE62A1D55);
+  static const Color glassSubtle = Color(0xD9171039);
 
-  static const Color purpleLight = Color(0xFFC2879F);
-  static const Color purpleMid = Color(0xFF9B3366);
-  static const Color purpleDark = Color(0xFF5C2B63);
+  static const Color purpleLight = Color(0xFFFF43BD);
+  static const Color purpleMid = Color(0xFFD23E91);
+  static const Color purpleDark = Color(0xFF7541A9);
 
-  static const Color textPrimary = Color(0xFF111111);
-  static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(0xFF999999);
+  static const Color textPrimary = Color(0xFFFDFBFF);
+  static const Color textSecondary = Color(0xFFD9D1E8);
+  static const Color textTertiary = Color(0xFFA99DBD);
   static const Color textInverse = Color(0xFFFFFFFF);
 
-  static const Color borderLight = Color(0x14000000);
-  static const Color borderGlass = Color(0x24FFFFFF);
-  static const Color divider = Color(0x0F000000);
+  static const Color borderLight = Color(0x66443469);
+  static const Color borderGlass = Color(0x5269528F);
+  static const Color divider = Color(0x52443469);
   static const Color shadowGlow = Color(0x335C2B63);
 
   static const Color success = Color(0xFF10B981);
@@ -56,7 +56,7 @@ abstract final class GlassTheme {
   );
 
   static const LinearGradient softWhiteGradient = LinearGradient(
-    colors: [Color(0xFFFFFFFF), Color(0xF8FFFFFF)],
+    colors: [Color(0xF02B1C54), Color(0xE6172044)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

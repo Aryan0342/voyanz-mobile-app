@@ -39,9 +39,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .read(authRepositoryProvider)
           .forgetPassword(email: _emailCtrl.text.trim());
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.resetLinkSent)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(t.resetLinkSent)));
       context.go('/login');
     } catch (e) {
       if (!mounted) return;
@@ -68,7 +68,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final t = ref.watch(translationsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.canvas,
       body: Column(
         children: [
           // HERO SECTION
@@ -116,7 +116,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surfaceDark,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
               ),
               transform: Matrix4.translationValues(0, -30, 0),
@@ -161,8 +161,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             enableSuggestions: false,
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => _submit(),
-                            validator: (v) =>
-                                (v == null || v.isEmpty) ? t.emailRequired : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? t.emailRequired
+                                : null,
                             style: GoogleFonts.manrope(
                               fontSize: 15,
                               color: AppColors.textPrimary,
@@ -182,21 +183,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   size: 20,
                                 ),
                               ),
-                              prefixIconConstraints:
-                                  const BoxConstraints(minWidth: 52),
+                              prefixIconConstraints: const BoxConstraints(
+                                minWidth: 52,
+                              ),
                               filled: true,
-                              fillColor: const Color(0xFFF4F5F9),
+                              fillColor: AppColors.surfaceElevated,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFE4E6EF),
+                                  color: AppColors.borderSubtle,
                                   width: 1.2,
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFE4E6EF),
+                                  color: AppColors.borderSubtle,
                                   width: 1.2,
                                 ),
                               ),
@@ -221,8 +223,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   width: 1.6,
                                 ),
                               ),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 18,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),

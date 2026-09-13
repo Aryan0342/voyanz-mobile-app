@@ -143,7 +143,7 @@ class GlassCard extends StatelessWidget {
           borderRadius: radius,
           boxShadow: [
             BoxShadow(
-              color: AppColors.deepIndigo.withValues(alpha: 0.07),
+              color: Colors.black.withValues(alpha: 0.30),
               blurRadius: 26,
               offset: const Offset(0, 14),
             ),
@@ -164,7 +164,7 @@ class GlassCard extends StatelessWidget {
                 gradient: AppGradients.card,
                 borderRadius: radius,
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.78),
+                  color: AppColors.borderStrong.withValues(alpha: 0.55),
                 ),
               ),
               child: child,
@@ -259,10 +259,7 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
             decoration: BoxDecoration(
               gradient: AppGradients.headerNavbar,
               border: Border(
-                bottom: BorderSide(
-                  color: AppColors.borderSubtle,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: AppColors.borderSubtle, width: 1),
               ),
             ),
           ),
@@ -298,8 +295,8 @@ class VoyanzAppBarIconButton extends StatelessWidget {
         borderRadius: borderRadius,
         side: const BorderSide(color: AppColors.borderSubtle),
       ),
-      elevation: 2,
-      shadowColor: AppColors.deepIndigo.withValues(alpha: 0.10),
+      elevation: 0,
+      shadowColor: Colors.black.withValues(alpha: 0.30),
       child: InkWell(
         onTap: onPressed,
         borderRadius: borderRadius,
@@ -348,7 +345,7 @@ class GradientScaffold extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-          child: IgnorePointer(
+              child: IgnorePointer(
                 child: Container(
                   height: 156,
                   decoration: const BoxDecoration(
@@ -415,7 +412,7 @@ class AppCard extends StatelessWidget {
         color: AppColors.surfaceCard,
         borderRadius: radius,
         elevation: 2,
-        shadowColor: AppColors.deepIndigo.withValues(alpha: 0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.30),
         child: InkWell(
           onTap: onTap,
           borderRadius: radius,
@@ -423,7 +420,9 @@ class AppCard extends StatelessWidget {
             padding: padding,
             decoration: BoxDecoration(
               borderRadius: radius,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+              border: Border.all(
+                color: AppColors.borderStrong.withValues(alpha: 0.55),
+              ),
               gradient: AppGradients.card,
               boxShadow: [
                 BoxShadow(
