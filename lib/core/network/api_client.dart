@@ -23,7 +23,9 @@ class ApiClient {
       return _instance!;
     }
 
-    _cookieJar = CookieJar();
+    if (!kIsWeb) {
+      _cookieJar = CookieJar();
+    }
 
     _instance = Dio(
       BaseOptions(
@@ -43,7 +45,11 @@ class ApiClient {
     );
 
     _instance!.interceptors.add(_MobileApiHeadersInterceptor());
-    _instance!.interceptors.add(CookieManager(_cookieJar!));
+    // Browsers manage cookies themselves. dio_cookie_manager intentionally
+    // asserts on web, so only install it for the native iOS/Android clients.
+    if (!kIsWeb) {
+      _instance!.interceptors.add(CookieManager(_cookieJar!));
+    }
     _instance!.interceptors.add(AuthInterceptor(tokenStorage));
 
     _logger.i(
