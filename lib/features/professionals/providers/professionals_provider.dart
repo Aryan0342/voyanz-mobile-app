@@ -68,19 +68,28 @@ final professionalsListProvider =
     });
 
 /// AI assistants filtered from the full professionals list (co_isassistant).
-final aiAssistantsProvider =
-    FutureProvider.family<List<Professional>, String>((ref, search) async {
-      final all = await ref.watch(
-        professionalsListProvider(search).future,
-      );
-      return all.where((p) => p.isAssistant).toList();
-    });
+final aiAssistantsProvider = FutureProvider.family<List<Professional>, String>((
+  ref,
+  search,
+) async {
+  final all = await ref.watch(professionalsListProvider(search).future);
+  return all.where((p) => p.isAssistant).toList();
+});
 
 final professionalDetailProvider =
     FutureProvider.family<ProfessionalDetail, String>((ref, coId) async {
-      return ref
+      final detail = await ref
           .watch(professionalsRepositoryProvider)
           .getProfessionalInfos(coId);
+
+      // The detail response is deliberately compact. The directory response
+      // contains the public biography, specialties, tools, languages, image
+      // identity, availability and the crucial `co_isassistant` marker.
+      final directory = await ref.watch(professionalsListProvider('').future);
+      for (final item in directory) {
+        if (item.coId == coId) return detail.withListFallback(item);
+      }
+      return detail;
     });
 
 final professionalDisponibilitiesProvider = FutureProvider<List<dynamic>>((
@@ -228,9 +237,7 @@ List<Map<String, dynamic>> _slotsFromDisponibilityRules(List<dynamic> rules) {
       final times = <String>[];
       var hour = hourFrom;
       var minute = minuteFrom;
-      while (
-        hour < hourTo || (hour == hourTo && minute <= minuteTo)
-      ) {
+      while (hour < hourTo || (hour == hourTo && minute <= minuteTo)) {
         final time =
             '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
         times.add(time);
@@ -261,78 +268,76 @@ List<Map<String, dynamic>> _slotsFromDisponibilityRules(List<dynamic> rules) {
   return rows;
 }
 
-final professionalBookingSlotsProvider =
-    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((
-  ref,
-  coId,
-) async {
-  final payload = await ref
-      .watch(professionalsRepositoryProvider)
-      .getProfessionalBookingSlots(coId);
+final professionalBookingSlotsProvider = FutureProvider.autoDispose
+    .family<List<Map<String, dynamic>>, String>((ref, coId) async {
+      final payload = await ref
+          .watch(professionalsRepositoryProvider)
+          .getProfessionalBookingSlots(coId);
 
-  final rows = <Map<String, dynamic>>[];
+      final rows = <Map<String, dynamic>>[];
 
-  final next = payload['nextdisponibilities'];
-  if (next is List) {
-    for (final entry in next) {
-      if (entry is! Map<String, dynamic>) continue;
-      final date = entry['date']?.toString() ?? '';
-      final hours = entry['hours'];
-      final times = <String>[];
-      if (hours is List) {
-        for (final hour in hours) {
-          if (hour is List && hour.isNotEmpty) {
-            final time = hour.first.toString();
-            if (time.isNotEmpty) times.add(time);
-          } else if (hour is String && hour.trim().isNotEmpty) {
-            times.add(hour.trim());
+      final next = payload['nextdisponibilities'];
+      if (next is List) {
+        for (final entry in next) {
+          if (entry is! Map<String, dynamic>) continue;
+          final date = entry['date']?.toString() ?? '';
+          final hours = entry['hours'];
+          final times = <String>[];
+          if (hours is List) {
+            for (final hour in hours) {
+              if (hour is List && hour.isNotEmpty) {
+                final time = hour.first.toString();
+                if (time.isNotEmpty) times.add(time);
+              } else if (hour is String && hour.trim().isNotEmpty) {
+                times.add(hour.trim());
+              }
+            }
           }
+          if (date.isEmpty || times.isEmpty) continue;
+          rows.add({
+            'key': 'slot_$date',
+            'day': _formatSlotDay(date),
+            'slots': times,
+            'ap_id': null,
+          });
         }
       }
-      if (date.isEmpty || times.isEmpty) continue;
-      rows.add({
-        'key': 'slot_$date',
-        'day': _formatSlotDay(date),
-        'slots': times,
-        'ap_id': null,
-      });
-    }
-  }
 
-  // The customer-facing detail endpoint often returns raw availability rules
-  // (`disponibilities`) instead of computed slots (`nextdisponibilities`).
-  // Fall back to expanding the rules into concrete future slots.
-  if (rows.isEmpty) {
-    final rawRules = payload['disponibilities'];
-    if (rawRules is List) {
-      rows.addAll(_slotsFromDisponibilityRules(rawRules));
-    }
-  }
+      // The customer-facing detail endpoint often returns raw availability rules
+      // (`disponibilities`) instead of computed slots (`nextdisponibilities`).
+      // Fall back to expanding the rules into concrete future slots.
+      if (rows.isEmpty) {
+        final rawRules = payload['disponibilities'];
+        if (rawRules is List) {
+          rows.addAll(_slotsFromDisponibilityRules(rawRules));
+        }
+      }
 
-  final appointments = payload['appointments'];
-  if (appointments is List) {
-    for (final appt in appointments) {
-      if (appt is! Map<String, dynamic>) continue;
-      final apId = appt['ap_id']?.toString() ?? '';
-      if (apId.isEmpty) continue;
-      final name = appt['ap_name']?.toString() ?? '';
-      final date = appt['ap_date']?.toString() ?? '';
-      final time = _extractTime(date);
-      final price = appt['ap_price'] is num
-          ? (appt['ap_price'] as num).toDouble()
-          : (num.tryParse(appt['ap_price']?.toString() ?? '') ?? 0).toDouble();
-      rows.add({
-        'key': 'ap_$apId',
-        'day': _formatAppointmentDay(name, date),
-        'slots': time != null ? <String>[time] : <String>[],
-        'ap_id': apId,
-        'ap_price': price,
-      });
-    }
-  }
+      final appointments = payload['appointments'];
+      if (appointments is List) {
+        for (final appt in appointments) {
+          if (appt is! Map<String, dynamic>) continue;
+          final apId = appt['ap_id']?.toString() ?? '';
+          if (apId.isEmpty) continue;
+          final name = appt['ap_name']?.toString() ?? '';
+          final date = appt['ap_date']?.toString() ?? '';
+          final time = _extractTime(date);
+          final price = appt['ap_price'] is num
+              ? (appt['ap_price'] as num).toDouble()
+              : (num.tryParse(appt['ap_price']?.toString() ?? '') ?? 0)
+                    .toDouble();
+          rows.add({
+            'key': 'ap_$apId',
+            'day': _formatAppointmentDay(name, date),
+            'slots': time != null ? <String>[time] : <String>[],
+            'ap_id': apId,
+            'ap_price': price,
+          });
+        }
+      }
 
-  return rows;
-});
+      return rows;
+    });
 
 final professionalDisponibilitiesPayloadProvider =
     FutureProvider<Map<String, dynamic>>((ref) async {

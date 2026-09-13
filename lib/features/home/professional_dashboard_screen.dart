@@ -100,7 +100,7 @@ class _ProfessionalDashboardScreenState
       appBar: VoyanzAppBar(
         title: Text(
           t.dashboard,
-          style: GoogleFonts.jost(
+          style: GoogleFonts.lora(
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -138,50 +138,46 @@ class _ProfessionalDashboardScreenState
                 offset: const Offset(0, 14),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: _StatCard(
-                          title: t.totalSessions,
-                          value: historyAsync.when(
-                            data: (items) => '${_validSessions(items).length}',
-                            loading: () => '-',
-                            error: (_, __) => '0',
-                          ),
-                          icon: Icons.videocam_outlined,
+                      _StatCard(
+                        title: t.totalSessions,
+                        value: historyAsync.when(
+                          data: (items) => '${_validSessions(items).length}',
+                          loading: () => '-',
+                          error: (_, __) => '0',
                         ),
+                        icon: Icons.videocam_outlined,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          title: t.avgRating,
-                          value: reviewsAsync.when(
-                            data: (items) {
-                              final validItems = items
-                                  .whereType<Map<String, dynamic>>()
-                                  .toList();
-                              if (validItems.isEmpty) return '0.0';
-                              final totalRating = validItems.fold<double>(
-                                0,
-                                (sum, item) =>
-                                    sum +
-                                    (double.tryParse(
-                                          (item['rv_note'] ??
-                                                  item['re_rating'] ??
-                                                  '')
-                                              .toString(),
-                                        ) ??
-                                        0),
-                              );
-                              final avg = (totalRating / validItems.length)
-                                  .toStringAsFixed(1);
-                              return avg;
-                            },
-                            loading: () => '-',
-                            error: (_, __) => '0.0',
-                          ),
-                          icon: Icons.star_outline,
+                      const SizedBox(height: 12),
+                      _StatCard(
+                        title: t.avgRating,
+                        value: reviewsAsync.when(
+                          data: (items) {
+                            final validItems = items
+                                .whereType<Map<String, dynamic>>()
+                                .toList();
+                            if (validItems.isEmpty) return '0.0';
+                            final totalRating = validItems.fold<double>(
+                              0,
+                              (sum, item) =>
+                                  sum +
+                                  (double.tryParse(
+                                        (item['rv_note'] ??
+                                                item['re_rating'] ??
+                                                '')
+                                            .toString(),
+                                      ) ??
+                                      0),
+                            );
+                            final avg = (totalRating / validItems.length)
+                                .toStringAsFixed(1);
+                            return avg;
+                          },
+                          loading: () => '-',
+                          error: (_, __) => '0.0',
                         ),
+                        icon: Icons.star_outline,
                       ),
                     ],
                   ),
@@ -230,7 +226,7 @@ class _ProfessionalDashboardScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     t.recentSessions,
-                    style: GoogleFonts.jost(
+                    style: GoogleFonts.lora(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -257,7 +253,9 @@ class _ProfessionalDashboardScreenState
                               height: 54,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.mediumPurple.withValues(alpha: 0.1),
+                                color: AppColors.mediumPurple.withValues(
+                                  alpha: 0.1,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.inbox_outlined,
@@ -326,21 +324,21 @@ class _ProfessionalDashboardScreenState
                     final statusColor = rawStatus == 'completed'
                         ? AppColors.success
                         : rawStatus == 'cancelled'
-                            ? AppColors.error
-                            : rawStatus == 'pending'
-                                ? AppColors.warning
-                                : AppColors.mediumPurple;
+                        ? AppColors.error
+                        : rawStatus == 'pending'
+                        ? AppColors.warning
+                        : AppColors.mediumPurple;
                     final statusIcon = rawStatus == 'completed'
                         ? Icons.check_circle_outline
                         : rawStatus == 'cancelled'
-                            ? Icons.cancel_outlined
-                            : Icons.schedule;
+                        ? Icons.cancel_outlined
+                        : Icons.schedule;
 
                     final typeIcon = rawType == 'phone'
                         ? Icons.phone_in_talk_outlined
                         : rawType == 'chat'
-                            ? Icons.chat_bubble_outline
-                            : Icons.videocam_outlined;
+                        ? Icons.chat_bubble_outline
+                        : Icons.videocam_outlined;
 
                     return SoftEntrance(
                       duration: Duration(milliseconds: 320 + (idx * 40)),
@@ -483,7 +481,9 @@ class _ProfessionalDashboardScreenState
                 child: Padding(
                   padding: EdgeInsets.all(32),
                   child: Center(
-                    child: CircularProgressIndicator(color: AppColors.mediumPurple),
+                    child: CircularProgressIndicator(
+                      color: AppColors.mediumPurple,
+                    ),
                   ),
                 ),
               ),
@@ -666,14 +666,17 @@ class _DashboardHeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome back, $name',
-                      style: GoogleFonts.jost(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Welcome back, $name',
+                        style: GoogleFonts.lora(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -698,7 +701,11 @@ class _DashboardHeroCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Icon(Icons.calendar_today_outlined, size: 16, color: Colors.white),
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                       SizedBox(width: 8),
                       Text('Manage Slots'),
                     ],
@@ -776,10 +783,9 @@ String _displayName(
 
 List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
   return items.whereType<Map<String, dynamic>>().where((item) {
-    final type =
-        (item['type'] ?? item['se_type'] ?? item['subtype'] ?? '')
-            .toString()
-            .toLowerCase();
+    final type = (item['type'] ?? item['se_type'] ?? item['subtype'] ?? '')
+        .toString()
+        .toLowerCase();
     if (type.isNotEmpty) return type == 'session';
     return item.containsKey('se_id') ||
         item.containsKey('se_status') ||
@@ -793,10 +799,7 @@ List<Map<String, dynamic>> _validSessions(List<dynamic> items) {
 /// nested `session` map first (legacy backend shape) then the item itself.
 String _sessionValue(Map<String, dynamic> item, List<String> keys) {
   final nested = item['session'];
-  final maps = [
-    if (nested is Map<String, dynamic>) nested,
-    item,
-  ];
+  final maps = [if (nested is Map<String, dynamic>) nested, item];
   for (final map in maps) {
     for (final key in keys) {
       final value = map[key];
@@ -832,9 +835,10 @@ String _clientName(
 String _nameFromTitle(String title) {
   final text = title.trim();
   if (text.isEmpty) return '';
-  final match =
-      RegExp(r'(?:avec|with)\s+([^:\-–—]+)$', caseSensitive: false)
-          .firstMatch(text);
+  final match = RegExp(
+    r'(?:avec|with)\s+([^:\-–—]+)$',
+    caseSensitive: false,
+  ).firstMatch(text);
   if (match == null) return text;
   final name = match.group(1)?.trim() ?? '';
   if (name.isEmpty || name.toLowerCase().contains('session')) return text;
@@ -880,8 +884,9 @@ String _sessionStatus(Map<String, dynamic> session) {
     'se_end_at',
   ]);
   final isEnded = session['is_ended'] == true || session['ended'] == true;
-  final price = (session['pricef'] ?? session['price'] ?? session['totalf'] ?? '')
-      .toString();
+  final price =
+      (session['pricef'] ?? session['price'] ?? session['totalf'] ?? '')
+          .toString();
   final recordings = session['recording'];
   final hasRecordings = recordings is List && recordings.isNotEmpty;
 
@@ -1064,39 +1069,33 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: AppColors.mediumPurple.withValues(alpha: 0.11),
-                ),
-                child: Icon(icon, size: 15, color: AppColors.mediumPurple),
-              ),
-            ],
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: AppColors.brandPink.withValues(alpha: 0.15),
+            ),
+            child: Icon(icon, size: 21, color: AppColors.brandPink),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
           Text(
             value,
-            style: GoogleFonts.jost(
+            style: GoogleFonts.lora(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,

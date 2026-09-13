@@ -43,10 +43,19 @@ String _profileImageUrl({String? rawAvatar, required String seed}) {
   final resolved = _resolveImageUrl(rawAvatar);
   if (resolved != null) return resolved;
 
-  // Backend currently returns empty avatar for many professionals.
-  // Use deterministic fallback photo so each profile keeps a stable image.
+  // `co_avatar` is normally empty: this is the same canonical cover endpoint
+  // used by the website for humans and AI assistants.
   final encodedSeed = Uri.encodeComponent(seed);
-  return 'https://i.pravatar.cc/300?u=voyanz-$encodedSeed';
+  return '${EnvConfig.current.baseUrl}/api/1.0/image/$encodedSeed/400/400/cover';
+}
+
+String _taxonomyLabel(String value) {
+  return value
+      .replaceAll('_', ' ')
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+      .join(' ');
 }
 
 class ProfessionalDetailScreen extends ConsumerStatefulWidget {
@@ -114,9 +123,7 @@ class _ProfessionalDetailScreenState
             : AppColors.mediumPurple,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -130,6 +137,9 @@ class _ProfessionalDetailScreenState
     Professional pro, {
     Professional? fromList,
   }) {
+    if (pro.isAssistant || (fromList?.isAssistant ?? false)) {
+      return type == 'chat' ? 0 : null;
+    }
     final candidates = switch (type) {
       'phone' => <double?>[
         pro.pricePhonePerMinute,
@@ -163,6 +173,9 @@ class _ProfessionalDetailScreenState
     Professional pro, {
     Professional? fromList,
   }) {
+    if (pro.isAssistant || (fromList?.isAssistant ?? false)) {
+      return type == 'chat';
+    }
     return switch (type) {
       'phone' => pro.supportsPhone || (fromList?.supportsPhone ?? false),
       'video' => pro.supportsVideo || (fromList?.supportsVideo ?? false),
@@ -242,7 +255,9 @@ class _ProfessionalDetailScreenState
                 decoration: BoxDecoration(
                   gradient: AppGradients.card,
                   borderRadius: BorderRadius.circular(26),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+                  border: Border.all(
+                    color: AppColors.borderStrong.withValues(alpha: 0.55),
+                  ),
                 ),
                 padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
                 child: Column(
@@ -259,7 +274,9 @@ class _ProfessionalDetailScreenState
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.mediumPurple.withValues(alpha: 0.3),
+                                color: AppColors.mediumPurple.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 14,
                                 offset: const Offset(0, 5),
                               ),
@@ -299,29 +316,54 @@ class _ProfessionalDetailScreenState
                       ],
                     ),
                     const SizedBox(height: 18),
-                    if (_supportsSessionType('phone', pro, fromList: fromList)) ...[
+                    if (_supportsSessionType(
+                      'phone',
+                      pro,
+                      fromList: fromList,
+                    )) ...[
                       _SessionTypeOption(
                         icon: Icons.phone_rounded,
                         label: t.phoneCall,
-                        price: _sessionTypePrice('phone', pro, fromList: fromList),
+                        price: _sessionTypePrice(
+                          'phone',
+                          pro,
+                          fromList: fromList,
+                        ),
                         onTap: () => _startSessionType(ctx, pro, 'phone'),
                       ),
                       const SizedBox(height: 10),
                     ],
-                    if (_supportsSessionType('video', pro, fromList: fromList)) ...[
+                    if (_supportsSessionType(
+                      'video',
+                      pro,
+                      fromList: fromList,
+                    )) ...[
                       _SessionTypeOption(
                         icon: Icons.videocam_rounded,
                         label: t.videoCall,
-                        price: _sessionTypePrice('video', pro, fromList: fromList),
+                        price: _sessionTypePrice(
+                          'video',
+                          pro,
+                          fromList: fromList,
+                        ),
                         onTap: () => _startSessionType(ctx, pro, 'video'),
                       ),
                       const SizedBox(height: 10),
                     ],
-                    if (_supportsSessionType('chat', pro, fromList: fromList)) ...[
+                    if (_supportsSessionType(
+                      'chat',
+                      pro,
+                      fromList: fromList,
+                    )) ...[
                       _SessionTypeOption(
                         icon: Icons.chat_bubble_rounded,
                         label: t.textChat,
-                        price: _sessionTypePrice('chat', pro, fromList: fromList),
+                        price: _sessionTypePrice(
+                          'chat',
+                          pro,
+                          fromList: fromList,
+                        ),
+                        freeLabel: t.free,
                         onTap: () => _startSessionType(ctx, pro, 'chat'),
                       ),
                     ],
@@ -400,7 +442,8 @@ class _ProfessionalDetailScreenState
             type: normalizedType,
           );
       if (!mounted) return;
-      if (balance.isInsufficient || (!balance.success && balance.error != null)) {
+      if (balance.isInsufficient ||
+          (!balance.success && balance.error != null)) {
         _showInsufficientBalanceDialog(context, ref);
         return;
       }
@@ -488,12 +531,14 @@ class _ProfessionalDetailScreenState
         final existingProId = status.professionalCoId?.trim();
         final existingType = normalizeSessionType(status.sessionType);
 
-        final proMatches = expectedProId == null ||
+        final proMatches =
+            expectedProId == null ||
             expectedProId.isEmpty ||
             existingProId == null ||
             existingProId.isEmpty ||
             existingProId == expectedProId;
-        final typeMatches = normalizedExpectedType == null ||
+        final typeMatches =
+            normalizedExpectedType == null ||
             existingType == null ||
             existingType == normalizedExpectedType;
 
@@ -674,9 +719,7 @@ class _ProfessionalDetailScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surfaceCard,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           t.insufficientBalance,
           style: GoogleFonts.jost(
@@ -791,12 +834,14 @@ class _ProfessionalDetailScreenState
           final liveProId = liveStatus.professionalCoId?.trim();
           final liveType = normalizeSessionType(liveStatus.sessionType);
 
-          final proMatches = expectedCoId == null ||
+          final proMatches =
+              expectedCoId == null ||
               expectedCoId.isEmpty ||
               liveProId == null ||
               liveProId.isEmpty ||
               liveProId == expectedCoId.trim();
-          final typeMatches = normalizedExpectedType == null ||
+          final typeMatches =
+              normalizedExpectedType == null ||
               liveType == null ||
               liveType == normalizedExpectedType;
 
@@ -825,21 +870,29 @@ class _ProfessionalDetailScreenState
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: VoyanzAppBar(
-        showBackButton: true,
-        onBackPressed: () => Navigator.of(context).pop(),
+      appBar: AppBar(
+        backgroundColor: AppColors.darkPurple,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: ScaleTransition(
               scale: _favoriteScale,
-              child: VoyanzAppBarIconButton(
-                icon: isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
-                iconSize: 22,
+              child: IconButton(
                 onPressed: _toggleFavorite,
                 tooltip: isMarkedFavorite
                     ? t.removedFavorites
                     : t.addedFavorites,
+                icon: Icon(
+                  isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
+                  size: 22,
+                  color: isMarkedFavorite ? AppColors.brandPink : Colors.white,
+                ),
               ),
             ),
           ),
@@ -909,7 +962,9 @@ class _ProfessionalDetailScreenState
 
           final effectiveOnline = pro.isOnline ?? listPro?.isOnline;
           final effectiveAvailableNow =
-              pro.isAvailableNow || (listPro?.isAvailableNow ?? false);
+              pro.isAssistant ||
+              pro.isAvailableNow ||
+              (listPro?.isAvailableNow ?? false);
 
           String? effectiveAvailabilityText = pro.availabilityText;
           if (effectiveAvailabilityText == null ||
@@ -920,7 +975,9 @@ class _ProfessionalDetailScreenState
             }
           }
 
-          final availabilityLabel = effectiveAvailableNow
+          final availabilityLabel = pro.isAssistant
+              ? t.available24Hours
+              : effectiveAvailableNow
               ? t.availableNow
               : (effectiveAvailabilityText ?? t.noAvailabilityAtMoment);
 
@@ -973,7 +1030,17 @@ class _ProfessionalDetailScreenState
           }
 
           return Container(
-            decoration: const BoxDecoration(gradient: AppGradients.hero),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.darkPurple,
+                  AppColors.deepIndigo,
+                  Color(0xFF321451),
+                ],
+              ),
+            ),
             child: SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -985,10 +1052,14 @@ class _ProfessionalDetailScreenState
                       padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFFFFEDF5), Color(0xFFF1EEFF), Color(0x00FFFFFF)],
-                          stops: [0.0, 0.6, 1.0],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF5A176C),
+                            Color(0xFF9B3366),
+                            Color(0xFF311552),
+                          ],
+                          stops: [0.0, 0.55, 1.0],
                         ),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(32),
@@ -997,44 +1068,51 @@ class _ProfessionalDetailScreenState
                       ),
                       child: Column(
                         children: [
-                          // ── Avatar with online indicator ──
+                          // Voyanz uses the professional cover as a prominent
+                          // rectangular portrait rather than a generic avatar.
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Glow ring
                               Container(
-                                width: 136,
-                                height: 136,
+                                width: 190,
+                                height: 238,
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(24),
                                   gradient: const LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
-                                    colors: [AppColors.mediumPurple, AppColors.magentaRose],
+                                    colors: [
+                                      AppColors.mediumPurple,
+                                      AppColors.magentaRose,
+                                    ],
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.mediumPurple.withValues(alpha: 0.30),
+                                      color: AppColors.mediumPurple.withValues(
+                                        alpha: 0.30,
+                                      ),
                                       blurRadius: 24,
                                       spreadRadius: 4,
                                     ),
                                     BoxShadow(
-                                      color: AppColors.rosePink.withValues(alpha: 0.20),
+                                      color: AppColors.rosePink.withValues(
+                                        alpha: 0.20,
+                                      ),
                                       blurRadius: 40,
                                       spreadRadius: 2,
                                     ),
                                   ],
                                 ),
                               ),
-                              // Avatar image
                               Container(
-                                width: 126,
-                                height: 126,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
+                                width: 180,
+                                height: 228,
+                                decoration: BoxDecoration(
                                   color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: ClipOval(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
                                   child: Image.network(
                                     _profileImageUrl(
                                       rawAvatar: pro.avatar,
@@ -1052,7 +1130,7 @@ class _ProfessionalDetailScreenState
                               if (effectiveOnline != null)
                                 Positioned(
                                   bottom: 6,
-                                  right: 6,
+                                  right: 2,
                                   child: Container(
                                     width: 22,
                                     height: 22,
@@ -1062,15 +1140,16 @@ class _ProfessionalDetailScreenState
                                           : AppColors.offline,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: Colors.white,
+                                        color: AppColors.darkPurple,
                                         width: 3,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: (effectiveOnline == true
-                                                  ? AppColors.online
-                                                  : AppColors.offline)
-                                              .withValues(alpha: 0.5),
+                                          color:
+                                              (effectiveOnline == true
+                                                      ? AppColors.online
+                                                      : AppColors.offline)
+                                                  .withValues(alpha: 0.5),
                                           blurRadius: 8,
                                         ),
                                       ],
@@ -1087,7 +1166,7 @@ class _ProfessionalDetailScreenState
                             style: GoogleFonts.jost(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              color: Colors.white,
                               letterSpacing: -0.5,
                             ),
                             textAlign: TextAlign.center,
@@ -1101,7 +1180,7 @@ class _ProfessionalDetailScreenState
                               style: GoogleFonts.lora(
                                 fontSize: 14,
                                 fontStyle: FontStyle.italic,
-                                color: AppColors.textSecondary,
+                                color: Colors.white70,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -1120,23 +1199,30 @@ class _ProfessionalDetailScreenState
                                   dotColor: effectiveOnline == true
                                       ? AppColors.online
                                       : AppColors.offline,
-                                  label: effectiveOnline == true ? t.online : t.offline,
-                                  bgColor: (effectiveOnline == true
-                                          ? AppColors.online
-                                          : AppColors.offline)
-                                      .withValues(alpha: 0.12),
-                                  borderColor: (effectiveOnline == true
-                                          ? AppColors.online
-                                          : AppColors.offline)
-                                      .withValues(alpha: 0.35),
+                                  label: effectiveOnline == true
+                                      ? t.online
+                                      : t.offline,
+                                  bgColor:
+                                      (effectiveOnline == true
+                                              ? AppColors.online
+                                              : AppColors.offline)
+                                          .withValues(alpha: 0.12),
+                                  borderColor:
+                                      (effectiveOnline == true
+                                              ? AppColors.online
+                                              : AppColors.offline)
+                                          .withValues(alpha: 0.35),
                                 ),
                               if (pro.isVerified)
                                 _StatusPill(
                                   icon: Icons.verified,
                                   iconColor: AppColors.mediumPurple,
                                   label: t.verifiedProfile,
-                                  bgColor: AppColors.mediumPurple.withValues(alpha: 0.10),
-                                  borderColor: AppColors.mediumPurple.withValues(alpha: 0.25),
+                                  bgColor: AppColors.mediumPurple.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                  borderColor: AppColors.mediumPurple
+                                      .withValues(alpha: 0.25),
                                 ),
                             ],
                           ),
@@ -1153,24 +1239,25 @@ class _ProfessionalDetailScreenState
                           if (statCells.isNotEmpty)
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF261846),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                                    color: AppColors.mediumPurple.withValues(
+                                      alpha: 0.08,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                                 border: Border.all(
-                                  color: AppColors.borderSubtle,
+                                  color: Colors.white12,
                                   width: 1,
                                 ),
                               ),
                               child: Row(children: statCells),
                             ),
-                          if (statCells.isNotEmpty)
-                            const SizedBox(height: 20),
+                          if (statCells.isNotEmpty) const SizedBox(height: 20),
 
                           // ── Availability Banner ──
                           Container(
@@ -1181,8 +1268,8 @@ class _ProfessionalDetailScreenState
                             ),
                             decoration: BoxDecoration(
                               color: effectiveAvailableNow
-                                  ? const Color(0xFFECFDF5)
-                                  : const Color(0xFFFFF1F2),
+                                  ? AppColors.online.withValues(alpha: 0.12)
+                                  : AppColors.brandPink.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: effectiveAvailableNow
@@ -1197,8 +1284,12 @@ class _ProfessionalDetailScreenState
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
                                     color: effectiveAvailableNow
-                                        ? AppColors.online.withValues(alpha: 0.15)
-                                        : AppColors.rosePink.withValues(alpha: 0.15),
+                                        ? AppColors.online.withValues(
+                                            alpha: 0.15,
+                                          )
+                                        : AppColors.rosePink.withValues(
+                                            alpha: 0.15,
+                                          ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -1219,8 +1310,8 @@ class _ProfessionalDetailScreenState
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: effectiveAvailableNow
-                                          ? const Color(0xFF15803D)
-                                          : AppColors.magentaRose,
+                                          ? AppColors.online
+                                          : AppColors.rosePink,
                                     ),
                                   ),
                                 ),
@@ -1230,13 +1321,13 @@ class _ProfessionalDetailScreenState
                           const SizedBox(height: 20),
 
                           // ── EXPERTISE Section ──
-                          if (pro.specialty != null && pro.specialty!.isNotEmpty) ...[
+                          if (pro.specialties.isNotEmpty) ...[
                             Text(
                               t.expertise.toUpperCase(),
                               style: GoogleFonts.montserrat(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textMuted,
+                                color: Colors.white70,
                                 letterSpacing: 1.4,
                               ),
                             ),
@@ -1244,10 +1335,9 @@ class _ProfessionalDetailScreenState
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: pro.specialty!
-                                  .split(RegExp(r'[,/|]'))
+                              children: pro.specialties
                                   .map((s) => s.trim())
-                                  .where((s) => s.isNotEmpty && s.toLowerCase() != 'professional')
+                                  .where((s) => s.isNotEmpty)
                                   .map(
                                     (tag) => Container(
                                       padding: const EdgeInsets.symmetric(
@@ -1255,19 +1345,68 @@ class _ProfessionalDetailScreenState
                                         vertical: 7,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.mediumPurple.withValues(alpha: 0.09),
+                                        color: AppColors.mediumPurple
+                                            .withValues(alpha: 0.09),
                                         borderRadius: BorderRadius.circular(30),
                                         border: Border.all(
-                                          color: AppColors.mediumPurple.withValues(alpha: 0.22),
+                                          color: AppColors.mediumPurple
+                                              .withValues(alpha: 0.22),
                                           width: 1.2,
                                         ),
                                       ),
                                       child: Text(
-                                        tag,
+                                        _taxonomyLabel(tag),
                                         style: GoogleFonts.montserrat(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
-                                          color: AppColors.mediumPurple,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          if (pro.tools.isNotEmpty) ...[
+                            Text(
+                              t.categories.toUpperCase(),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white70,
+                                letterSpacing: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: pro.tools
+                                  .map(
+                                    (tool) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 7,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.aqua.withValues(
+                                          alpha: 0.09,
+                                        ),
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: AppColors.aqua.withValues(
+                                            alpha: 0.25,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _taxonomyLabel(tool),
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
@@ -1280,17 +1419,19 @@ class _ProfessionalDetailScreenState
                           // ── Available Services Card ──
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF261846),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.mediumPurple.withValues(alpha: 0.07),
+                                  color: AppColors.mediumPurple.withValues(
+                                    alpha: 0.07,
+                                  ),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
                               ],
                               border: Border.all(
-                                color: AppColors.borderSubtle,
+                                color: Colors.white12,
                                 width: 1,
                               ),
                             ),
@@ -1306,7 +1447,10 @@ class _ProfessionalDetailScreenState
                                         gradient: const LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
-                                          colors: [AppColors.mediumPurple, AppColors.magentaRose],
+                                          colors: [
+                                            AppColors.mediumPurple,
+                                            AppColors.magentaRose,
+                                          ],
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -1322,27 +1466,30 @@ class _ProfessionalDetailScreenState
                                       style: GoogleFonts.jost(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 18),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
-                                    _ServiceChip(
-                                      icon: Icons.phone_rounded,
-                                      label: t.phone,
-                                      isAvailable: pro.supportsPhone,
-                                      activeColor: AppColors.mediumPurple,
-                                    ),
-                                    _ServiceChip(
-                                      icon: Icons.videocam_rounded,
-                                      label: t.video,
-                                      isAvailable: pro.supportsVideo,
-                                      activeColor: AppColors.magentaRose,
-                                    ),
+                                    if (!pro.isAssistant)
+                                      _ServiceChip(
+                                        icon: Icons.phone_rounded,
+                                        label: t.phone,
+                                        isAvailable: pro.supportsPhone,
+                                        activeColor: AppColors.mediumPurple,
+                                      ),
+                                    if (!pro.isAssistant)
+                                      _ServiceChip(
+                                        icon: Icons.videocam_rounded,
+                                        label: t.video,
+                                        isAvailable: pro.supportsVideo,
+                                        activeColor: AppColors.magentaRose,
+                                      ),
                                     _ServiceChip(
                                       icon: Icons.chat_bubble_rounded,
                                       label: t.tabChat,
@@ -1361,17 +1508,19 @@ class _ProfessionalDetailScreenState
                               pro.description!.isNotEmpty) ...[
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF261846),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.rosePink.withValues(alpha: 0.07),
+                                    color: AppColors.rosePink.withValues(
+                                      alpha: 0.07,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                                 border: Border.all(
-                                  color: AppColors.borderSubtle,
+                                  color: Colors.white12,
                                   width: 1,
                                 ),
                               ),
@@ -1384,8 +1533,12 @@ class _ProfessionalDetailScreenState
                                       Container(
                                         padding: const EdgeInsets.all(9),
                                         decoration: BoxDecoration(
-                                          color: AppColors.rosePink.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: AppColors.rosePink.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.person_outline_rounded,
@@ -1399,7 +1552,7 @@ class _ProfessionalDetailScreenState
                                         style: GoogleFonts.jost(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ],
@@ -1410,7 +1563,7 @@ class _ProfessionalDetailScreenState
                                     style: GoogleFonts.lora(
                                       fontSize: 14,
                                       height: 1.75,
-                                      color: AppColors.textSecondary,
+                                      color: Colors.white70,
                                     ),
                                   ),
                                 ],
@@ -1425,17 +1578,19 @@ class _ProfessionalDetailScreenState
                               pro.email != null) ...[
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF261846),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.aqua.withValues(alpha: 0.07),
+                                    color: AppColors.aqua.withValues(
+                                      alpha: 0.07,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                                 border: Border.all(
-                                  color: AppColors.borderSubtle,
+                                  color: Colors.white12,
                                   width: 1,
                                 ),
                               ),
@@ -1484,20 +1639,25 @@ class _ProfessionalDetailScreenState
                             const SizedBox(height: 20),
                           ],
 
-                          // ── Book Session CTA ──
-                          _ActionButton(
-                            onPressed: () => _bookSession(context, pro),
-                            icon: Icons.calendar_today_rounded,
-                            label: t.bookSession,
-                            isPrimary: true,
-                          ),
-                          const SizedBox(height: 12),
+                          // AI guidance is always available and chat-only.
+                          if (!pro.isAssistant) ...[
+                            _ActionButton(
+                              onPressed: () => _bookSession(context, pro),
+                              icon: Icons.calendar_today_rounded,
+                              label: t.bookSession,
+                              isPrimary: true,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
 
                           // ── Start Session CTA ──
                           if (effectiveAvailableNow)
                             GradientButton(
-                              onPressed: () =>
-                                  _startSession(context, pro, fromList: listPro),
+                              onPressed: () => _startSession(
+                                context,
+                                pro,
+                                fromList: listPro,
+                              ),
                               width: double.infinity,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -1545,9 +1705,6 @@ class _ProfessionalDetailScreenState
     );
   }
 }
-
-
-
 
 // ── Status Pill Widget ──
 class _StatusPill extends StatelessWidget {
@@ -1597,7 +1754,7 @@ class _StatusPill extends StatelessWidget {
             style: GoogleFonts.montserrat(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: Colors.white,
             ),
           ),
         ],
@@ -1642,7 +1799,7 @@ class _StatCell extends StatelessWidget {
                     style: GoogleFonts.jost(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1651,7 +1808,7 @@ class _StatCell extends StatelessWidget {
                     style: GoogleFonts.montserrat(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted,
+                      color: Colors.white60,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1781,7 +1938,7 @@ class _DetailRow extends StatelessWidget {
                 label,
                 style: GoogleFonts.montserrat(
                   fontSize: 11,
-                  color: AppColors.textMuted,
+                  color: Colors.white60,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
                 ),
@@ -1792,7 +1949,7 @@ class _DetailRow extends StatelessWidget {
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -1842,11 +1999,7 @@ class _ServiceChip extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 26,
-          ),
+          child: Icon(icon, color: color, size: 26),
         ),
         const SizedBox(height: 8),
         Text(
@@ -1854,7 +2007,7 @@ class _ServiceChip extends StatelessWidget {
           style: GoogleFonts.montserrat(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isAvailable ? AppColors.textPrimary : AppColors.textMuted,
+            color: isAvailable ? Colors.white : Colors.white54,
           ),
         ),
       ],
@@ -1866,18 +2019,22 @@ class _SessionTypeOption extends StatelessWidget {
   final IconData icon;
   final String label;
   final double? price;
+  final String freeLabel;
   final VoidCallback onTap;
 
   const _SessionTypeOption({
     required this.icon,
     required this.label,
     this.price,
+    this.freeLabel = 'Free',
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final priceText = price != null
+    final priceText = price == 0
+        ? freeLabel
+        : price != null
         ? '€${price!.toStringAsFixed(2)}/min'
         : null;
 
@@ -1886,7 +2043,7 @@ class _SessionTypeOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.75),
+          color: AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: AppColors.mediumPurple.withValues(alpha: 0.18),

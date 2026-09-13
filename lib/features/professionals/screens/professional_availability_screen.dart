@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
@@ -61,9 +61,7 @@ class _ProfessionalAvailabilityScreenState
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
                 decoration: const BoxDecoration(
                   gradient: AppGradients.accent,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Row(
                   children: [
@@ -270,9 +268,9 @@ class _ProfessionalAvailabilityScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.failedAddSlot('Please try again.'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.failedAddSlot('Please try again.'))),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -385,9 +383,7 @@ class _ProfessionalAvailabilityScreenState
 
     setState(() => _submitting = true);
     try {
-      await ref
-          .read(professionalsRepositoryProvider)
-          .deleteDisponibility(diId);
+      await ref.read(professionalsRepositoryProvider).deleteDisponibility(diId);
       ref.invalidate(professionalDisponibilitiesPayloadProvider);
       if (mounted) {
         ScaffoldMessenger.of(
@@ -396,9 +392,9 @@ class _ProfessionalAvailabilityScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(t.failedDeleteSlot('Please try again.'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.failedDeleteSlot('Please try again.'))),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -516,7 +512,9 @@ class _ProfessionalAvailabilityScreenState
           final nextItems = nextData is List ? nextData : const <dynamic>[];
 
           final mergedRawItems = [...rawItems, ..._pendingCreatedItems];
-          final sourceItems = mergedRawItems.isNotEmpty ? mergedRawItems : nextItems;
+          final sourceItems = mergedRawItems.isNotEmpty
+              ? mergedRawItems
+              : nextItems;
           final rows = _normalizeDisponibilities(sourceItems);
           final totalSlots = rows.fold<int>(
             0,
@@ -554,7 +552,10 @@ class _ProfessionalAvailabilityScreenState
                 SoftEntrance(
                   duration: const Duration(milliseconds: 360),
                   offset: const Offset(0, 12),
-                  child: _EmptyAvailabilityCard(onAdd: _showAddSlotDialog, t: t),
+                  child: _EmptyAvailabilityCard(
+                    onAdd: _showAddSlotDialog,
+                    t: t,
+                  ),
                 ),
               ...rows.map((row) {
                 final index = rows.indexOf(row);
@@ -939,11 +940,7 @@ class _SlotRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.access_time_rounded,
-            color: accent,
-            size: 18,
-          ),
+          Icon(Icons.access_time_rounded, color: accent, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -1184,7 +1181,7 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
     if (diDays.isNotEmpty) {
       final timeLabel =
           (hourFrom.isNotEmpty && hourTo.isNotEmpty && hourFrom != hourTo)
-          ? '$hourFrom â€“ $hourTo'
+          ? '$hourFrom – $hourTo'
           : hourFrom.isNotEmpty
           ? hourFrom
           : '?';
@@ -1236,7 +1233,7 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
 
     if (slots.isEmpty && hourFrom.isNotEmpty) {
       final timeLabel = (hourTo.isNotEmpty && hourTo != hourFrom)
-          ? '$hourFrom â€“ $hourTo'
+          ? '$hourFrom – $hourTo'
           : hourFrom;
       slots.add(
         _AvailabilitySlot(timeLabel: timeLabel, channels: const [], diId: diId),
@@ -1526,4 +1523,3 @@ String _localizedDay(String englishDay, AppTranslations t) {
       return englishDay;
   }
 }
-

@@ -35,10 +35,10 @@ String _profileImageUrl({String? rawAvatar, required String seed}) {
   final resolved = _resolveImageUrl(rawAvatar);
   if (resolved != null) return resolved;
 
-  // Backend currently returns empty avatar for many professionals.
-  // Use deterministic fallback photo so each profile keeps a stable image.
+  // `co_avatar` is normally empty: the canonical cover is exposed through
+  // this endpoint for both human professionals and Voyanz AI assistants.
   final encodedSeed = Uri.encodeComponent(seed);
-  return 'https://i.pravatar.cc/300?u=voyanz-$encodedSeed';
+  return '${EnvConfig.current.baseUrl}/api/1.0/image/$encodedSeed/400/400/cover';
 }
 
 class ProfessionalsListScreen extends ConsumerStatefulWidget {
@@ -257,273 +257,289 @@ class _ProfessionalsListScreenState
 
     final t = ref.watch(translationsProvider);
     return Scaffold(
-      appBar: VoyanzAppBar(
+      backgroundColor: AppColors.deepIndigo,
+      appBar: AppBar(
+        backgroundColor: AppColors.darkPurple,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           t.explore,
-          style: GoogleFonts.jost(fontSize: 22, fontWeight: FontWeight.w700),
+          style: GoogleFonts.jost(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
         actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
       ),
-      body: professionalsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.mediumPurple),
-        ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.wifi_off,
-                  color: AppColors.textMuted,
-                  size: 54,
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  t.unableLoadExplore,
-                  style: GoogleFonts.jost(
-                    color: AppColors.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$e',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      ref.refresh(professionalsListProvider(_serverSearchQuery)),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(t.tryAgain),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.darkPurple,
+              AppColors.deepIndigo,
+              Color(0xFF321451),
+            ],
           ),
         ),
-        data: (pros) {
-          final humanPros = pros.where((p) => !p.isAssistant).toList();
-          final filteredPros = _filterProfessionals(humanPros, favoriteIds);
-          final featuredPros = [
-            ...filteredPros.where((p) => p.isAvailableNow),
-            ...filteredPros.where((p) => !p.isAvailableNow),
-          ].take(5).toList();
-
-          if (pros.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: GlassCard(
-                  padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 94,
-                        height: 94,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.mediumPurple.withValues(alpha: 0.16),
-                              AppColors.aqua.withValues(alpha: 0.11),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+        child: professionalsAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.mediumPurple),
+          ),
+          error: (e, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.wifi_off,
+                    color: AppColors.textMuted,
+                    size: 54,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    t.unableLoadExplore,
+                    style: GoogleFonts.jost(
+                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$e',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: () => ref.refresh(
+                      professionalsListProvider(_serverSearchQuery),
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: Text(t.tryAgain),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          data: (pros) {
+            final humanPros = pros.where((p) => !p.isAssistant).toList();
+            final filteredPros = _filterProfessionals(humanPros, favoriteIds);
+            if (pros.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: GlassCard(
+                    padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 94,
+                          height: 94,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.mediumPurple.withValues(alpha: 0.16),
+                                AppColors.aqua.withValues(alpha: 0.11),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.explore_outlined,
+                            size: 42,
+                            color: AppColors.deepIndigo,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.explore_outlined,
-                          size: 42,
-                          color: AppColors.deepIndigo,
+                        const SizedBox(height: 20),
+                        Text(
+                          t.noProfessionalsFound,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.jost(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        t.noProfessionalsFound,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.jost(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                        const SizedBox(height: 10),
+                        Text(
+                          t.noProfessionalsSubtitle,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 15,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        t.noProfessionalsSubtitle,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 15,
-                          color: AppColors.textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return RefreshIndicator(
-            color: AppColors.mediumPurple,
-            onRefresh: () async {
-              ref.invalidate(professionalsListProvider(_serverSearchQuery));
-              await ref.read(professionalsListProvider(_serverSearchQuery).future);
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _RevealIn(
-                    delayMs: 20,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-                      child: _ExploreHero(totalCount: humanPros.length),
+                      ],
                     ),
                   ),
                 ),
+              );
+            }
 
-                SliverToBoxAdapter(
-                  child: _RevealIn(
-                    delayMs: 70,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
-                      child: TextField(
-                        controller: _searchCtrl,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: t.searchAdvisor,
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchCtrl.text.isNotEmpty
-                              ? IconButton(
-                                  onPressed: () {
-                                    _searchCtrl.clear();
-                                    setState(() {});
-                                  },
-                                  icon: const Icon(Icons.close),
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: _RevealIn(
-                    delayMs: 120,
-                    child: _AiAssistantsSection(
-                      search: _serverSearchQuery,
-                    ),
-                  ),
-                ),
-
-                SliverToBoxAdapter(
-                  child: _RevealIn(
-                    delayMs: 180,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
-                      child: _SectionTitle(
-                        title: t.featuredAdvisors,
-                        subtitle: t.topProsReadyNow,
-                      ),
-                    ),
-                  ),
-                ),
-
-                if (featuredPros.isEmpty)
+            return RefreshIndicator(
+              color: AppColors.mediumPurple,
+              onRefresh: () async {
+                ref.invalidate(professionalsListProvider(_serverSearchQuery));
+                await ref.read(
+                  professionalsListProvider(_serverSearchQuery).future,
+                );
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                      child: _EmptyState(message: t.noFeaturedAdvisors),
+                    child: _RevealIn(
+                      delayMs: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                        child: _ExploreHero(totalCount: humanPros.length),
+                      ),
                     ),
-                  )
-                else
+                  ),
+
                   SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 170,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                        itemBuilder: (_, i) {
-                          final pro = featuredPros[i];
-                          return _RevealIn(
-                            delayMs: 160 + (i * 35),
-                            child: _FeaturedProfessionalCard(
+                    child: _RevealIn(
+                      delayMs: 70,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _searchCtrl,
+                              style: GoogleFonts.montserrat(
+                                color: Colors.white,
+                              ),
+                              onChanged: (_) => setState(() {}),
+                              decoration: InputDecoration(
+                                hintText: t.searchAdvisor,
+                                hintStyle: GoogleFonts.montserrat(
+                                  color: Colors.white60,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Colors.white70,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white.withValues(alpha: 0.09),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.brandPink,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                suffixIcon: _searchCtrl.text.isNotEmpty
+                                    ? IconButton(
+                                        onPressed: () {
+                                          _searchCtrl.clear();
+                                          setState(() {});
+                                        },
+                                        icon: const Icon(Icons.close),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: FilledButton.icon(
+                                onPressed: () {
+                                  FocusScope.of(context).unfocus();
+                                  setState(
+                                    () => _serverSearchQuery = _searchCtrl.text
+                                        .trim(),
+                                  );
+                                },
+                                icon: const Icon(Icons.search),
+                                label: Text(t.searchAdvisor),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.brandPink,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: _RevealIn(
+                      delayMs: 120,
+                      child: _AiAssistantsSection(search: _serverSearchQuery),
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: _RevealIn(
+                      delayMs: 180,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+                        child: _SectionTitle(
+                          title: t.allAdvisors,
+                          subtitle: t.nResults(filteredPros.length),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  if (filteredPros.isEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                        child: _EmptyState(message: t.noAdvisorsMatch),
+                      ),
+                    )
+                  else
+                    SliverList.builder(
+                      itemCount: filteredPros.length,
+                      itemBuilder: (_, i) {
+                        final pro = filteredPros[i];
+                        return _RevealIn(
+                          delayMs: 210 + (i * 24),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              20,
+                              i == 0 ? 12 : 10,
+                              20,
+                              i == filteredPros.length - 1 ? 24 : 0,
+                            ),
+                            child: _ProfessionalCard(
                               professional: pro,
                               onTap: () =>
                                   context.push('/professional/${pro.coId}'),
                             ),
-                          );
-                        },
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                        itemCount: featuredPros.length,
-                      ),
-                    ),
-                  ),
-
-                SliverToBoxAdapter(
-                  child: _RevealIn(
-                    delayMs: 180,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
-                      child: _SectionTitle(
-                        title: t.allAdvisors,
-                        subtitle: t.nResults(filteredPros.length),
-                      ),
-                    ),
-                  ),
-                ),
-
-                if (filteredPros.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                      child: _EmptyState(message: t.noAdvisorsMatch),
-                    ),
-                  )
-                else
-                  SliverList.builder(
-                    itemCount: filteredPros.length,
-                    itemBuilder: (_, i) {
-                      final pro = filteredPros[i];
-                      return _RevealIn(
-                        delayMs: 210 + (i * 24),
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            20,
-                            i == 0 ? 12 : 10,
-                            20,
-                            i == filteredPros.length - 1 ? 24 : 0,
                           ),
-                          child: _ProfessionalCard(
-                            coId: pro.coId,
-                            name: pro.displayName,
-                            specialty: pro.specialty,
-                            avatarUrl: pro.avatar,
-                            isOnline: pro.isAvailableNow,
-                            rating: pro.rating,
-                            pricePerMinute: pro.pricePerMinute,
-                            onTap: () =>
-                                context.push('/professional/${pro.coId}'),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
-          );
-        },
+                        );
+                      },
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -690,107 +706,43 @@ class _ExploreHero extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF5A176C), Color(0xFF9B3366), Color(0xFF311552)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
+            color: AppColors.brandPink.withValues(alpha: 0.16),
+            blurRadius: 26,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.mediumPurple,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.mediumPurple.withValues(alpha: 0.2),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.explore_outlined, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.discoverYourGuide,
-                      style: GoogleFonts.jost(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.nAdvisorsAvailable(totalCount),
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            t.discoverYourGuide,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lora(
+              fontSize: 29,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              _HeroTag(
-                icon: Icons.circle,
-                label: t.online,
-                tone: AppColors.online,
-              ),
-              _HeroTag(
-                icon: Icons.videocam_outlined,
-                label: t.videoCall,
-                tone: AppColors.textSecondary,
-                bgColor: Colors.grey.withValues(alpha: 0.08),
-              ),
-              _HeroTag(
-                icon: Icons.chat_bubble_outline,
-                label: t.textChat,
-                tone: AppColors.textSecondary,
-                bgColor: Colors.grey.withValues(alpha: 0.08),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.mediumPurple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  '${totalCount.toString()} live',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.mediumPurple,
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 8),
+          Text(
+            t.nAdvisorsAvailable(totalCount),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(
+              fontSize: 13,
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -804,7 +756,12 @@ class _HeroTag extends StatelessWidget {
   final Color tone;
   final Color? bgColor;
 
-  const _HeroTag({required this.icon, required this.label, required this.tone, this.bgColor});
+  const _HeroTag({
+    required this.icon,
+    required this.label,
+    required this.tone,
+    this.bgColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -880,9 +837,9 @@ class _FilterPanel extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        border: Border.all(color: AppColors.borderSubtle),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -1171,16 +1128,13 @@ class _SectionTitle extends StatelessWidget {
           style: GoogleFonts.jost(
             fontSize: 19,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           subtitle,
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
+          style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white60),
         ),
       ],
     );
@@ -1213,8 +1167,9 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
         width: 220,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
+          color: const Color(0xFF261846),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -1226,13 +1181,14 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 64,
+              height: 92,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(14),
                 gradient: AppGradients.accent,
               ),
-              child: ClipOval(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.cover,
@@ -1253,7 +1209,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1264,7 +1220,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                     style: GoogleFonts.lora(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
-                      color: AppColors.textSecondary,
+                      color: Colors.white70,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1281,7 +1237,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -1300,7 +1256,7 @@ class _FeaturedProfessionalCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.montserrat(
                             fontSize: 11,
-                            color: AppColors.textMuted,
+                            color: Colors.white60,
                           ),
                         ),
                       ),
@@ -1366,163 +1322,256 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ProfessionalCard extends StatelessWidget {
-  final String coId;
-  final String name;
-  final String? specialty;
-  final String? avatarUrl;
-  final bool isOnline;
-  final double? rating;
-  final double? pricePerMinute;
+  final Professional professional;
   final VoidCallback onTap;
 
-  const _ProfessionalCard({
-    required this.coId,
-    required this.name,
-    this.specialty,
-    this.avatarUrl,
-    required this.isOnline,
-    this.rating,
-    this.pricePerMinute,
-    required this.onTap,
-  });
+  const _ProfessionalCard({required this.professional, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final imageUrl = _profileImageUrl(
-      rawAvatar: avatarUrl,
-      seed: coId.isNotEmpty ? coId : name,
+      rawAvatar: professional.avatar,
+      seed: professional.coId.isNotEmpty
+          ? professional.coId
+          : professional.displayName,
     );
+    final specialty =
+        professional.specialty ??
+        (professional.specialties.isNotEmpty
+            ? professional.specialties.first
+            : null);
+    final availability = professional.availabilityText?.trim();
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            color: const Color(0xFF261846),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white12),
           ),
-          child: Row(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Avatar with online indicator ──
-              Stack(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppGradients.accent,
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) => _initials(),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isOnline ? AppColors.online : AppColors.offline,
-                        border: Border.all(
-                          color: AppColors.surfaceCard,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              // ── Info ──
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(
+                height: 230,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+                    Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) => _initials(),
                     ),
-                    if (specialty != null && specialty!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        specialty!,
-                        style: GoogleFonts.lora(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.textSecondary,
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Color(0xE8140B2D)],
+                          stops: [0.42, 1],
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        ...List.generate(5, (i) {
-                          final value = (rating ?? 0).round();
-                          return Icon(
-                            i < value ? Icons.star : Icons.star_outline,
-                            size: 14,
-                            color: AppColors.mediumPurple,
-                          );
-                        }),
-                        const SizedBox(width: 6),
-                        Text(
-                          (rating ?? 0).toStringAsFixed(1),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
+                    ),
+                    if (specialty != null && specialty.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        top: 14,
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 270),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: const BoxDecoration(
+                            color: AppColors.brandPink,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            specialty,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ],
+                      ),
+                    Positioned(
+                      right: 14,
+                      top: 14,
+                      child: Icon(
+                        professional.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: professional.isFavorite
+                            ? AppColors.brandPink
+                            : Colors.white,
+                      ),
+                    ),
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 14,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            professional.displayName,
+                            style: GoogleFonts.lora(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              if (professional.isVerified)
+                                const _ProfileBadge(
+                                  icon: Icons.verified_outlined,
+                                  label: 'Profile verified',
+                                ),
+                              const _ProfileBadge(
+                                icon: Icons.mark_email_read_outlined,
+                                label: 'Email verified',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                width: 9,
+                                height: 9,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: professional.isAvailableNow
+                                      ? AppColors.online
+                                      : AppColors.offline,
+                                ),
+                              ),
+                              const SizedBox(width: 7),
+                              ...List.generate(5, (i) {
+                                final value = (professional.rating ?? 0)
+                                    .round();
+                                return Icon(
+                                  i < value ? Icons.star : Icons.star_outline,
+                                  size: 16,
+                                  color: AppColors.gold,
+                                );
+                              }),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              // ── Price ──
-              if (pricePerMinute != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    '€${pricePerMinute!.toStringAsFixed(2)}/min',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.mediumPurple,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (professional.bio != null &&
+                        professional.bio!.trim().isNotEmpty) ...[
+                      Text(
+                        professional.bio!.trim(),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.montserrat(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: professional.isAvailableNow
+                            ? AppColors.online.withValues(alpha: 0.14)
+                            : Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: professional.isAvailableNow
+                              ? AppColors.online.withValues(alpha: 0.45)
+                              : Colors.white12,
+                        ),
+                      ),
+                      child: Text(
+                        availability != null && availability.isNotEmpty
+                            ? availability
+                            : professional.isAvailableNow
+                            ? 'Available now'
+                            : 'View availability',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.montserrat(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        if (professional.supportsChat)
+                          Expanded(
+                            child: _SessionButton(
+                              icon: Icons.chat_bubble_outline,
+                              label: 'Chat',
+                              price: professional.priceChatPerMinute,
+                              onTap: onTap,
+                            ),
+                          ),
+                        if (professional.supportsChat &&
+                            (professional.supportsPhone ||
+                                professional.supportsVideo))
+                          const SizedBox(width: 7),
+                        if (professional.supportsPhone)
+                          Expanded(
+                            child: _SessionButton(
+                              icon: Icons.phone_outlined,
+                              label: 'Call',
+                              price: professional.pricePhonePerMinute,
+                              onTap: onTap,
+                            ),
+                          ),
+                        if (professional.supportsPhone &&
+                            professional.supportsVideo)
+                          const SizedBox(width: 7),
+                        if (professional.supportsVideo)
+                          Expanded(
+                            child: _SessionButton(
+                              icon: Icons.videocam_outlined,
+                              label: 'Video',
+                              price: professional.priceVideoPerMinute,
+                              onTap: onTap,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted,
-                size: 20,
               ),
             ],
           ),
@@ -1534,12 +1583,95 @@ class _ProfessionalCard extends StatelessWidget {
   Widget _initials() {
     return Center(
       child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        professional.displayName.isNotEmpty
+            ? professional.displayName[0].toUpperCase()
+            : '?',
         style: GoogleFonts.jost(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ProfileBadge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.online),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SessionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final double? price;
+  final VoidCallback onTap;
+
+  const _SessionButton({
+    required this.icon,
+    required this.label,
+    required this.price,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 9),
+        side: BorderSide(color: AppColors.brandPink.withValues(alpha: 0.7)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: Colors.white),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (price != null)
+            Text(
+              price == 0 ? 'Free' : '€${price!.toStringAsFixed(2)}/min',
+              maxLines: 1,
+              style: GoogleFonts.montserrat(color: Colors.white60, fontSize: 8),
+            ),
+        ],
       ),
     );
   }
@@ -1574,10 +1706,7 @@ class _AiAssistantsSection extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          AppColors.mediumPurple,
-                          AppColors.aqua,
-                        ],
+                        colors: [AppColors.mediumPurple, AppColors.aqua],
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1597,7 +1726,7 @@ class _AiAssistantsSection extends ConsumerWidget {
                           style: GoogleFonts.jost(
                             fontSize: 19,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1605,7 +1734,7 @@ class _AiAssistantsSection extends ConsumerWidget {
                           'AI-powered guidance, always available',
                           style: GoogleFonts.montserrat(
                             fontSize: 12,
-                            color: AppColors.textMuted,
+                            color: Colors.white60,
                           ),
                         ),
                       ],
@@ -1618,10 +1747,8 @@ class _AiAssistantsSection extends ConsumerWidget {
                 height: 130,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemBuilder: (_, i) => _AiAssistantCard(
-                    professional: ais[i],
-                    index: i,
-                  ),
+                  itemBuilder: (_, i) =>
+                      _AiAssistantCard(professional: ais[i], index: i),
                   separatorBuilder: (_, __) => const SizedBox(width: 10),
                   itemCount: ais.length,
                 ),
@@ -1638,10 +1765,7 @@ class _AiAssistantCard extends StatelessWidget {
   final Professional professional;
   final int index;
 
-  const _AiAssistantCard({
-    required this.professional,
-    required this.index,
-  });
+  const _AiAssistantCard({required this.professional, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -1658,7 +1782,7 @@ class _AiAssistantCard extends StatelessWidget {
         width: 140,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF261846),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: AppColors.mediumPurple.withValues(alpha: 0.15),
@@ -1740,14 +1864,14 @@ class _AiAssistantCard extends StatelessWidget {
               style: GoogleFonts.jost(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 3),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                color: AppColors.aqua.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
@@ -1755,7 +1879,7 @@ class _AiAssistantCard extends StatelessWidget {
                 style: GoogleFonts.montserrat(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.mediumPurple,
+                  color: Colors.white,
                 ),
               ),
             ),

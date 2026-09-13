@@ -90,7 +90,8 @@ class HomeShell extends ConsumerWidget {
         location.startsWith('/wallet') ||
         location.startsWith('/support') ||
         location.startsWith('/privacy') ||
-        location.startsWith('/about')) return 4;
+        location.startsWith('/about'))
+      return 4;
     return 0; // dashboard (home)
   }
 
@@ -174,77 +175,83 @@ class HomeShell extends ConsumerWidget {
           offset: const Offset(0, 18),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard.withValues(alpha: 0.88),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.deepIndigo.withValues(alpha: 0.11),
-                    blurRadius: 28,
-                    offset: const Offset(0, 12),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCard.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.borderStrong.withValues(alpha: 0.55),
                   ),
-                  BoxShadow(
-                    color: AppColors.mediumPurple.withValues(alpha: 0.08),
-                    blurRadius: 22,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  navigationBarTheme: NavigationBarThemeData(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    indicatorColor: AppColors.mediumPurple.withValues(
-                      alpha: 0.16,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.deepIndigo.withValues(alpha: 0.11),
+                      blurRadius: 28,
+                      offset: const Offset(0, 12),
                     ),
-                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      return GoogleFonts.manrope(
-                        fontSize: 10.5,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
-                        letterSpacing: 0,
-                      );
-                    }),
-                    iconTheme: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      if (selected) {
-                        return const IconThemeData(
-                          color: AppColors.mediumPurple,
-                          size: 23,
-                        );
-                      }
-                      return const IconThemeData(
-                        color: AppColors.textMuted,
-                        size: 22,
-                      );
-                    }),
-                  ),
+                    BoxShadow(
+                      color: AppColors.mediumPurple.withValues(alpha: 0.08),
+                      blurRadius: 22,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: NavigationBar(
-                  selectedIndex: currentIdx,
-                  onDestinationSelected: (i) => onTap(context, i),
-                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                  height: 72,
-                  destinations: tabs
-                      .map(
-                        (t) => NavigationDestination(
-                          icon: Icon(t.icon),
-                          selectedIcon: Icon(t.activeIcon),
-                          label: t.label,
-                        ),
-                      )
-                      .toList(),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    navigationBarTheme: NavigationBarThemeData(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      indicatorColor: AppColors.brandMagenta.withValues(
+                        alpha: 0.22,
+                      ),
+                      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                        final selected = states.contains(WidgetState.selected);
+                        return GoogleFonts.manrope(
+                          fontSize: 10.5,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                          color: selected
+                              ? AppColors.aqua
+                              : AppColors.textMuted,
+                          letterSpacing: 0,
+                        );
+                      }),
+                      iconTheme: WidgetStateProperty.resolveWith((states) {
+                        final selected = states.contains(WidgetState.selected);
+                        if (selected) {
+                          return const IconThemeData(
+                            color: AppColors.aqua,
+                            size: 23,
+                          );
+                        }
+                        return const IconThemeData(
+                          color: AppColors.textMuted,
+                          size: 22,
+                        );
+                      }),
+                    ),
+                  ),
+                  child: NavigationBar(
+                    selectedIndex: currentIdx,
+                    onDestinationSelected: (i) => onTap(context, i),
+                    labelBehavior:
+                        NavigationDestinationLabelBehavior.alwaysShow,
+                    height: 72,
+                    destinations: tabs
+                        .map(
+                          (t) => NavigationDestination(
+                            icon: Icon(t.icon),
+                            selectedIcon: Icon(t.activeIcon),
+                            label: t.label,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
             ),
-          ),
           ),
         ),
       ),
@@ -364,8 +371,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'co_firstname': firstNameCtrl.text.trim(),
         'co_name': lastNameCtrl.text.trim(),
         'co_mobile1': phoneCtrl.text.trim(),
-        if (user.isProfessional == true &&
-            siretCtrl.text.trim().isNotEmpty)
+        if (user.isProfessional == true && siretCtrl.text.trim().isNotEmpty)
           'co_siret': siretCtrl.text.trim(),
       });
 
@@ -457,8 +463,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 20),
                     // Name
                     Text(
-                      name.isEmpty ? t.guestUser : name,
-                      style: GoogleFonts.jost(
+                      name.isEmpty ? t.guestUser : 'Welcome $name',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.lora(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -704,7 +711,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             gradient: AppGradients.accent.scale(0.25),
                           ),
                           child: Icon(
-                            isProfessional ? Icons.history : Icons.explore_outlined,
+                            isProfessional
+                                ? Icons.history
+                                : Icons.explore_outlined,
                             size: 38,
                             color: Colors.white.withValues(alpha: 0.8),
                           ),
@@ -780,7 +789,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onTap: () => context.push('/professional-account'),
                       ),
                     ],
-
                   ],
                 ),
               ),
@@ -899,18 +907,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.logout,
-                              color: AppColors.surfaceCard,
-                              size: 22,
-                            ),
+                            Icon(Icons.logout, color: Colors.white, size: 22),
                             const SizedBox(width: 12),
                             Text(
                               t.logout,
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.surfaceCard,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -970,7 +974,7 @@ class _StatCard extends StatelessWidget {
     final card = Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -1045,48 +1049,96 @@ class _CustomerStatsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.credit_card_outlined,
-                value: creditValue,
-                label: creditLabel,
-                onTap: onCreditTap,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.phone_in_talk_outlined,
-                value: phoneCount,
-                label: phoneLabel,
-              ),
-            ),
-          ],
+        _CustomerStatCard(
+          icon: Icons.credit_card_outlined,
+          value: creditValue,
+          label: creditLabel,
+          onTap: onCreditTap,
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.videocam_outlined,
-                value: videoCount,
-                label: videoLabel,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.chat_bubble_outline,
-                value: chatCount,
-                label: chatLabel,
-              ),
-            ),
-          ],
+        const SizedBox(height: 12),
+        _CustomerStatCard(
+          icon: Icons.phone_in_talk_outlined,
+          value: phoneCount,
+          label: phoneLabel,
+        ),
+        const SizedBox(height: 12),
+        _CustomerStatCard(
+          icon: Icons.videocam_outlined,
+          value: videoCount,
+          label: videoLabel,
+        ),
+        const SizedBox(height: 12),
+        _CustomerStatCard(
+          icon: Icons.chat_bubble_outline,
+          value: chatCount,
+          label: chatLabel,
         ),
       ],
     );
+  }
+}
+
+class _CustomerStatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _CustomerStatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.brandPink.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppColors.brandPink, size: 23),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.lora(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right, color: Colors.white54),
+          ],
+        ],
+      ),
+    );
+    return onTap == null ? child : SoftPress(onTap: onTap!, child: child);
   }
 }
 
@@ -1299,7 +1351,11 @@ class _ProfileTile extends StatelessWidget {
                 color: AppColors.surfaceCard.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: AppColors.textPrimary.withValues(alpha: 0.8), size: 22),
+              child: Icon(
+                icon,
+                color: AppColors.textPrimary.withValues(alpha: 0.8),
+                size: 22,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

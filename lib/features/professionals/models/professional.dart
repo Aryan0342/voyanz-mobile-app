@@ -4,7 +4,9 @@ class Professional {
   final String? lastName;
   final String? avatar;
   final String? specialty;
+  final String? bio;
   final List<String> specialties;
+  final List<String> tools;
   final List<String> languages;
   final double? rating;
   final double? pricePerMinute;
@@ -29,7 +31,9 @@ class Professional {
     this.lastName,
     this.avatar,
     this.specialty,
+    this.bio,
     this.specialties = const [],
+    this.tools = const [],
     this.languages = const [],
     this.rating,
     this.pricePerMinute,
@@ -210,16 +214,15 @@ class Professional {
   }
 
   factory Professional.fromJson(Map<String, dynamic> json) {
-    final firstName = _readString(json, [
-      'co_first_name',
-      'co_firstname',
-      'co_fullname',
-    ]);
-    final lastName = _readString(json, [
-      'co_last_name',
-      'co_name',
-      'co_lastname',
-    ]);
+    // `co_name` is the legal surname while `co_fullname` is the public name
+    // shown by Voyanz. Never append the former to the latter (for example,
+    // the website displays "Melli", not "Melli vogt").
+    final publicName = _readString(json, ['co_fullname']);
+    final firstName =
+        publicName ?? _readString(json, ['co_first_name', 'co_firstname']);
+    final lastName = publicName == null
+        ? _readString(json, ['co_last_name', 'co_name', 'co_lastname'])
+        : null;
 
     final pricePhone = _normalizePrice(
       _readDouble(json, ['co_price_phone', 'price_phone']),
@@ -249,6 +252,7 @@ class Professional {
       'co_subtype',
     ]);
     final languages = _readStringList(json, ['co_languages', 'languages']);
+    final tools = _readStringList(json, ['co_tools', 'tools']);
 
     final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
     final availabilityText = _readString(json, ['disponibilityText']);
@@ -277,7 +281,9 @@ class Professional {
         'co_type_label',
         'co_type',
       ]),
+      bio: _readString(json, ['co_description', 'co_presentation', 'co_bio']),
       specialties: specialties,
+      tools: tools,
       languages: languages,
       rating: _readDouble(json, [
         'co_rating',
@@ -308,8 +314,7 @@ class Professional {
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
       availabilityText: availabilityText,
-      isAssistant:
-          _readBool(json, ['co_isassistant', 'is_assistant']) ?? false,
+      isAssistant: _readBool(json, ['co_isassistant', 'is_assistant']) ?? false,
     );
   }
 }
@@ -325,6 +330,10 @@ class ProfessionalDetail extends Professional {
     super.lastName,
     super.avatar,
     super.specialty,
+    super.bio,
+    super.specialties,
+    super.tools,
+    super.languages,
     super.rating,
     super.pricePerMinute,
     super.pricePhonePerMinute,
@@ -335,9 +344,12 @@ class ProfessionalDetail extends Professional {
     super.isAvailableNow,
     super.availabilityText,
     super.isFavorite,
+    super.isRecommended,
+    super.experienceYears,
     super.supportsPhone,
     super.supportsVideo,
     super.supportsChat,
+    super.isAssistant,
     this.description,
     this.phone,
     this.email,
@@ -378,18 +390,20 @@ class ProfessionalDetail extends Professional {
         Professional._inferAvailabilityFromText(availabilityText) ??
         false;
 
+    final publicName = Professional._readString(json, ['co_fullname']);
+
     return ProfessionalDetail(
       coId: json['co_id']?.toString() ?? '',
-      firstName: Professional._readString(json, [
-        'co_first_name',
-        'co_firstname',
-        'co_fullname',
-      ]),
-      lastName: Professional._readString(json, [
-        'co_last_name',
-        'co_name',
-        'co_lastname',
-      ]),
+      firstName:
+          publicName ??
+          Professional._readString(json, ['co_first_name', 'co_firstname']),
+      lastName: publicName == null
+          ? Professional._readString(json, [
+              'co_last_name',
+              'co_name',
+              'co_lastname',
+            ])
+          : null,
       avatar: Professional._readString(json, [
         'co_avatar',
         'co_avatar_url',
@@ -404,6 +418,18 @@ class ProfessionalDetail extends Professional {
         'co_subtype',
         'co_type_label',
         'co_type',
+      ]),
+      specialties: Professional._readStringList(json, [
+        'co_specialities',
+        'co_speciality',
+        'co_specialty',
+        'specialities',
+        'speciality',
+      ]),
+      tools: Professional._readStringList(json, ['co_tools', 'tools']),
+      languages: Professional._readStringList(json, [
+        'co_languages',
+        'languages',
       ]),
       rating: Professional._readDouble(json, [
         'co_rating',
@@ -430,6 +456,10 @@ class ProfessionalDetail extends Professional {
       availabilityText: availabilityText,
       isFavorite:
           Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
+      isRecommended:
+          Professional._readBool(json, ['co_recommended', 'recommended']) ??
+          false,
+      experienceYears: Professional._readExperienceYears(json),
       supportsPhone:
           Professional._readBool(json, ['co_use_phone', 'use_phone']) ??
           (pricePhone ?? 0) > 0,
@@ -439,6 +469,69 @@ class ProfessionalDetail extends Professional {
       supportsChat:
           Professional._readBool(json, ['co_use_chat', 'use_chat']) ??
           (priceChat ?? 0) > 0,
+      isAssistant:
+          Professional._readBool(json, ['co_isassistant', 'is_assistant']) ??
+          false,
+    );
+  }
+
+  /// The detail endpoint intentionally returns a compact contact object.
+  /// Enrich it with the matching object from `/professionals`, which is where
+  /// the public bio, tools, specialties, languages and assistant marker live.
+  ProfessionalDetail withListFallback(Professional fallback) {
+    String? preferText(String? primary, String? secondary) {
+      return primary == null || primary.trim().isEmpty ? secondary : primary;
+    }
+
+    double? preferPrice(double? primary, double? secondary) {
+      return primary ?? secondary;
+    }
+
+    return ProfessionalDetail(
+      coId: coId.isEmpty ? fallback.coId : coId,
+      firstName: preferText(firstName, fallback.firstName),
+      lastName: preferText(lastName, fallback.lastName),
+      avatar: preferText(avatar, fallback.avatar),
+      specialty:
+          specialty == null ||
+              specialty!.trim().isEmpty ||
+              specialty!.trim().toLowerCase() == 'professional'
+          ? (fallback.specialty ??
+                (fallback.specialties.isEmpty
+                    ? null
+                    : fallback.specialties.first))
+          : specialty,
+      specialties: specialties.isEmpty ? fallback.specialties : specialties,
+      tools: tools.isEmpty ? fallback.tools : tools,
+      languages: languages.isEmpty ? fallback.languages : languages,
+      rating: rating ?? fallback.rating,
+      pricePerMinute: preferPrice(pricePerMinute, fallback.pricePerMinute),
+      pricePhonePerMinute: preferPrice(
+        pricePhonePerMinute,
+        fallback.pricePhonePerMinute,
+      ),
+      priceVideoPerMinute: preferPrice(
+        priceVideoPerMinute,
+        fallback.priceVideoPerMinute,
+      ),
+      priceChatPerMinute: preferPrice(
+        priceChatPerMinute,
+        fallback.priceChatPerMinute,
+      ),
+      isOnline: isOnline ?? fallback.isOnline,
+      isVerified: isVerified || fallback.isVerified,
+      isAvailableNow: isAvailableNow || fallback.isAvailableNow,
+      availabilityText: preferText(availabilityText, fallback.availabilityText),
+      isFavorite: isFavorite || fallback.isFavorite,
+      isRecommended: isRecommended || fallback.isRecommended,
+      experienceYears: experienceYears ?? fallback.experienceYears,
+      supportsPhone: supportsPhone || fallback.supportsPhone,
+      supportsVideo: supportsVideo || fallback.supportsVideo,
+      supportsChat: supportsChat || fallback.supportsChat,
+      isAssistant: isAssistant || fallback.isAssistant,
+      description: preferText(description, fallback.bio),
+      phone: phone,
+      email: email,
     );
   }
 }
