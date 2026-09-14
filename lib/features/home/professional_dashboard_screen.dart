@@ -120,8 +120,10 @@ class _ProfessionalDashboardScreenState
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: _DashboardHeroCard(
-                    name: name,
+                    welcome: t.welcomeBackName(name),
                     subtitle: t.yourProDashboard,
+                    manageSlotsLabel: t.manageSlots,
+                    messagesLabel: t.messages,
                     onOpenSlots: () => context.go('/availability'),
                     onOpenChat: () => context.go('/chat'),
                   ),
@@ -627,14 +629,18 @@ class _ProfessionalDashboardScreenState
 }
 
 class _DashboardHeroCard extends StatelessWidget {
-  final String name;
+  final String welcome;
   final String subtitle;
+  final String manageSlotsLabel;
+  final String messagesLabel;
   final VoidCallback onOpenSlots;
   final VoidCallback onOpenChat;
 
   const _DashboardHeroCard({
-    required this.name,
+    required this.welcome,
     required this.subtitle,
+    required this.manageSlotsLabel,
+    required this.messagesLabel,
     required this.onOpenSlots,
     required this.onOpenChat,
   });
@@ -670,7 +676,7 @@ class _DashboardHeroCard extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Welcome back, $name',
+                        welcome,
                         style: GoogleFonts.lora(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -700,14 +706,19 @@ class _DashboardHeroCard extends StatelessWidget {
                   height: 46,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.calendar_today_outlined,
                         size: 16,
                         color: Colors.white,
                       ),
-                      SizedBox(width: 8),
-                      Text('Manage Slots'),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(manageSlotsLabel),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -733,7 +744,7 @@ class _DashboardHeroCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Messages',
+                          messagesLabel,
                           style: GoogleFonts.manrope(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
