@@ -1,7 +1,7 @@
 name: voyanz
 description: "Voyanz mobile app – sessions & quick information capture."
 publish_to: "none"
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.11.0
@@ -54,6 +54,7 @@ dependencies:
   equatable: ^2.0.5
   freezed_annotation: ^2.4.1
   google_fonts: ^8.0.2
+  flutter_svg: ^2.2.1
 
 dev_dependencies:
   flutter_test:
@@ -68,12 +69,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/voyanz-mark.png
-    - assets/images/voyanz-full-logo.png
     - assets/images/voyanz-logo-v5-canonical.png
     - assets/images/voyanz-512.png
     - assets/images/voyanz-192.png
     - assets/images/voyanz-apple-180.png
+    - assets/images/voyanz-official-mark.svg
     - assets/sounds/ringtone.wav
   #         style: italic
   #   - family: Trajan Pro

@@ -7,6 +7,7 @@ import 'package:voyanz/core/l10n/language_switcher.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/theme/voyanz_brand_logo.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
@@ -324,43 +325,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Frosted square logo card
-                            Container(
-                              width: 70,
-                              height: 70,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.20),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.35),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.14),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Image.asset(
-                                'assets/images/voyanz-mark.png',
-                                fit: BoxFit.contain,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'Voyanz',
-                              style: GoogleFonts.jost(
-                                fontSize: 34,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
+                            const VoyanzBrandLogo(width: 220),
+                            const SizedBox(height: 8),
                             Text(
                               t.joinCommunity,
                               textAlign: TextAlign.center,

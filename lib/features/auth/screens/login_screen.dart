@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/core/theme/voyanz_brand_logo.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
@@ -80,27 +80,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         .trim();
   }
 
-  Color _parseHexColor(String? value, Color fallback) {
-    if (value == null || value.trim().isEmpty) return fallback;
-    final cleaned = value.trim().replaceAll('#', '');
-    if (cleaned.length != 6 && cleaned.length != 8) return fallback;
-    final hex = cleaned.length == 6 ? 'FF$cleaned' : cleaned;
-    final colorValue = int.tryParse(hex, radix: 16);
-    if (colorValue == null) return fallback;
-    return Color(colorValue);
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final t = ref.watch(translationsProvider);
-    final agency = ref.watch(agencyProvider);
-    final brandPrimary = _parseHexColor(
-      agency?.primaryColor,
-      AppColors.rosePink,
-    );
-    final agencyName = agency?.name?.trim();
-    final logo = agency?.logo?.trim();
 
     ref.listen<AsyncValue<dynamic>>(authStateProvider, (_, next) {
       if (next.hasValue && next.value != null) {
@@ -144,62 +127,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (logo != null && logo.isNotEmpty) ...[
-                              // Agency logo (frosted circle)
-                              Container(
-                                width: 74,
-                                height: 74,
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.14,
-                                      ),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: Image.network(
-                                  logo,
-                                  fit: BoxFit.contain,
-                                  color: Colors.white,
-                                  errorBuilder: (_, __, ___) => Image.asset(
-                                    'assets/images/voyanz-mark.png',
-                                    fit: BoxFit.contain,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // Brand name
-                              Text(
-                                (agencyName != null && agencyName.isNotEmpty)
-                                    ? agencyName
-                                    : 'Voyanz',
-                                style: GoogleFonts.jost(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                            ] else ...[
-                              // Full Voyanz logo
-                              Image.asset(
-                                'assets/images/voyanz-full-logo.png',
-                                width: 220,
-                                fit: BoxFit.contain,
-                              ),
-                            ],
+                            const VoyanzBrandLogo(width: 250),
+                            const SizedBox(height: 8),
                             // Tagline
                             Text(
                               t.tagline,

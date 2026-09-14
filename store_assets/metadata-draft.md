@@ -101,4 +101,4 @@ psychic,tarot,medium,astrology,chat,phone,video,reading,guidance,spirituality
 5. Start and manage a live consultation
 6. Wallet, appointments and session history
 
-Do not upload the current welcome capture until the “PSYCHIC AND CONFIDENCE” branding is confirmed or replaced with Voyanz branding.
+The welcome capture must use the validated Voyanz full-logo asset bundled in the app.

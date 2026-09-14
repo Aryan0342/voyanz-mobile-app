@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
@@ -98,11 +99,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ],
                     ),
                     Center(
-                      child: Image.asset(
-                        'assets/images/voyanz-mark.png',
+                      child: SvgPicture.asset(
+                        'assets/images/voyanz-official-mark.svg',
                         width: 64,
                         fit: BoxFit.contain,
-                        color: Colors.white,
                       ),
                     ),
                   ],

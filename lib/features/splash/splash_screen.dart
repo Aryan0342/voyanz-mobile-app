@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
+import 'package:voyanz/core/theme/voyanz_brand_logo.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -34,9 +35,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppGradients.brandBackground,
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.brandBackground),
         child: SafeArea(
           child: Center(
             child: Padding(
@@ -46,11 +45,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/images/voyanz-full-logo.png',
-                      width: 260,
-                      fit: BoxFit.contain,
-                    ),
+                    const VoyanzBrandLogo(width: 280),
                     const SizedBox(height: 32),
                     Text(
                       'Real-time sessions and expert guidance',
