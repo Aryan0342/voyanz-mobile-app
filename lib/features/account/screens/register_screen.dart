@@ -311,7 +311,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             children: [
               // ── HERO SECTION ────────────────────────────────────────────
               SizedBox(
-                height: 250,
+                height: 275,
                 child: Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
@@ -354,7 +354,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       top: Radius.circular(34),
                     ),
                   ),
-                  transform: Matrix4.translationValues(0, -26, 0),
+                  transform: Matrix4.translationValues(0, -14, 0),
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Padding(
