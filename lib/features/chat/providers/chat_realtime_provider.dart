@@ -45,11 +45,16 @@ final chatRealtimeProvider = Provider<void>((ref) {
   }
 
   ws.on('chat_message_new', handler);
+  // AI assistants stream a cumulative canonical message object on every
+  // chunk. Reusing the normal merge path replaces the placeholder/message by
+  // its stable chme_id and makes the response grow in real time until isLast.
+  ws.on('chat_message_chunk', handler);
   ws.on('chat_cmptupdated', unreadHandler);
 
   ref.onDispose(() {
     try {
       ws.off('chat_message_new', handler);
+      ws.off('chat_message_chunk', handler);
       ws.off('chat_cmptupdated', unreadHandler);
     } catch (_) {}
   });

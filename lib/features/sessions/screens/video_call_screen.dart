@@ -104,7 +104,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     };
     _webSocketService = ref.read(webSocketServiceProvider);
     _registerWebSocketHandlers();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       unawaited(() async {
         if (!mounted || !_heartbeatActive) return;
         try {
@@ -202,16 +202,16 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
           },
           onRemoteVideoStateChanged:
               (connection, remoteUid, state, reason, elapsed) {
-            if (!mounted) return;
-            final ok =
-                state == RemoteVideoState.remoteVideoStateDecoding ||
-                state == RemoteVideoState.remoteVideoStateStarting;
-            setState(() {
-              _remoteVideoDiagnostics = ok
-                  ? null
-                  : 'remote video: ${state.name} (${reason.name})';
-            });
-          },
+                if (!mounted) return;
+                final ok =
+                    state == RemoteVideoState.remoteVideoStateDecoding ||
+                    state == RemoteVideoState.remoteVideoStateStarting;
+                setState(() {
+                  _remoteVideoDiagnostics = ok
+                      ? null
+                      : 'remote video: ${state.name} (${reason.name})';
+                });
+              },
           onError: (err, msg) {
             if (!mounted) return;
             setState(() {
@@ -359,9 +359,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
   void _announceGroupLeft() {
     if (!_groupJoinAnnounced) return;
     _groupJoinAnnounced = false;
-    _webSocketService.send('session_group_client_left', {
-      'se_id': widget.seId,
-    });
+    _webSocketService.send('session_group_client_left', {'se_id': widget.seId});
   }
 
   Future<void> _endCallAndExit({bool notifyServer = true}) async {
