@@ -65,14 +65,14 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
   };
 
   String _path() => switch (widget.kind) {
-    InfoScreenKind.support => 'page2',
-    InfoScreenKind.privacy => 'page1',
+    InfoScreenKind.support => 'help-center',
+    InfoScreenKind.privacy => 'privacy',
     InfoScreenKind.about => 'whoweare',
     InfoScreenKind.terms => 'cgu',
     InfoScreenKind.service => 'cgs',
     InfoScreenKind.legal => 'legal',
     InfoScreenKind.trust => 'trust',
-    InfoScreenKind.contact => 'contact',
+    InfoScreenKind.contact => 'help-center',
   };
 
   String _url(String lang) => 'https://voyanz.com/$lang/${_path()}';
@@ -157,9 +157,7 @@ class _InfoScreenState extends ConsumerState<InfoScreen> {
                 ],
               ),
             ),
-            Expanded(
-              child: WebViewWidget(controller: _controller!),
-            ),
+            Expanded(child: WebViewWidget(controller: _controller!)),
           ],
         ),
       ),
