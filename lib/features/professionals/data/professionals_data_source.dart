@@ -11,10 +11,14 @@ class ProfessionalsDataSource {
   /// `filterTypes`, `filterSpecialities`, `filterLanguages`, `filterPrices`).
   /// The app currently uses `search`; remaining params can be passed through
   /// later without contract changes.
-  Future<List<Professional>> getProfessionals({String search = ''}) async {
+  Future<List<Professional>> getProfessionals({
+    String search = '',
+    String language = 'en',
+  }) async {
     final response = await _dio.get(
       ApiEndpoints.professionals,
       queryParameters: {
+        'lang': language,
         if (search.trim().isNotEmpty) 'search': search.trim(),
       },
     );
@@ -27,7 +31,7 @@ class ProfessionalsDataSource {
     }
     if (wrappedError is Map<String, dynamic> && wrappedError.isNotEmpty) {
       final message =
-        wrappedError['message'] ?? wrappedError['code'] ?? 'Unknown error';
+          wrappedError['message'] ?? wrappedError['code'] ?? 'Unknown error';
       throw Exception('Professionals API error: $message');
     }
     if (wrappedError != null && wrappedError != false && wrappedError != 0) {
@@ -38,12 +42,18 @@ class ProfessionalsDataSource {
 
     return list
         .whereType<Map<String, dynamic>>()
-        .map(Professional.fromJson)
+        .map((json) => Professional.fromJson(_localizedProfile(json, language)))
         .toList();
   }
 
-  Future<ProfessionalDetail> getProfessionalInfos(String coId) async {
-    final response = await _dio.get(ApiEndpoints.professionalInfos(coId));
+  Future<ProfessionalDetail> getProfessionalInfos(
+    String coId, {
+    String language = 'en',
+  }) async {
+    final response = await _dio.get(
+      ApiEndpoints.professionalInfos(coId),
+      queryParameters: {'lang': language},
+    );
     final body = response.data as Map<String, dynamic>;
     _throwIfApiError(body, fallbackPrefix: 'Professional detail API error');
 
@@ -70,7 +80,7 @@ class ProfessionalsDataSource {
       }
     }
 
-    return ProfessionalDetail.fromJson(data);
+    return ProfessionalDetail.fromJson(_localizedProfile(data, language));
   }
 
   Future<void> setProfessionalFavorite(String coId, bool isFavorite) async {
@@ -85,9 +95,13 @@ class ProfessionalsDataSource {
   }
 
   Future<Map<String, dynamic>> getProfessionalBookingSlots(
-    String coId,
-  ) async {
-    final response = await _dio.get(ApiEndpoints.professionalInfos(coId));
+    String coId, {
+    String language = 'en',
+  }) async {
+    final response = await _dio.get(
+      ApiEndpoints.professionalInfos(coId),
+      queryParameters: {'lang': language},
+    );
     final body = response.data as Map<String, dynamic>;
     _throwIfApiError(body, fallbackPrefix: 'Professional slots API error');
 
@@ -254,5 +268,22 @@ class ProfessionalsDataSource {
       }
     }
     return merged;
+  }
+
+  /// Prefer an explicit localized biography when a newer backend provides it.
+  /// The current production API returns the same `co_description` for `fr`
+  /// and `en`, so the original professional-authored text remains the fallback.
+  Map<String, dynamic> _localizedProfile(
+    Map<String, dynamic> source,
+    String language,
+  ) {
+    final result = Map<String, dynamic>.from(source);
+    final localized =
+        result['co_description_$language'] ?? result['description_$language'];
+    if (localized is String && localized.trim().isNotEmpty) {
+      result['co_description'] = localized;
+      result['description'] = localized;
+    }
+    return result;
   }
 }

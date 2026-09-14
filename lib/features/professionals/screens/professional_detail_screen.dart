@@ -863,6 +863,7 @@ class _ProfessionalDetailScreenState
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
+    final language = ref.watch(languageProvider);
     final detailAsync = ref.watch(professionalDetailProvider(widget.coId));
     final listAsync = ref.watch(professionalsListProvider(''));
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
@@ -1566,6 +1567,26 @@ class _ProfessionalDetailScreenState
                                       color: Colors.white70,
                                     ),
                                   ),
+                                  if (language == 'en' && !pro.isAssistant) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.aqua.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'Professional biographies are written by each advisor and may remain in their original language.',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 11,
+                                          height: 1.45,
+                                          color: AppColors.aqua,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voyanz/core/providers.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/professionals/data/professionals_data_source.dart';
 import 'package:voyanz/features/professionals/data/professionals_repository.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
@@ -62,9 +63,10 @@ final professionalsRepositoryProvider = Provider<ProfessionalsRepository>((
 /// term (API_REST §10.1 `search` query param); pass '' for the full list.
 final professionalsListProvider =
     FutureProvider.family<List<Professional>, String>((ref, search) async {
+      final language = ref.watch(languageProvider);
       return ref
           .watch(professionalsRepositoryProvider)
-          .getProfessionals(search: search);
+          .getProfessionals(search: search, language: language);
     });
 
 /// AI assistants filtered from the full professionals list (co_isassistant).
@@ -78,9 +80,10 @@ final aiAssistantsProvider = FutureProvider.family<List<Professional>, String>((
 
 final professionalDetailProvider =
     FutureProvider.family<ProfessionalDetail, String>((ref, coId) async {
+      final language = ref.watch(languageProvider);
       final detail = await ref
           .watch(professionalsRepositoryProvider)
-          .getProfessionalInfos(coId);
+          .getProfessionalInfos(coId, language: language);
 
       // The detail response is deliberately compact. The directory response
       // contains the public biography, specialties, tools, languages, image
@@ -270,9 +273,10 @@ List<Map<String, dynamic>> _slotsFromDisponibilityRules(List<dynamic> rules) {
 
 final professionalBookingSlotsProvider = FutureProvider.autoDispose
     .family<List<Map<String, dynamic>>, String>((ref, coId) async {
+      final language = ref.watch(languageProvider);
       final payload = await ref
           .watch(professionalsRepositoryProvider)
-          .getProfessionalBookingSlots(coId);
+          .getProfessionalBookingSlots(coId, language: language);
 
       final rows = <Map<String, dynamic>>[];
 

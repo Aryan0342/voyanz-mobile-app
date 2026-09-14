@@ -7,7 +7,10 @@ class ProfessionalsRepository {
 
   ProfessionalsRepository(this._ds);
 
-  Future<List<Professional>> getProfessionals({String search = ''}) async {
+  Future<List<Professional>> getProfessionals({
+    String search = '',
+    String language = 'en',
+  }) async {
     if (kUseMockBackend) {
       return const [
         Professional(
@@ -39,10 +42,13 @@ class ProfessionalsRepository {
         ),
       ];
     }
-    return _ds.getProfessionals(search: search);
+    return _ds.getProfessionals(search: search, language: language);
   }
 
-  Future<ProfessionalDetail> getProfessionalInfos(String coId) async {
+  Future<ProfessionalDetail> getProfessionalInfos(
+    String coId, {
+    String language = 'en',
+  }) async {
     if (kUseMockBackend) {
       final map = <String, ProfessionalDetail>{
         'pro-001': ProfessionalDetail(
@@ -85,7 +91,7 @@ class ProfessionalsRepository {
             email: 'advisor@voyanz.mock',
           );
     }
-    return _ds.getProfessionalInfos(coId);
+    return _ds.getProfessionalInfos(coId, language: language);
   }
 
   Future<void> setProfessionalFavorite(String coId, bool isFavorite) async {
@@ -168,20 +174,34 @@ class ProfessionalsRepository {
   }
 
   Future<Map<String, dynamic>> getProfessionalBookingSlots(
-    String coId,
-  ) async {
+    String coId, {
+    String language = 'en',
+  }) async {
     if (kUseMockBackend) {
       return {
         'nextdisponibilities': const [
           {
             'date': '2026-08-05',
             'hours': [
-              ['10:00', ['period']],
-              ['11:00', ['period']],
-              ['14:00', ['period']],
+              [
+                '10:00',
+                ['period'],
+              ],
+              [
+                '11:00',
+                ['period'],
+              ],
+              [
+                '14:00',
+                ['period'],
+              ],
             ],
             'hoursIntervals': [
-              ['10:00', '12:00', ['period']],
+              [
+                '10:00',
+                '12:00',
+                ['period'],
+              ],
             ],
           },
         ],
@@ -189,7 +209,7 @@ class ProfessionalsRepository {
         'disponibilities': const [],
       };
     }
-    return _ds.getProfessionalBookingSlots(coId);
+    return _ds.getProfessionalBookingSlots(coId, language: language);
   }
 
   Future<void> createDisponibility(Map<String, dynamic> data) async {
