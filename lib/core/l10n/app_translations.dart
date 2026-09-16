@@ -1,28 +1,57 @@
-/// Centralised bilingual string table.
-/// Default language is French ('fr'). Switch to 'en' for English.
+/// Centralised French, English and Spanish string table.
 class AppTranslations {
   final String lang;
   const AppTranslations(this.lang);
 
   bool get _fr => lang == 'fr';
+  bool get _es => lang == 'es';
+
+  String _l(String fr, String en, String es) => _fr ? fr : (_es ? es : en);
 
   // ── Branding ───────────────────────────────────────────────────────────────
-  String get tagline => _fr
-      ? 'Votre voyage spirituel commence ici'
-      : 'Your spiritual journey begins here';
+  String get tagline => _l(
+    'Votre voyage spirituel commence ici',
+    'Your spiritual journey begins here',
+    'Tu viaje espiritual comienza aquí',
+  );
 
   // ── Auth – login ────────────────────────────────────────────────────────────
-  String get welcomeBack => _fr ? 'Bon retour' : 'Welcome Back';
-  String get email => _fr ? 'E-mail' : 'Email';
-  String get emailRequired => _fr ? "L'e-mail est requis" : 'Email is required';
-  String get password => _fr ? 'Mot de passe' : 'Password';
-  String get passwordRequired =>
-      _fr ? 'Le mot de passe est requis' : 'Password is required';
-  String get logIn => _fr ? 'Connexion' : 'Log In';
-  String get noAccount => _fr ? 'Pas de compte ? ' : "Don't have an account? ";
-  String get signUp => _fr ? "S'inscrire" : 'Sign Up';
-  String get forgotPassword =>
-      _fr ? 'Mot de passe oublié ?' : 'Forgot Password?';
+  String get welcomeBack =>
+      _l('Bon retour', 'Welcome Back', 'Bienvenido de nuevo');
+  String get email => _l('E-mail', 'Email', 'Correo electrónico');
+  String get loginOrEmail => _l(
+    'Identifiant ou e-mail',
+    'Login or email',
+    'Usuario o correo electrónico',
+  );
+  String get loginRequired => _l(
+    "L'identifiant ou l'e-mail est requis",
+    'Login or email is required',
+    'El usuario o correo electrónico es obligatorio',
+  );
+  String get emailRequired => _l(
+    "L'e-mail est requis",
+    'Email is required',
+    'El correo es obligatorio',
+  );
+  String get password => _l('Mot de passe', 'Password', 'Contraseña');
+  String get passwordRequired => _l(
+    'Le mot de passe est requis',
+    'Password is required',
+    'La contraseña es obligatoria',
+  );
+  String get logIn => _l('Connexion', 'Log In', 'Iniciar sesión');
+  String get noAccount => _l(
+    'Pas de compte ? ',
+    "Don't have an account? ",
+    '¿No tienes una cuenta? ',
+  );
+  String get signUp => _l("S'inscrire", 'Sign Up', 'Registrarse');
+  String get forgotPassword => _l(
+    'Mot de passe oublié ?',
+    'Forgot Password?',
+    '¿Olvidaste tu contraseña?',
+  );
   String get resetPasswordSubtitle => _fr
       ? "Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe."
       : "Enter your email address and we'll send you a link to reset your password.";
@@ -39,12 +68,15 @@ class AppTranslations {
   String get backToLogin => _fr ? 'Retour à la connexion' : 'Back to Login';
 
   // ── Auth – register ─────────────────────────────────────────────────────────
-  String get createAccount => _fr ? 'Créer un compte' : 'Create Account';
-  String get joinCommunity => _fr
-      ? 'Rejoignez notre communauté de chercheurs'
-      : 'Join our community of seekers';
-  String get customer => _fr ? 'Client' : 'Customer';
-  String get professional => _fr ? 'Professionnel' : 'Professional';
+  String get createAccount =>
+      _l('Créer un compte', 'Create Account', 'Crear una cuenta');
+  String get joinCommunity => _l(
+    'Rejoignez notre communauté de chercheurs',
+    'Join our community of seekers',
+    'Únete a nuestra comunidad de buscadores',
+  );
+  String get customer => _l('Client', 'Customer', 'Cliente');
+  String get professional => _l('Professionnel', 'Professional', 'Profesional');
   String get iIdentifyAs => _fr ? 'Je suis' : 'I identify as';
   String get male => _fr ? 'Homme' : 'Male';
   String get female => _fr ? 'Femme' : 'Female';
@@ -142,14 +174,14 @@ class AppTranslations {
       _fr ? 'Vous avez déjà un compte ? ' : 'Already have an account? ';
 
   // ── Bottom nav tabs ─────────────────────────────────────────────────────────
-  String get tabExplore => _fr ? 'Explorer' : 'Explore';
-  String get tabChat => _fr ? 'Chat' : 'Chat';
-  String get tabHistory => _fr ? 'Historique' : 'History';
-  String get tabReviews => _fr ? 'Avis' : 'Reviews';
-  String get tabProfile => _fr ? 'Profil' : 'Profile';
-  String get tabHome => _fr ? 'Accueil' : 'Home';
-  String get tabSlots => _fr ? 'Créneaux' : 'Slots';
-  String get tabClients => _fr ? 'Clients' : 'Clients';
+  String get tabExplore => _l('Explorer', 'Explore', 'Explorar');
+  String get tabChat => _l('Chat', 'Chat', 'Chat');
+  String get tabHistory => _l('Historique', 'History', 'Historial');
+  String get tabReviews => _l('Avis', 'Reviews', 'Reseñas');
+  String get tabProfile => _l('Profil', 'Profile', 'Perfil');
+  String get tabHome => _l('Accueil', 'Home', 'Inicio');
+  String get tabSlots => _l('Créneaux', 'Slots', 'Horarios');
+  String get tabClients => _l('Clients', 'Clients', 'Clientes');
 
   // ── Professional dashboard ──────────────────────────────────────────────────
   String get dashboard => _fr ? 'Tableau de bord' : 'Dashboard';
@@ -217,22 +249,30 @@ class AppTranslations {
       : 'Are you sure you want to log out?';
 
   // ── Explore / Professionals list ────────────────────────────────────────────
-  String get explore => _fr ? 'Explorer' : 'Explore';
+  String get explore => _l('Explorer', 'Explore', 'Explorar');
   String get unableLoadExplore =>
       _fr ? 'Impossible de charger les données' : 'Unable to load explore data';
   String get tryAgain => _fr ? 'Réessayer' : 'Try Again';
-  String get noProfessionalsFound =>
-      _fr ? 'Aucun professionnel trouvé' : 'No professionals found';
-  String get noProfessionalsSubtitle => _fr
-      ? 'Les conseillers apparaîtront ici une fois disponibles.'
-      : 'Advisors will appear here once available.';
-  String get searchAdvisor => _fr
-      ? 'Rechercher un conseiller ou une spécialité'
-      : 'Search advisor or specialty';
-  String get all => _fr ? 'Tous' : 'All';
-  String get online => _fr ? 'En ligne' : 'Online';
-  String get offline => _fr ? 'Hors ligne' : 'Offline';
-  String get recommended => _fr ? 'Recommandé' : 'Recommended';
+  String get noProfessionalsFound => _l(
+    'Aucun voyant trouvé',
+    'No psychics found',
+    'No se encontraron profesionales',
+  );
+  String get noProfessionalsSubtitle => _l(
+    'Les voyants apparaîtront ici une fois disponibles.',
+    'Psychics will appear here once available.',
+    'Los profesionales aparecerán aquí cuando estén disponibles.',
+  );
+  String get searchAdvisor => _l(
+    'Rechercher des professionnels par nom ou spécialités',
+    'Search for professionals by name or specialties',
+    'Buscar profesionales por nombre o especialidades',
+  );
+  String get search => _l('Rechercher', 'Search', 'Buscar');
+  String get all => _l('Tous', 'All', 'Todos');
+  String get online => _l('En ligne', 'Online', 'En línea');
+  String get offline => _l('Hors ligne', 'Offline', 'Desconectado');
+  String get recommended => _l('Recommandé', 'Recommended', 'Recomendado');
   String get filters => _fr ? 'Filtres' : 'Filters';
   String get reset => _fr ? 'Réinitialiser' : 'Reset';
   String get specialty => _fr ? 'Spécialité' : 'Specialty';
@@ -242,6 +282,11 @@ class AppTranslations {
   String get language => _fr ? 'Langue' : 'Language';
   String get sessionType => _fr ? 'Type de session' : 'Session type';
   String get favoritesOnly => _fr ? 'Favoris seulement' : 'Favorites only';
+  String get favoritePsychicsSubtitle => _l(
+    'Retrouvez vos voyants favoris',
+    'View your favorite psychics',
+    'Consulta tus profesionales favoritos',
+  );
   String get phone => _fr ? 'Téléphone' : 'Phone';
   String get video => _fr ? 'Vidéo' : 'Video';
   String get moreFilters => _fr ? 'Plus de filtres' : 'More Filters';
@@ -251,19 +296,29 @@ class AppTranslations {
   String get specialties => _fr ? 'Spécialités' : 'Specialties';
   String get categories => _fr ? 'Catégories' : 'Categories';
   String get pricingEurMin => _fr ? 'Prix (EUR/min)' : 'Price (EUR/min)';
-  String get featuredAdvisors =>
-      _fr ? 'Conseillers vedettes' : 'Featured Advisors';
+  String get featuredAdvisors => _l(
+    'Nos voyants recommandés',
+    'Our recommended psychics',
+    'Nuestros profesionales recomendados',
+  );
   String get topProsReadyNow => _fr
       ? 'Les meilleurs professionnels en ligne disponibles'
       : 'Top online professionals ready now';
-  String get noFeaturedAdvisors => _fr
-      ? 'Aucun conseiller vedette pour les filtres actuels.'
-      : 'No featured advisors for current filters.';
-  String get allAdvisors => _fr ? 'Tous les conseillers' : 'All Advisors';
-  String nResults(int n) => _fr ? '$n résultats' : '$n results';
-  String get noAdvisorsMatch => _fr
-      ? 'Aucun conseiller ne correspond à votre recherche.'
-      : 'No advisors match your search right now.';
+  String get noFeaturedAdvisors => _l(
+    'Aucun voyant recommandé pour les filtres actuels.',
+    'No recommended psychics for the current filters.',
+    'No hay profesionales recomendados para los filtros actuales.',
+  );
+  String get onlineNow =>
+      _l('En ligne maintenant', 'Online now', 'En línea ahora');
+  String get allAdvisors =>
+      _l('Tous les voyants', 'All psychics', 'Todos los profesionales');
+  String nResults(int n) => _l('$n résultats', '$n results', '$n resultados');
+  String get noAdvisorsMatch => _l(
+    'Aucun voyant ne correspond à votre recherche.',
+    'No psychics match your search right now.',
+    'Ningún profesional coincide con tu búsqueda.',
+  );
   String get clearFiltersAndRetry =>
       _fr ? 'Effacer les filtres et réessayer' : 'Clear filters and retry';
   String get quickSessionTest =>
@@ -281,10 +336,12 @@ class AppTranslations {
       ? 'Aucun professionnel disponible pour un test chat.'
       : 'No professional available for chat test.';
   String get discoverYourGuide =>
-      _fr ? 'Découvrez votre guide' : 'Discover Your Guide';
-  String nAdvisorsAvailable(int n) => _fr
-      ? '$n conseillers disponibles pour chat et vidéo'
-      : '$n advisors available for chat and video sessions';
+      _l('Découvrez votre guide', 'Discover Your Guide', 'Descubre tu guía');
+  String nAdvisorsAvailable(int n) => _l(
+    '$n voyants disponibles pour chat et vidéo',
+    '$n psychics available for chat and video sessions',
+    '$n profesionales disponibles para chat y vídeo',
+  );
   String specialtyFilterLabel(String s) =>
       _fr ? 'Spécialité : $s' : 'Specialty: $s';
   String get results => _fr ? 'résultats' : 'results';
@@ -314,7 +371,15 @@ class AppTranslations {
   String sessionCreated(String seId, String type) => _fr
       ? 'Session #$seId créée (${type.toUpperCase()})'
       : 'Session #$seId created (${type.toUpperCase()})';
-  String get availableNow => _fr ? 'Disponible maintenant' : 'Available now';
+  String get availableNow =>
+      _l('Disponible maintenant', 'Available now', 'Disponible ahora');
+  String get viewAvailability =>
+      _l('Voir les disponibilités', 'View availability', 'Ver disponibilidad');
+  String get profileVerified =>
+      _l('Profil vérifié', 'Profile verified', 'Perfil verificado');
+  String get emailVerified =>
+      _l('E-mail vérifié', 'Email verified', 'Correo verificado');
+  String get call => _l('Appel', 'Call', 'Llamada');
   String get noAvailabilityAtMoment => _fr
       ? 'Aucune disponibilité pour le moment'
       : 'No availability at the moment';
@@ -410,62 +475,104 @@ class AppTranslations {
   ];
 
   // ── Reviews ─────────────────────────────────────────────────────────────────
-  String get reviews => _fr ? 'Avis' : 'Reviews';
-  String get myReviews => _fr ? 'Mes avis' : 'My Reviews';
-  String get failedLoadReviews =>
-      _fr ? 'Impossible de charger les avis' : 'Failed to load reviews';
-  String get noReviewsFound => _fr ? 'Aucun avis trouvé' : 'No reviews found';
+  String get reviews => _l('Avis', 'Reviews', 'Reseñas');
+  String get myReviews => _l('Mes avis', 'My Reviews', 'Mis reseñas');
+  String get failedLoadReviews => _l(
+    'Impossible de charger les avis',
+    'Failed to load reviews',
+    'No se pudieron cargar las reseñas',
+  );
+  String get noReviewsFound =>
+      _l('Aucun avis trouvé', 'No reviews found', 'No se encontraron reseñas');
   String get noReviewsYet =>
-      _fr ? 'Aucun avis pour le moment' : 'No reviews yet';
-  String get beFirstToReview => _fr
-      ? 'Soyez le premier à laisser un avis !'
-      : 'Be the first to leave a review!';
-  String get writeReview => _fr ? 'Écrire un avis' : 'Write a review';
-  String get submitReview => _fr ? 'Soumettre un avis' : 'Submit review';
-  String get yourRating => _fr ? 'Votre note' : 'Your rating';
-  String get yourComment => _fr ? 'Votre commentaire' : 'Your comment';
+      _l('Aucun avis pour le moment', 'No reviews yet', 'Aún no hay reseñas');
+  String get beFirstToReview => _l(
+    'Soyez le premier à laisser un avis !',
+    'Be the first to leave a review!',
+    '¡Sé el primero en dejar una reseña!',
+  );
+  String get writeReview =>
+      _l('Écrire un avis', 'Write a review', 'Escribir una reseña');
+  String get submitReview =>
+      _l('Soumettre un avis', 'Submit review', 'Enviar reseña');
+  String get yourRating => _l('Votre note', 'Your rating', 'Tu puntuación');
+  String get yourComment =>
+      _l('Votre commentaire', 'Your comment', 'Tu comentario');
+  String starCount(int count) => _l(
+    '$count étoile${count == 1 ? '' : 's'}',
+    '$count star${count == 1 ? '' : 's'}',
+    '$count estrella${count == 1 ? '' : 's'}',
+  );
   String get reviewTargetCoidHint =>
       _fr ? 'ID du professionnel (optionnel)' : 'Professional ID (optional)';
   String get reviewSessionIdHint =>
       _fr ? 'ID de session (optionnel)' : 'Session ID (optional)';
-  String get reviewProfessionalLabel => _fr ? 'Professionnel' : 'Professional';
-  String get reviewSessionLabel => _fr ? 'Session' : 'Session';
-  String get selectProfessional =>
-      _fr ? 'Choisir un professionnel' : 'Select a professional';
-  String get selectSession => _fr ? 'Choisir une session' : 'Select a session';
-  String get noProfessionalsAvailable =>
-      _fr ? 'Aucun professionnel disponible' : 'No professionals available';
-  String get noSessionsForProfessional => _fr
-      ? 'Aucune session pour ce professionnel'
-      : 'No sessions for this professional';
-  String get ratingRequired =>
-      _fr ? 'La note est requise' : 'Rating is required';
-  String get reviewSubmitted =>
-      _fr ? 'Avis soumis avec succès' : 'Review submitted successfully';
-  String reviewSubmitFailed(String err) => _fr
-      ? 'Échec de l\'envoi de l\'avis : $err'
-      : 'Failed to submit review: $err';
-  String nReviews(int count) => _fr ? '$count avis' : '$count reviews';
+  String get reviewProfessionalLabel =>
+      _l('Professionnel', 'Professional', 'Profesional');
+  String get reviewSessionLabel => _l('Session', 'Session', 'Sesión');
+  String get selectProfessional => _l(
+    'Choisir un professionnel',
+    'Select a professional',
+    'Seleccionar un profesional',
+  );
+  String get selectSession =>
+      _l('Choisir une session', 'Select a session', 'Seleccionar una sesión');
+  String get noProfessionalsAvailable => _l(
+    'Aucun professionnel disponible',
+    'No professionals available',
+    'No hay profesionales disponibles',
+  );
+  String get noSessionsForProfessional => _l(
+    'Aucune session pour ce professionnel',
+    'No sessions for this professional',
+    'No hay sesiones con este profesional',
+  );
+  String get ratingRequired => _l(
+    'La note est requise',
+    'Rating is required',
+    'La puntuación es obligatoria',
+  );
+  String get reviewSubmitted => _l(
+    'Avis soumis avec succès',
+    'Review submitted successfully',
+    'Reseña enviada correctamente',
+  );
+  String reviewSubmitFailed(String err) => _l(
+    'Échec de l\'envoi de l\'avis : $err',
+    'Failed to submit review: $err',
+    'No se pudo enviar la reseña: $err',
+  );
+  String nReviews(int count) =>
+      _l('$count avis', '$count reviews', '$count reseñas');
   String get reviewsFromClientsWillAppear => _fr
       ? 'Les avis de vos clients\napparaîtront ici'
       : 'Reviews from your clients\nwill appear here';
   String get reviewsFromConsultationsWillAppear => _fr
       ? 'Les avis de vos consultations\napparaîtront ici'
       : 'Reviews from your consultations\nwill appear here';
-  String get anonymous => _fr ? 'Anonyme' : 'Anonymous';
+  String get anonymous => _l('Anonyme', 'Anonymous', 'Anónimo');
 
   // ── History ──────────────────────────────────────────────────────────────────
   String get sessionHistory =>
-      _fr ? 'Historique des sessions' : 'Session History';
-  String get pastConsultations =>
-      _fr ? 'Vos consultations passées' : 'Your past consultations';
-  String get failedLoadHistory =>
-      _fr ? "Impossible de charger l'historique" : 'Failed to load history';
-  String get noSessionsFound =>
-      _fr ? 'Aucune session trouvée' : 'No sessions found';
-  String get completed => _fr ? 'Terminé' : 'Completed';
-  String get cancelled => _fr ? 'Annulé' : 'Cancelled';
-  String get pending => _fr ? 'En attente' : 'Pending';
+      _l('Historique des sessions', 'Session History', 'Historial de sesiones');
+  String get pastConsultations => _l(
+    'Vos consultations passées',
+    'Your past consultations',
+    'Tus consultas anteriores',
+  );
+  String get failedLoadHistory => _l(
+    "Impossible de charger l'historique",
+    'Failed to load history',
+    'No se pudo cargar el historial',
+  );
+  String get noSessionsFound => _l(
+    'Aucune session trouvée',
+    'No sessions found',
+    'No se encontraron sesiones',
+  );
+  String get completed => _l('Terminé', 'Completed', 'Completada');
+  String get cancelled => _l('Annulé', 'Cancelled', 'Cancelada');
+  String get pending => _l('En attente', 'Pending', 'Pendiente');
   String get noSessionsHistory =>
       _fr ? 'Aucune session dans l\'historique' : 'No sessions in history';
   String get noHistoryYet => _fr
@@ -478,9 +585,12 @@ class AppTranslations {
       : 'Your consultation history will\nappear here';
 
   // ── Chat ─────────────────────────────────────────────────────────────────────
-  String get messages => _fr ? 'Messages' : 'Messages';
-  String get searchConversations =>
-      _fr ? 'Rechercher des conversations...' : 'Search conversations...';
+  String get messages => _l('Messages', 'Messages', 'Mensajes');
+  String get searchConversations => _l(
+    'Rechercher des conversations...',
+    'Search conversations...',
+    'Buscar conversaciones...',
+  );
   String get failedLoadConversations => _fr
       ? 'Impossible de charger les conversations'
       : 'Failed to load conversations';
@@ -491,8 +601,9 @@ class AppTranslations {
   String get startChatExplore => _fr
       ? 'Commencez une session avec un professionnel pour discuter.'
       : 'Start a session with a professional to chat.';
-  String get typeMessage => _fr ? 'Écrire un message...' : 'Type a message...';
-  String get send => _fr ? 'Envoyer' : 'Send';
+  String get typeMessage =>
+      _l('Écrire un message...', 'Type a message...', 'Escribe un mensaje...');
+  String get send => _l('Envoyer', 'Send', 'Enviar');
   String sendMessageFailed(String err) => _fr
       ? 'Échec de l\'envoi du message : $err'
       : 'Failed to send message: $err';
@@ -544,6 +655,42 @@ class AppTranslations {
       : 'No appointment slots available to register.';
   String get loadingAppointments =>
       _fr ? 'Chargement des créneaux...' : 'Loading appointments...';
+  String get myAppointments =>
+      _l('Mes rendez-vous', 'My appointments', 'Mis citas');
+  String get upcoming => _l('À venir', 'Upcoming', 'Próximas');
+  String get past => _l('Passés', 'Past', 'Anteriores');
+  String get noUpcomingAppointments => _l(
+    'Aucun rendez-vous à venir.',
+    'No upcoming appointments.',
+    'No hay citas próximas.',
+  );
+  String get noPastAppointments => _l(
+    'Aucun rendez-vous passé.',
+    'No past appointments.',
+    'No hay citas anteriores.',
+  );
+  String get manageAppointmentsSubtitle => _l(
+    'Consultez vos rendez-vous à venir et passés',
+    'View your upcoming and past appointments',
+    'Consulta tus citas próximas y anteriores',
+  );
+  String get groupCalendar => _l(
+    'Calendrier des sessions de groupe',
+    'Group-session calendar',
+    'Calendario de sesiones grupales',
+  );
+  String get groupCalendarSubtitle => _l(
+    'Découvrez et rejoignez les sessions Club Voyanz',
+    'Discover and join Club Voyanz sessions',
+    'Descubre y únete a las sesiones Club Voyanz',
+  );
+  String get groupSession =>
+      _l('Session de groupe', 'Group session', 'Sesión grupal');
+  String get noGroupSessions => _l(
+    'Aucune session de groupe dans les 30 prochains jours.',
+    'No group sessions in the next 30 days.',
+    'No hay sesiones grupales en los próximos 30 días.',
+  );
   String get phoneSession => _fr ? 'Session téléphonique' : 'Phone Session';
   String get answerPhoneTitle =>
       _fr ? 'Repondez a votre telephone' : 'Answer your phone';
@@ -685,9 +832,10 @@ class AppTranslations {
       : 'The received video provider is not Agora.';
 
   // ── Language selector ────────────────────────────────────────────────────────
-  String get selectLanguage => _fr ? 'Choisir la langue' : 'Select Language';
-  String get english => _fr ? 'Anglais' : 'English';
-  String get french => _fr ? 'Français' : 'French';
+  String get selectLanguage =>
+      _l('Choisir la langue', 'Select Language', 'Seleccionar idioma');
+  String get english => _l('Anglais', 'English', 'Inglés');
+  String get french => _l('Français', 'French', 'Francés');
 
   // ── Profile / About dialogs ──────────────────────────────────────────────────
   String get privacyPolicy =>
@@ -714,28 +862,56 @@ class AppTranslations {
   String get supportChannels => _fr ? 'Canaux de contact' : 'Contact channels';
 
   // ── Wallet / Top-Up ──────────────────────────────────────────────────────
-  String get wallet => _fr ? 'Portefeuille' : 'Wallet';
-  String get topUp => _fr ? 'Recharger' : 'Top Up';
-  String get topUpCredit => _fr ? 'Recharger mon solde' : 'Top Up Balance';
-  String get buyPack => _fr ? 'Acheter' : 'Buy';
-  String get selectPack => _fr ? 'Choisir un pack' : 'Select a pack';
-  String get creditReceived => _fr ? 'Crédit reçu' : 'Credit received';
-  String get amountToPay => _fr ? 'Montant à payer' : 'Amount to pay';
+  String get wallet => _l('Portefeuille', 'Wallet', 'Monedero');
+  String get topUp => _l('Recharger', 'Top Up', 'Recargar');
+  String get topUpCredit =>
+      _l('Recharger mon solde', 'Top Up Balance', 'Recargar saldo');
+  String get buyPack => _l('Acheter', 'Buy', 'Comprar');
+  String get selectPack =>
+      _l('Choisir un pack', 'Select a pack', 'Seleccionar un paquete');
+  String get creditReceived =>
+      _l('Crédit reçu', 'Credit received', 'Crédito recibido');
+  String get amountToPay =>
+      _l('Montant à payer', 'Amount to pay', 'Importe a pagar');
   String get firstTopUpBonus =>
       _fr ? 'Bonus première recharge' : 'First top-up bonus';
   String get promoDiscount => _fr ? 'Réduction promo' : 'Promo discount';
-  String get payWithCard => _fr ? 'Payer par carte' : 'Pay with Card';
+  String get payWithCard =>
+      _l('Payer par carte', 'Pay with Card', 'Pagar con tarjeta');
   String get processingPayment =>
       _fr ? 'Paiement en cours...' : 'Processing payment...';
-  String get paymentSuccess => _fr ? 'Paiement réussi' : 'Payment Successful';
-  String get paymentFailed => _fr ? 'Paiement échoué' : 'Payment Failed';
+  String get paymentSuccess =>
+      _l('Paiement réussi', 'Payment Successful', 'Pago realizado');
+  String get paymentFailed =>
+      _l('Paiement échoué', 'Payment Failed', 'Pago fallido');
   String get insufficientBalance =>
-      _fr ? 'Solde insuffisant' : 'Insufficient Balance';
-  String get topUpNow => _fr ? 'Recharger maintenant' : 'Top Up Now';
+      _l('Solde insuffisant', 'Insufficient Balance', 'Saldo insuficiente');
+  String get insufficientBalanceMessage => _l(
+    'Votre solde est insuffisant. Rechargez votre portefeuille pour continuer.',
+    'Your balance is insufficient. Top up your wallet to continue.',
+    'Tu saldo es insuficiente. Recarga tu monedero para continuar.',
+  );
+  String get topUpNow =>
+      _l('Recharger maintenant', 'Top Up Now', 'Recargar ahora');
   String get transactionHistory =>
       _fr ? 'Historique des transactions' : 'Transaction History';
   String get noTransactionsYet =>
       _fr ? 'Aucune transaction' : 'No transactions yet';
+  String get transactionHistoryEmptySubtitle => _l(
+    'Votre activité apparaîtra ici',
+    'Your activity will appear here',
+    'Tu actividad aparecerá aquí',
+  );
+  String get availableBalance =>
+      _l('SOLDE DISPONIBLE', 'AVAILABLE BALANCE', 'SALDO DISPONIBLE');
+  String get currentBalance =>
+      _l('SOLDE ACTUEL', 'CURRENT BALANCE', 'SALDO ACTUAL');
+  String get bestValue => _l('MEILLEURE OFFRE', 'BEST VALUE', 'MEJOR OFERTA');
+  String get termsAndConditions => _l(
+    'Conditions générales',
+    'Terms & Conditions',
+    'Términos y condiciones',
+  );
   String get newBalance => _fr ? 'Nouveau solde' : 'New balance';
   String get backToWallet => _fr ? 'Retour au portefeuille' : 'Back to Wallet';
   String get youPay => _fr ? 'Vous payez' : 'You pay';

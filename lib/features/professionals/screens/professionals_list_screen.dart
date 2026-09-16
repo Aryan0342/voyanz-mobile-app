@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -42,7 +43,9 @@ String _profileImageUrl({String? rawAvatar, required String seed}) {
 }
 
 class ProfessionalsListScreen extends ConsumerStatefulWidget {
-  const ProfessionalsListScreen({super.key});
+  final bool favoritesOnly;
+
+  const ProfessionalsListScreen({super.key, this.favoritesOnly = false});
 
   @override
   ConsumerState<ProfessionalsListScreen> createState() =>
@@ -65,6 +68,7 @@ class _ProfessionalsListScreenState
   @override
   void initState() {
     super.initState();
+    _favoritesOnly = widget.favoritesOnly;
     // Debounced server-side search (API_REST §10.1 `search` param).
     _searchCtrl.addListener(_onSearchChanged);
   }
@@ -250,9 +254,9 @@ class _ProfessionalsListScreenState
 
   @override
   Widget build(BuildContext context) {
-    final professionalsAsync = ref.watch(
-      professionalsListProvider(_serverSearchQuery),
-    );
+    final professionalsAsync = widget.favoritesOnly
+        ? ref.watch(favoriteProfessionalsProvider)
+        : ref.watch(professionalsListProvider(_serverSearchQuery));
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
 
     final t = ref.watch(translationsProvider);
@@ -263,14 +267,29 @@ class _ProfessionalsListScreenState
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          t.explore,
+          widget.favoritesOnly ? t.favoritesOnly : t.explore,
           style: GoogleFonts.jost(
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
-        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
+        actions: [
+          if (!widget.favoritesOnly)
+            IconButton(
+              tooltip: t.favoritesOnly,
+              onPressed: () => context.push('/favorites'),
+              icon: const Icon(Icons.favorite_outline),
+            ),
+          if (!widget.favoritesOnly)
+            IconButton(
+              tooltip: t.groupCalendar,
+              onPressed: () => context.push('/group-calendar'),
+              icon: const Icon(Icons.groups_outlined),
+            ),
+          const LanguageSwitcherButton(),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -391,10 +410,15 @@ class _ProfessionalsListScreenState
             return RefreshIndicator(
               color: AppColors.mediumPurple,
               onRefresh: () async {
-                ref.invalidate(professionalsListProvider(_serverSearchQuery));
-                await ref.read(
-                  professionalsListProvider(_serverSearchQuery).future,
-                );
+                if (widget.favoritesOnly) {
+                  ref.invalidate(favoriteProfessionalsProvider);
+                  await ref.read(favoriteProfessionalsProvider.future);
+                } else {
+                  ref.invalidate(professionalsListProvider(_serverSearchQuery));
+                  await ref.read(
+                    professionalsListProvider(_serverSearchQuery).future,
+                  );
+                }
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -470,7 +494,7 @@ class _ProfessionalsListScreenState
                                   );
                                 },
                                 icon: const Icon(Icons.search),
-                                label: Text(t.searchAdvisor),
+                                label: Text(t.search),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.brandPink,
                                   shape: RoundedRectangleBorder(
@@ -485,25 +509,7 @@ class _ProfessionalsListScreenState
                     ),
                   ),
 
-                  SliverToBoxAdapter(
-                    child: _RevealIn(
-                      delayMs: 120,
-                      child: _AiAssistantsSection(search: _serverSearchQuery),
-                    ),
-                  ),
-
-                  SliverToBoxAdapter(
-                    child: _RevealIn(
-                      delayMs: 180,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
-                        child: _SectionTitle(
-                          title: t.allAdvisors,
-                          subtitle: t.nResults(filteredPros.length),
-                        ),
-                      ),
-                    ),
-                  ),
+                  ..._buildProfessionalSections(context, filteredPros, t),
 
                   if (filteredPros.isEmpty)
                     SliverToBoxAdapter(
@@ -511,29 +517,6 @@ class _ProfessionalsListScreenState
                         padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                         child: _EmptyState(message: t.noAdvisorsMatch),
                       ),
-                    )
-                  else
-                    SliverList.builder(
-                      itemCount: filteredPros.length,
-                      itemBuilder: (_, i) {
-                        final pro = filteredPros[i];
-                        return _RevealIn(
-                          delayMs: 210 + (i * 24),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              20,
-                              i == 0 ? 12 : 10,
-                              20,
-                              i == filteredPros.length - 1 ? 24 : 0,
-                            ),
-                            child: _ProfessionalCard(
-                              professional: pro,
-                              onTap: () =>
-                                  context.push('/professional/${pro.coId}'),
-                            ),
-                          ),
-                        );
-                      },
                     ),
                 ],
               ),
@@ -542,6 +525,74 @@ class _ProfessionalsListScreenState
         ),
       ),
     );
+  }
+
+  List<Widget> _buildProfessionalSections(
+    BuildContext context,
+    List<Professional> professionals,
+    dynamic t,
+  ) {
+    if (professionals.isEmpty) return const [];
+
+    final online = professionals.where((p) => p.isAvailableNow).toList();
+    final onlineIds = online.map((p) => p.coId).toSet();
+    final recommended = professionals
+        .where((p) => p.isRecommended && !onlineIds.contains(p.coId))
+        .toList();
+    final featuredIds = {...onlineIds, ...recommended.map((p) => p.coId)};
+    final remaining = professionals
+        .where((p) => !featuredIds.contains(p.coId))
+        .toList();
+
+    final sections = <({String title, List<Professional> items})>[
+      if (online.isNotEmpty) (title: t.onlineNow, items: online),
+      if (recommended.isNotEmpty)
+        (title: t.featuredAdvisors, items: recommended),
+      if (remaining.isNotEmpty) (title: t.allAdvisors, items: remaining),
+    ];
+
+    final slivers = <Widget>[];
+    var animationIndex = 0;
+    for (final section in sections) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+            child: _SectionTitle(
+              title: section.title,
+              subtitle: t.nResults(section.items.length),
+            ),
+          ),
+        ),
+      );
+      slivers.add(
+        SliverList.builder(
+          itemCount: section.items.length,
+          itemBuilder: (_, index) {
+            final pro = section.items[index];
+            animationIndex += 1;
+            return _RevealIn(
+              delayMs: 180 + (animationIndex * 24),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  index == 0 ? 12 : 10,
+                  20,
+                  index == section.items.length - 1 ? 8 : 0,
+                ),
+                child: _ProfessionalCard(
+                  professional: pro,
+                  translations: t,
+                  onTap: () => context.push('/professional/${pro.coId}'),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 16)));
+    return slivers;
   }
 
   Professional? _pickQuickCandidate(
@@ -1323,9 +1374,14 @@ class _EmptyState extends StatelessWidget {
 
 class _ProfessionalCard extends StatelessWidget {
   final Professional professional;
+  final AppTranslations translations;
   final VoidCallback onTap;
 
-  const _ProfessionalCard({required this.professional, required this.onTap});
+  const _ProfessionalCard({
+    required this.professional,
+    required this.translations,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1335,11 +1391,6 @@ class _ProfessionalCard extends StatelessWidget {
           ? professional.coId
           : professional.displayName,
     );
-    final specialty =
-        professional.specialty ??
-        (professional.specialties.isNotEmpty
-            ? professional.specialties.first
-            : null);
     final availability = professional.availabilityText?.trim();
 
     return Material(
@@ -1377,35 +1428,6 @@ class _ProfessionalCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (specialty != null && specialty.isNotEmpty)
-                      Positioned(
-                        left: 0,
-                        top: 14,
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 270),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 7,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: AppColors.brandPink,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Text(
-                            specialty,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
                     Positioned(
                       right: 14,
                       top: 14,
@@ -1439,13 +1461,13 @@ class _ProfessionalCard extends StatelessWidget {
                             runSpacing: 6,
                             children: [
                               if (professional.isVerified)
-                                const _ProfileBadge(
+                                _ProfileBadge(
                                   icon: Icons.verified_outlined,
-                                  label: 'Profile verified',
+                                  label: translations.profileVerified,
                                 ),
-                              const _ProfileBadge(
+                              _ProfileBadge(
                                 icon: Icons.mark_email_read_outlined,
-                                label: 'Email verified',
+                                label: translations.emailVerified,
                               ),
                             ],
                           ),
@@ -1519,8 +1541,8 @@ class _ProfessionalCard extends StatelessWidget {
                         availability != null && availability.isNotEmpty
                             ? availability
                             : professional.isAvailableNow
-                            ? 'Available now'
-                            : 'View availability',
+                            ? translations.availableNow
+                            : translations.viewAvailability,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1538,7 +1560,7 @@ class _ProfessionalCard extends StatelessWidget {
                           Expanded(
                             child: _SessionButton(
                               icon: Icons.chat_bubble_outline,
-                              label: 'Chat',
+                              label: translations.tabChat,
                               price: professional.priceChatPerMinute,
                               onTap: onTap,
                             ),
@@ -1551,7 +1573,7 @@ class _ProfessionalCard extends StatelessWidget {
                           Expanded(
                             child: _SessionButton(
                               icon: Icons.phone_outlined,
-                              label: 'Call',
+                              label: translations.call,
                               price: professional.pricePhonePerMinute,
                               onTap: onTap,
                             ),
@@ -1563,7 +1585,7 @@ class _ProfessionalCard extends StatelessWidget {
                           Expanded(
                             child: _SessionButton(
                               icon: Icons.videocam_outlined,
-                              label: 'Video',
+                              label: translations.video,
                               price: professional.priceVideoPerMinute,
                               onTap: onTap,
                             ),

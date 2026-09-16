@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 
-/// Holds the currently selected locale code: 'fr' or 'en'.
-/// Defaults to the device locale: French devices get 'fr',
-/// everything else gets 'en'.
+/// Holds the currently selected locale code: 'fr', 'en' or 'es'.
 final languageProvider = StateProvider<String>((ref) {
   final deviceLang = PlatformDispatcher.instance.locale.languageCode;
-  return deviceLang == 'fr' ? 'fr' : 'en';
+  return switch (deviceLang) {
+    'fr' => 'fr',
+    'es' => 'es',
+    _ => 'en',
+  };
 });
 
 /// Convenience provider that turns the language code into an [AppTranslations].

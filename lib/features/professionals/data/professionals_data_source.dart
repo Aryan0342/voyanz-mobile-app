@@ -14,11 +14,13 @@ class ProfessionalsDataSource {
   Future<List<Professional>> getProfessionals({
     String search = '',
     String language = 'en',
+    bool favoritesOnly = false,
   }) async {
     final response = await _dio.get(
       ApiEndpoints.professionals,
       queryParameters: {
         'lang': language,
+        if (favoritesOnly) 'filterFavories': true,
         if (search.trim().isNotEmpty) 'search': search.trim(),
       },
     );
@@ -261,8 +263,14 @@ class ProfessionalsDataSource {
       if (list is! List) continue;
       for (final item in list) {
         if (item is Map<String, dynamic>) {
-          final id = item['co_id']?.toString();
+          final normalized = Map<String, dynamic>.from(item);
+          if (key == 'recommendedProfessionals') {
+            normalized['recommended'] = true;
+          }
+          final id = normalized['co_id']?.toString();
           if (id != null && id.isNotEmpty && !seen.add(id)) continue;
+          merged.add(normalized);
+          continue;
         }
         merged.add(item);
       }

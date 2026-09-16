@@ -203,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               _LoginTextField(
                                 controller: _emailCtrl,
                                 focusNode: _emailFocusNode,
-                                hintText: t.email,
+                                hintText: t.loginOrEmail,
                                 prefixIcon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
@@ -211,7 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 enableSuggestions: false,
                                 textCapitalization: TextCapitalization.none,
                                 validator: (v) => (v == null || v.isEmpty)
-                                    ? t.emailRequired
+                                    ? t.loginRequired
                                     : null,
                               ),
                               const SizedBox(height: 14),

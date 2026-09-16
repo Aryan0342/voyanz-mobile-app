@@ -33,6 +33,12 @@ class FavoriteProfessionalsNotifier extends StateNotifier<Set<String>> {
     _persist(next);
   }
 
+  void replaceAll(Iterable<String> coIds) {
+    final next = coIds.where((id) => id.trim().isNotEmpty).toSet();
+    state = next;
+    _persist(next);
+  }
+
   Future<void> _persist(Set<String> ids) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -68,6 +74,20 @@ final professionalsListProvider =
           .watch(professionalsRepositoryProvider)
           .getProfessionals(search: search, language: language);
     });
+
+/// Authoritative cross-device favorites list (API answers §3).
+final favoriteProfessionalsProvider = FutureProvider<List<Professional>>((
+  ref,
+) async {
+  final language = ref.watch(languageProvider);
+  final favorites = await ref
+      .watch(professionalsRepositoryProvider)
+      .getProfessionals(language: language, favoritesOnly: true);
+  ref
+      .read(favoriteProfessionalIdsProvider.notifier)
+      .replaceAll(favorites.map((p) => p.coId));
+  return favorites.where((p) => !p.isAssistant).toList();
+});
 
 /// AI assistants filtered from the full professionals list (co_isassistant).
 final aiAssistantsProvider = FutureProvider.family<List<Professional>, String>((

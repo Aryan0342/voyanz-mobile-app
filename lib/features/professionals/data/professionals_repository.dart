@@ -10,6 +10,7 @@ class ProfessionalsRepository {
   Future<List<Professional>> getProfessionals({
     String search = '',
     String language = 'en',
+    bool favoritesOnly = false,
   }) async {
     if (kUseMockBackend) {
       return const [
@@ -42,7 +43,11 @@ class ProfessionalsRepository {
         ),
       ];
     }
-    return _ds.getProfessionals(search: search, language: language);
+    return _ds.getProfessionals(
+      search: search,
+      language: language,
+      favoritesOnly: favoritesOnly,
+    );
   }
 
   Future<ProfessionalDetail> getProfessionalInfos(

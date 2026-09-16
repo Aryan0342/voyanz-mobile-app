@@ -5,7 +5,7 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 
 /// Flag button placed in an AppBar's [actions] list.
-/// Shows 🇫🇷 when French is active, 🇬🇧 when English is active.
+/// Shows the active French, English or Spanish flag.
 /// Tapping opens a small dialog to pick the language.
 class LanguageSwitcherButton extends ConsumerWidget {
   const LanguageSwitcherButton({super.key});
@@ -13,7 +13,11 @@ class LanguageSwitcherButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(languageProvider);
-    final flag = lang == 'fr' ? '🇫🇷' : '🇬🇧';
+    final flag = switch (lang) {
+      'fr' => '🇫🇷',
+      'es' => '🇪🇸',
+      _ => '🇬🇧',
+    };
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -69,6 +73,16 @@ class LanguageSwitcherButton extends ConsumerWidget {
               isSelected: current == 'en',
               onTap: () {
                 ref.read(languageProvider.notifier).state = 'en';
+                Navigator.pop(ctx);
+              },
+            ),
+            const SizedBox(height: 8),
+            _LangOption(
+              flag: '🇪🇸',
+              label: 'Español',
+              isSelected: current == 'es',
+              onTap: () {
+                ref.read(languageProvider.notifier).state = 'es';
                 Navigator.pop(ctx);
               },
             ),
