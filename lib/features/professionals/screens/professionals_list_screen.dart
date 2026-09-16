@@ -539,16 +539,12 @@ class _ProfessionalsListScreenState
     final recommended = professionals
         .where((p) => p.isRecommended && !onlineIds.contains(p.coId))
         .toList();
-    final featuredIds = {...onlineIds, ...recommended.map((p) => p.coId)};
-    final remaining = professionals
-        .where((p) => !featuredIds.contains(p.coId))
-        .toList();
 
     final sections = <({String title, List<Professional> items})>[
       if (online.isNotEmpty) (title: t.onlineNow, items: online),
       if (recommended.isNotEmpty)
         (title: t.featuredAdvisors, items: recommended),
-      if (remaining.isNotEmpty) (title: t.allAdvisors, items: remaining),
+      (title: t.allAdvisors, items: professionals),
     ];
 
     final slivers = <Widget>[];
