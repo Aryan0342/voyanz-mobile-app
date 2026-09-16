@@ -186,6 +186,7 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBackPressed;
   final bool centerTitle;
   final double toolbarHeight;
+  final PreferredSizeWidget? bottom;
 
   const VoyanzAppBar({
     super.key,
@@ -197,10 +198,12 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBackPressed,
     this.centerTitle = false,
     this.toolbarHeight = kToolbarHeight,
+    this.bottom,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(toolbarHeight);
+  Size get preferredSize =>
+      Size.fromHeight(toolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   void _handleBack(BuildContext context) {
     if (onBackPressed != null) {
@@ -252,6 +255,7 @@ class VoyanzAppBar extends StatelessWidget implements PreferredSizeWidget {
               : null),
       title: effectiveTitle,
       actions: actions,
+      bottom: bottom,
       flexibleSpace: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),

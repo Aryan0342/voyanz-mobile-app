@@ -26,188 +26,208 @@ import 'package:voyanz/features/wallet/screens/wallet_screen.dart';
 import 'package:voyanz/features/wallet/screens/topup_screen.dart';
 import 'package:voyanz/features/wallet/screens/payment_success_screen.dart';
 import 'package:voyanz/features/appointments/screens/appointment_booking_screen.dart';
+import 'package:voyanz/features/appointments/screens/customer_appointments_screen.dart';
+import 'package:voyanz/features/appointments/screens/group_calendar_screen.dart';
 
 final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
-  return _SafeRouterConfig(GoRouter(
-    initialLocation: '/splash',
-    redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
-      if (authState.isLoading) return null;
-      final loggedIn = authState.valueOrNull != null;
-      final isSplashRoute = state.matchedLocation == '/splash';
-      final isAuthRoute =
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/forgot-password';
+  return _SafeRouterConfig(
+    GoRouter(
+      initialLocation: '/splash',
+      redirect: (context, state) {
+        final authState = ref.read(authStateProvider);
+        if (authState.isLoading) return null;
+        final loggedIn = authState.valueOrNull != null;
+        final isSplashRoute = state.matchedLocation == '/splash';
+        final isAuthRoute =
+            state.matchedLocation == '/login' ||
+            state.matchedLocation == '/register' ||
+            state.matchedLocation == '/forgot-password';
 
-      if (isSplashRoute) return null;
-      if (!loggedIn && !isAuthRoute) return '/login';
-      if (loggedIn && isAuthRoute) return '/home';
-      return null;
-    },
-    routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
-      ),
-      ShellRoute(
-        builder: (_, state, child) => HomeShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            builder: (context, state) {
-              // Show dashboard for professionals, professionals list for customers
-              return _HomeScreenRouter();
-            },
-          ),
-          GoRoute(
-            path: '/professional/:coId',
-            builder: (context, state) =>
-                ProfessionalDetailScreen(coId: state.pathParameters['coId']!),
-          ),
-          GoRoute(
-            path: '/chat',
-            builder: (context, state) => const ChatGroupsScreen(),
-          ),
-          GoRoute(
-            path: '/chat/:chgrId',
-            builder: (context, state) => ChatMessagesScreen(
-              chgrId: state.pathParameters['chgrId']!,
-              seId: state.uri.queryParameters['seId'],
-              coId: state.uri.queryParameters['coId'],
+        if (isSplashRoute) return null;
+        if (!loggedIn && !isAuthRoute) return '/login';
+        if (loggedIn && isAuthRoute) return '/home';
+        return null;
+      },
+      routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => const SplashScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/register',
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: '/forgot-password',
+          builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        ShellRoute(
+          builder: (_, state, child) => HomeShell(child: child),
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) {
+                // Show dashboard for professionals, professionals list for customers
+                return _HomeScreenRouter();
+              },
             ),
-          ),
-          GoRoute(
-            path: '/history',
-            builder: (context, state) =>
-                const HistoryScreen(isProfessional: false),
-          ),
-          GoRoute(
-            path: '/reviews',
-            builder: (context, state) =>
-                const ReviewsScreen(isProfessional: false),
-          ),
-          GoRoute(
-            path: '/availability',
-            builder: (context, state) => const ProfessionalAvailabilityScreen(),
-          ),
-          GoRoute(
-            path: '/clients',
-            builder: (context, state) => const ProfessionalClientsScreen(),
-          ),
-          GoRoute(
-            path: '/professional-account',
-            builder: (context, state) => const ProfessionalAccountScreen(),
-          ),
-          GoRoute(
-            path: '/pricing/:coId',
-            builder: (context, state) =>
-                PricingScreen(coId: state.pathParameters['coId']),
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfileScreen(),
-          ),
-          GoRoute(
-            path: '/appointment-booking/:coId',
-            builder: (context, state) => AppointmentBookingScreen(
-              coId: state.pathParameters['coId']!,
+            GoRoute(
+              path: '/professional/:coId',
+              builder: (context, state) =>
+                  ProfessionalDetailScreen(coId: state.pathParameters['coId']!),
             ),
-          ),
-          GoRoute(
-            path: '/wallet',
-            builder: (context, state) => const WalletScreen(),
-          ),
-          GoRoute(
-            path: '/wallet/topup',
-            builder: (context, state) => const TopUpScreen(),
-          ),
-          GoRoute(
-            path: '/wallet/success',
-            builder: (context, state) => const PaymentSuccessScreen(),
-          ),
-          GoRoute(
-            path: '/support',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.support),
-          ),
-          GoRoute(
-            path: '/privacy',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.privacy),
-          ),
-          GoRoute(
-            path: '/about',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.about),
-          ),
-          GoRoute(
-            path: '/terms',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.terms),
-          ),
-          GoRoute(
-            path: '/service',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.service),
-          ),
-          GoRoute(
-            path: '/legal',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.legal),
-          ),
-          GoRoute(
-            path: '/trust',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.trust),
-          ),
-          GoRoute(
-            path: '/contact',
-            builder: (context, state) =>
-                const InfoScreen(kind: InfoScreenKind.contact),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/session/wait/:type/:seId/:coId',
-        builder: (context, state) => SessionWaitingScreen(
-          type: state.pathParameters['type']!,
-          seId: state.pathParameters['seId']!,
-          coId: state.pathParameters['coId']!,
+            GoRoute(
+              path: '/favorites',
+              builder: (context, state) =>
+                  const ProfessionalsListScreen(favoritesOnly: true),
+            ),
+            GoRoute(
+              path: '/chat',
+              builder: (context, state) => const ChatGroupsScreen(),
+            ),
+            GoRoute(
+              path: '/chat/:chgrId',
+              builder: (context, state) => ChatMessagesScreen(
+                chgrId: state.pathParameters['chgrId']!,
+                seId: state.uri.queryParameters['seId'],
+                coId: state.uri.queryParameters['coId'],
+              ),
+            ),
+            GoRoute(
+              path: '/history',
+              builder: (context, state) =>
+                  const HistoryScreen(isProfessional: false),
+            ),
+            GoRoute(
+              path: '/reviews',
+              builder: (context, state) =>
+                  const ReviewsScreen(isProfessional: false),
+            ),
+            GoRoute(
+              path: '/availability',
+              builder: (context, state) =>
+                  const ProfessionalAvailabilityScreen(),
+            ),
+            GoRoute(
+              path: '/clients',
+              builder: (context, state) => const ProfessionalClientsScreen(),
+            ),
+            GoRoute(
+              path: '/professional-account',
+              builder: (context, state) => const ProfessionalAccountScreen(),
+            ),
+            GoRoute(
+              path: '/pricing/:coId',
+              builder: (context, state) =>
+                  PricingScreen(coId: state.pathParameters['coId']),
+            ),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+            GoRoute(
+              path: '/appointment-booking/:coId',
+              builder: (context, state) =>
+                  AppointmentBookingScreen(coId: state.pathParameters['coId']!),
+            ),
+            GoRoute(
+              path: '/appointments',
+              builder: (context, state) => const CustomerAppointmentsScreen(),
+            ),
+            GoRoute(
+              path: '/group-calendar',
+              builder: (context, state) => const GroupCalendarScreen(),
+            ),
+            GoRoute(
+              path: '/wallet',
+              builder: (context, state) => const WalletScreen(),
+            ),
+            GoRoute(
+              path: '/wallet/topup',
+              builder: (context, state) => const TopUpScreen(),
+            ),
+            GoRoute(
+              path: '/wallet/success',
+              builder: (context, state) => const PaymentSuccessScreen(),
+            ),
+            GoRoute(
+              path: '/support',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.support),
+            ),
+            GoRoute(
+              path: '/privacy',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.privacy),
+            ),
+            GoRoute(
+              path: '/about',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.about),
+            ),
+            GoRoute(
+              path: '/terms',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.terms),
+            ),
+            GoRoute(
+              path: '/service',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.service),
+            ),
+            GoRoute(
+              path: '/legal',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.legal),
+            ),
+            GoRoute(
+              path: '/trust',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.trust),
+            ),
+            GoRoute(
+              path: '/contact',
+              builder: (context, state) =>
+                  const InfoScreen(kind: InfoScreenKind.contact),
+            ),
+          ],
         ),
-      ),
-      GoRoute(
-        path: '/video/:seId/:coId',
-        builder: (context, state) => VideoCallScreen(
-          seId: state.pathParameters['seId']!,
-          coId: state.pathParameters['coId']!,
+        GoRoute(
+          path: '/session/wait/:type/:seId/:coId',
+          builder: (context, state) => SessionWaitingScreen(
+            type: state.pathParameters['type']!,
+            seId: state.pathParameters['seId']!,
+            coId: state.pathParameters['coId']!,
+          ),
         ),
-      ),
-      GoRoute(
-        path: '/session/phone/:seId/:coId',
-        builder: (context, state) => PhoneSessionScreen(
-          seId: state.pathParameters['seId']!,
-          coId: state.pathParameters['coId']!,
+        GoRoute(
+          path: '/video/:seId/:coId',
+          builder: (context, state) => VideoCallScreen(
+            seId: state.pathParameters['seId']!,
+            coId: state.pathParameters['coId']!,
+          ),
         ),
-      ),
-      GoRoute(
-        path: '/session/chat/:seId/:coId',
-        builder: (context, state) => ChatSessionScreen(
-          seId: state.pathParameters['seId']!,
-          coId: state.pathParameters['coId']!,
+        GoRoute(
+          path: '/session/phone/:seId/:coId',
+          builder: (context, state) => PhoneSessionScreen(
+            seId: state.pathParameters['seId']!,
+            coId: state.pathParameters['coId']!,
+          ),
         ),
-      ),
-    ],
-  ));
+        GoRoute(
+          path: '/session/chat/:seId/:coId',
+          builder: (context, state) => ChatSessionScreen(
+            seId: state.pathParameters['seId']!,
+            coId: state.pathParameters['coId']!,
+          ),
+        ),
+      ],
+    ),
+  );
 });
 
 /// go_router 14.x crashes with `Bad state: No element` in

@@ -71,6 +71,9 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/history')) return 2;
     if (location.startsWith('/reviews')) return 3;
     if (location.startsWith('/pricing') ||
+        location.startsWith('/favorites') ||
+        location.startsWith('/appointments') ||
+        location.startsWith('/group-calendar') ||
         location.startsWith('/profile') ||
         location.startsWith('/support') ||
         location.startsWith('/privacy') ||
@@ -778,6 +781,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         title: t.wallet,
                         subtitle: t.topUpCredit,
                         onTap: () => context.push('/wallet'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.favorite_outline,
+                        title: t.favoritesOnly,
+                        subtitle: t.favoritePsychicsSubtitle,
+                        onTap: () => context.push('/favorites'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.event_note_outlined,
+                        title: t.myAppointments,
+                        subtitle: t.manageAppointmentsSubtitle,
+                        onTap: () => context.push('/appointments'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ProfileTile(
+                        icon: Icons.groups_outlined,
+                        title: t.groupCalendar,
+                        subtitle: t.groupCalendarSubtitle,
+                        onTap: () => context.push('/group-calendar'),
                       ),
                     ],
                     if (user?.isProfessional == true) ...[

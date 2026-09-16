@@ -55,6 +55,7 @@ class ApiEndpoints {
 
   // ── Appointments ───────────────────────────────────────────────────────
   static const String registration = '/web/1.0/registration';
+  static const String publicVideoSessions = '/web/1.0/public/video-sessions';
 
   // ── Wallet / Payment ──────────────────────────────────────────────────
   static const String stripePaymentIntent = '/stripe/payment-intent';

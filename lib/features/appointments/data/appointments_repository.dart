@@ -16,4 +16,11 @@ class AppointmentsRepository {
     }
     return _ds.register(apId: apId);
   }
+
+  Future<List<Map<String, dynamic>>> getPublicVideoSessions({
+    required DateTime from,
+    required DateTime to,
+  }) {
+    return _ds.fetchPublicVideoSessions(from: from, to: to);
+  }
 }

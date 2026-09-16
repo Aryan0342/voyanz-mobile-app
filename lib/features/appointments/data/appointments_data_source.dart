@@ -63,6 +63,39 @@ class AppointmentsDataSource {
     return '$fallback (${statusCode ?? 'network error'})';
   }
 
+  Future<List<Map<String, dynamic>>> fetchPublicVideoSessions({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.publicVideoSessions,
+        queryParameters: {'from': _dateOnly(from), 'to': _dateOnly(to)},
+      );
+      final body = response.data;
+      if (body is List) {
+        return body.whereType<Map<String, dynamic>>().toList();
+      }
+      if (body is Map<String, dynamic>) {
+        _throwIfApiError(body);
+        final data = body['data'];
+        if (data is List) {
+          return data.whereType<Map<String, dynamic>>().toList();
+        }
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw Exception(
+        _extractApiErrorMessage(e, fallback: 'Calendar request failed'),
+      );
+    }
+  }
+
+  String _dateOnly(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+
   void _throwIfApiError(Map<String, dynamic> body) {
     final err = body['err'];
     if (err != null && err != false && err != 0) {
@@ -71,17 +104,17 @@ class AppointmentsDataSource {
             err['message']?.toString() ??
             err['key']?.toString() ??
             err['code']?.toString();
-        throw Exception(message == null || message.trim().isEmpty
-            ? 'Appointment registration failed'
-            : message);
+        throw Exception(
+          message == null || message.trim().isEmpty
+              ? 'Appointment registration failed'
+              : message,
+        );
       }
       throw Exception(err.toString());
     }
 
     final topLevelError = body['error'];
-    if (topLevelError != null &&
-        topLevelError != false &&
-        topLevelError != 0) {
+    if (topLevelError != null && topLevelError != false && topLevelError != 0) {
       final message = body['message']?.toString() ?? topLevelError.toString();
       throw Exception(message);
     }
