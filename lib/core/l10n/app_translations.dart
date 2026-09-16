@@ -181,7 +181,7 @@ class AppTranslations {
   String get tabProfile => _l('Profil', 'Profile', 'Perfil');
   String get tabHome => _l('Accueil', 'Home', 'Inicio');
   String get tabSlots => _l('Créneaux', 'Slots', 'Horarios');
-  String get tabClients => _l('Clients', 'Clients', 'Clientes');
+  String get tabClients => _l('Avis', 'Reviews', 'Reseñas');
 
   // ── Professional dashboard ──────────────────────────────────────────────────
   String get dashboard => _fr ? 'Tableau de bord' : 'Dashboard';
@@ -864,6 +864,11 @@ class AppTranslations {
   // ── Wallet / Top-Up ──────────────────────────────────────────────────────
   String get wallet => _l('Portefeuille', 'Wallet', 'Monedero');
   String get topUp => _l('Recharger', 'Top Up', 'Recargar');
+  String get selectPackHint => _l(
+    'Choisissez la meilleure offre pour vos prochaines consultations.',
+    'Choose the best value for your future consultations.',
+    'Elige la mejor oferta para tus próximas consultas.',
+  );
   String get topUpCredit =>
       _l('Recharger mon solde', 'Top Up Balance', 'Recargar saldo');
   String get buyPack => _l('Acheter', 'Buy', 'Comprar');

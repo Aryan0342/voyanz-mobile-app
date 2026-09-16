@@ -68,7 +68,9 @@ class _AppointmentBookingScreenState
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment is temporarily unavailable. Please try again later.'),
+            content: Text(
+              'Payment is temporarily unavailable. Please try again later.',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -79,9 +81,7 @@ class _AppointmentBookingScreenState
     try {
       final repo = ref.read(walletRepositoryProvider);
 
-      final intent = await repo.createPaymentIntent(
-        item: 'registration_$apId',
-      );
+      final intent = await repo.createPaymentIntent(item: 'registration_$apId');
 
       if (kUseMockBackend) {
         await repo.confirmPayment(intent.clientSecret);
@@ -291,7 +291,7 @@ class _AppointmentBookingScreenState
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          'An error occurred. Please try again.',
+                          t.errorMessage(_cleanError(e)),
                           style: GoogleFonts.montserrat(
                             color: AppColors.textSecondary,
                           ),
@@ -329,11 +329,15 @@ class _AppointmentBookingScreenState
                         itemCount: slots.length,
                         itemBuilder: (_, i) {
                           final slot = slots[i];
-                          final apId = slot['ap_id']?.toString() ??
+                          final apId =
+                              slot['ap_id']?.toString() ??
                               slot['di_id']?.toString() ??
                               '';
                           final slotKey = slot['key']?.toString() ?? apId;
-                          final day = slot['day']?.toString() ?? '';
+                          final day = _localizedSlotDay(
+                            slot['day']?.toString() ?? '',
+                            t.lang,
+                          );
                           final rawSlots = slot['slots'];
                           final timeSlots = rawSlots is List
                               ? rawSlots.map((s) => s.toString()).toList()
@@ -364,8 +368,7 @@ class _AppointmentBookingScreenState
                                     runSpacing: 8,
                                     children: timeSlots.map((time) {
                                       final key = '$slotKey|$time';
-                                      final selected =
-                                          _selectedSlotKey == key;
+                                      final selected = _selectedSlotKey == key;
                                       return GestureDetector(
                                         onTap: () => setState(() {
                                           _selectedSlotKey = key;
@@ -379,10 +382,11 @@ class _AppointmentBookingScreenState
                                           decoration: BoxDecoration(
                                             color: selected
                                                 ? AppColors.mediumPurple
-                                                    .withValues(alpha: 0.15)
+                                                      .withValues(alpha: 0.15)
                                                 : AppColors.surfaceLight,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             border: Border.all(
                                               color: selected
                                                   ? AppColors.mediumPurple
@@ -429,7 +433,8 @@ class _AppointmentBookingScreenState
                       top: false,
                       child: Builder(
                         builder: (bottomContext) {
-                          final apId = _selectedSlot!['ap_id']?.toString() ??
+                          final apId =
+                              _selectedSlot!['ap_id']?.toString() ??
                               _selectedSlot!['di_id']?.toString() ??
                               '';
                           if (apId.isEmpty) {
@@ -577,4 +582,63 @@ class _AppointmentBookingScreenState
       ),
     );
   }
+}
+
+String _cleanError(Object error) =>
+    error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+
+String _localizedSlotDay(String value, String language) {
+  final match = RegExp(
+    r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})$',
+  ).firstMatch(value.trim());
+  if (match == null) return value;
+  const keys = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const french = [
+    'janv.',
+    'févr.',
+    'mars',
+    'avr.',
+    'mai',
+    'juin',
+    'juil.',
+    'août',
+    'sept.',
+    'oct.',
+    'nov.',
+    'déc.',
+  ];
+  const spanish = [
+    'ene.',
+    'feb.',
+    'mar.',
+    'abr.',
+    'may.',
+    'jun.',
+    'jul.',
+    'ago.',
+    'sept.',
+    'oct.',
+    'nov.',
+    'dic.',
+  ];
+  final index = keys.indexOf(match.group(1)!);
+  final month = language == 'fr'
+      ? french[index]
+      : language == 'es'
+      ? spanish[index]
+      : keys[index];
+  return '$month ${match.group(2)}';
 }

@@ -140,7 +140,7 @@ class TopUpScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Choose the best value for your future consultations.',
+                      t.selectPackHint,
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         color: AppColors.textMuted,

@@ -239,14 +239,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 _HistoryStat(
-                                  label: 'DONE',
+                                  label: t.completed.toUpperCase(),
                                   value: '${counts['completed'] ?? 0}',
                                   color: AppColors.success,
                                   icon: Icons.check_circle_outline,
                                 ),
                                 const SizedBox(width: 12),
                                 _HistoryStat(
-                                  label: 'WAIT',
+                                  label: t.pending.toUpperCase(),
                                   value: '${counts['pending'] ?? 0}',
                                   color: AppColors.warning,
                                   icon: Icons.schedule,
