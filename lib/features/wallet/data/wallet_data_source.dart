@@ -64,9 +64,7 @@ class WalletDataSource {
 
   Future<PaymentStatusResponse> confirmPaymentStatus(String pi) async {
     try {
-      final response = await _dio.post(
-        ApiEndpoints.payreturnStatusById(pi),
-      );
+      final response = await _dio.post(ApiEndpoints.payreturnStatusById(pi));
       final body = response.data;
       _throwIfApiError(body, fallback: 'Failed to confirm payment');
       return PaymentStatusResponse.fromJson(
@@ -105,12 +103,23 @@ class WalletDataSource {
           data: {'professionalId': professionalId, 'type': type},
         );
         final body = response.data;
+        if (body is Map<String, dynamic>) {
+          final result = BalanceResponse.fromJson(body);
+          // INSUFFICIENT_BALANCE is an expected gating result, not a
+          // transport failure. Preserve the server message for the UI.
+          if (result.isInsufficient || result.success) return result;
+          _throwIfApiError(body, fallback: 'Failed to check balance');
+          return result;
+        }
         _throwIfApiError(body, fallback: 'Failed to check balance');
-        return BalanceResponse.fromJson(
-          body is Map<String, dynamic> ? body : <String, dynamic>{},
-        );
+        return BalanceResponse.fromJson(const <String, dynamic>{});
       });
     } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        final result = BalanceResponse.fromJson(data);
+        if (result.isInsufficient) return result;
+      }
       _checkRateLimit(e);
       _logger.e('Error checking balance: $e');
       rethrow;

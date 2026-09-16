@@ -15,6 +15,7 @@ import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/features/sessions/widgets/insufficient_balance_dialog.dart';
 
 class SessionWaitingScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -52,7 +53,24 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
     // Use the live polling provider (continues until terminal) so a freshly
     // created video session keeps updating while we wait for the professional
     // to actually join.
-    final statusAsync = ref.watch(sessionStatusLivePollingProvider(widget.seId));
+    final statusAsync = ref.watch(
+      sessionStatusLivePollingProvider(widget.seId),
+    );
+
+    ref.listen<SessionErrorEvent?>(sessionErrorProvider, (_, event) {
+      if (event == null ||
+          !event.matches(widget.seId) ||
+          !event.isInsufficientBalance ||
+          !mounted) {
+        return;
+      }
+      ref.read(sessionErrorProvider.notifier).clear();
+      showInsufficientBalanceDialog(
+        context,
+        ref.read(translationsProvider),
+        serverMessage: event.message,
+      );
+    });
 
     ref.listen<AsyncValue<SessionStatus>>(
       sessionStatusLivePollingProvider(widget.seId),
@@ -103,7 +121,11 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
             child: statusAsync.when(
               loading: _buildLoading,
-              error: (e, _) => _buildError(context, 'An error occurred. Please try again.', t),
+              error: (e, _) => _buildError(
+                context,
+                'An error occurred. Please try again.',
+                t,
+              ),
               data: (status) =>
                   _buildStatus(context, status, t, isProfessional),
             ),
@@ -524,9 +546,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surfaceCard,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           t.insufficientBalance,
           style: GoogleFonts.jost(

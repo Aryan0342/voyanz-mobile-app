@@ -17,6 +17,7 @@ import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/models/video_token.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/features/sessions/widgets/insufficient_balance_dialog.dart';
 
 class VideoCallScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -421,6 +422,22 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen> {
     final action = event['action']?.toString() ?? '';
     final allowNoSessionId = action == 'session_videoaborted';
     if (!_matchesCurrentSession(event, allowNoSessionId: allowNoSessionId)) {
+      return;
+    }
+
+    if (action == 'session_error') {
+      final sessionError = SessionErrorEvent.fromEvent(event);
+      if (sessionError.isInsufficientBalance) {
+        unawaited(
+          showInsufficientBalanceDialog(
+            context,
+            ref.read(translationsProvider),
+            serverMessage: sessionError.message,
+          ),
+        );
+        return;
+      }
+      _finishFromServer(sessionError.message);
       return;
     }
 

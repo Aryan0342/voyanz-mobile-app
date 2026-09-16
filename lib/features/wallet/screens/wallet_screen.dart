@@ -65,6 +65,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                   child: _BalanceCard(
                     creditStr: creditStr,
+                    availableBalanceLabel: t.availableBalance,
+                    topUpLabel: t.topUp,
                     onTopUp: () => context.push('/wallet/topup'),
                   ),
                 ),
@@ -138,7 +140,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No transactions yet',
+                                t.noTransactionsYet,
                                 style: GoogleFonts.jost(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -147,7 +149,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Your activity will appear here',
+                                t.transactionHistoryEmptySubtitle,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 13,
                                   color: AppColors.textMuted,
@@ -181,9 +183,16 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
 class _BalanceCard extends StatelessWidget {
   final String creditStr;
+  final String availableBalanceLabel;
+  final String topUpLabel;
   final VoidCallback onTopUp;
 
-  const _BalanceCard({required this.creditStr, required this.onTopUp});
+  const _BalanceCard({
+    required this.creditStr,
+    required this.availableBalanceLabel,
+    required this.topUpLabel,
+    required this.onTopUp,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +211,7 @@ class _BalanceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'AVAILABLE BALANCE',
+            availableBalanceLabel,
             style: GoogleFonts.montserrat(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -238,7 +247,7 @@ class _BalanceCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Top Up',
+                    topUpLabel,
                     style: GoogleFonts.jost(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

@@ -14,6 +14,7 @@ import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/features/sessions/widgets/insufficient_balance_dialog.dart';
 
 class ChatSessionScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -37,6 +38,21 @@ class _ChatSessionScreenState extends ConsumerState<ChatSessionScreen> {
     final liveStatusAsync = ref.watch(
       sessionStatusLivePollingProvider(widget.seId),
     );
+
+    ref.listen<SessionErrorEvent?>(sessionErrorProvider, (_, event) {
+      if (event == null ||
+          !event.matches(widget.seId) ||
+          !event.isInsufficientBalance ||
+          !mounted) {
+        return;
+      }
+      ref.read(sessionErrorProvider.notifier).clear();
+      showInsufficientBalanceDialog(
+        context,
+        ref.read(translationsProvider),
+        serverMessage: event.message,
+      );
+    });
 
     ref.listen<AsyncValue<SessionStatus>>(
       sessionStatusLivePollingProvider(widget.seId),

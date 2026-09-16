@@ -213,6 +213,71 @@ class SessionStartedNotifier extends StateNotifier<SessionStartedEvent?> {
   }
 }
 
+class SessionErrorEvent {
+  final String? sessionId;
+  final String? errorCode;
+  final String message;
+
+  const SessionErrorEvent({
+    this.sessionId,
+    this.errorCode,
+    required this.message,
+  });
+
+  bool get isInsufficientBalance =>
+      (errorCode ?? '').toUpperCase() == 'INSUFFICIENT_BALANCE';
+
+  factory SessionErrorEvent.fromEvent(Map<String, dynamic> event) {
+    final data = event['data'] is Map<String, dynamic>
+        ? event['data'] as Map<String, dynamic>
+        : const <String, dynamic>{};
+    final session = event['session'] is Map<String, dynamic>
+        ? event['session'] as Map<String, dynamic>
+        : data['session'] is Map<String, dynamic>
+        ? data['session'] as Map<String, dynamic>
+        : const <String, dynamic>{};
+    final code =
+        event['errorCode'] ??
+        data['errorCode'] ??
+        event['code'] ??
+        data['code'];
+    final message =
+        event['message'] ??
+        data['message'] ??
+        event['error'] ??
+        data['error'] ??
+        code ??
+        'Session error';
+    return SessionErrorEvent(
+      sessionId: (event['se_id'] ?? data['se_id'] ?? session['se_id'])
+          ?.toString(),
+      errorCode: code?.toString(),
+      message: message.toString(),
+    );
+  }
+
+  bool matches(String seId) =>
+      sessionId == null || sessionId!.isEmpty || sessionId == seId;
+}
+
+class SessionErrorNotifier extends StateNotifier<SessionErrorEvent?> {
+  final WebSocketService _ws;
+  late final WebSocketEventHandler _handler;
+
+  SessionErrorNotifier(this._ws) : super(null) {
+    _handler = (event) => state = SessionErrorEvent.fromEvent(event);
+    _ws.on('session_error', _handler);
+  }
+
+  void clear() => state = null;
+
+  @override
+  void dispose() {
+    _ws.off('session_error', _handler);
+    super.dispose();
+  }
+}
+
 /// Incoming call provider
 final incomingCallProvider =
     StateNotifierProvider<IncomingCallNotifier, IncomingCall?>((ref) {
@@ -225,6 +290,11 @@ final sessionStartedProvider =
     StateNotifierProvider<SessionStartedNotifier, SessionStartedEvent?>((ref) {
       final ws = ref.watch(webSocketServiceProvider);
       return SessionStartedNotifier(ws);
+    });
+
+final sessionErrorProvider =
+    StateNotifierProvider<SessionErrorNotifier, SessionErrorEvent?>((ref) {
+      return SessionErrorNotifier(ref.watch(webSocketServiceProvider));
     });
 
 int? _readInt(dynamic value) {

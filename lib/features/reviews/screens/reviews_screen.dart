@@ -302,17 +302,6 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        if ((pro.specialty ?? '').isNotEmpty)
-                          Text(
-                            pro.specialty!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.manrope(
-                              fontSize: 10.5,
-                              height: 1.15,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -433,13 +422,6 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     );
 
     return GradientScaffold(
-      floatingActionButton: widget.isProfessional
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: _submitReview,
-              icon: const Icon(Icons.rate_review_outlined),
-              label: Text(t.writeReview),
-            ),
       body: SafeArea(
         child: reviewsAsync.when(
           loading: () => const Center(
@@ -602,35 +584,35 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: '5 star',
+                              label: t.starCount(5),
                               isSelected: _selectedFilter == '5',
                               onTap: () =>
                                   setState(() => _selectedFilter = '5'),
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: '4 star',
+                              label: t.starCount(4),
                               isSelected: _selectedFilter == '4',
                               onTap: () =>
                                   setState(() => _selectedFilter = '4'),
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: '3 star',
+                              label: t.starCount(3),
                               isSelected: _selectedFilter == '3',
                               onTap: () =>
                                   setState(() => _selectedFilter = '3'),
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: '2 star',
+                              label: t.starCount(2),
                               isSelected: _selectedFilter == '2',
                               onTap: () =>
                                   setState(() => _selectedFilter = '2'),
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: '1 star',
+                              label: t.starCount(1),
                               isSelected: _selectedFilter == '1',
                               onTap: () =>
                                   setState(() => _selectedFilter = '1'),
@@ -946,14 +928,15 @@ class _RatingOverviewCard extends ConsumerWidget {
   }
 }
 
-class _RatingBar extends StatelessWidget {
+class _RatingBar extends ConsumerWidget {
   final String label;
   final double value;
 
   const _RatingBar({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -961,7 +944,7 @@ class _RatingBar extends StatelessWidget {
           SizedBox(
             width: 42,
             child: Text(
-              '$label star',
+              t.starCount(int.tryParse(label) ?? 0),
               style: GoogleFonts.manrope(
                 fontSize: 11,
                 color: AppColors.textSecondary,

@@ -86,7 +86,7 @@ class TopUpScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'CURRENT BALANCE',
+                            t.currentBalance,
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -274,6 +274,7 @@ class TopUpScreen extends ConsumerWidget {
   }
 
   void _showTermsDialog(BuildContext context, WidgetRef ref) {
+    final t = ref.read(translationsProvider);
     final repo = ref.read(walletRepositoryProvider);
     final cgu = repo.htmlTextCgu;
     final cgs = repo.htmlTextCgs;
@@ -285,7 +286,7 @@ class TopUpScreen extends ConsumerWidget {
         backgroundColor: AppColors.surfaceCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Terms & Conditions',
+          t.termsAndConditions,
           style: GoogleFonts.jost(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -297,7 +298,7 @@ class TopUpScreen extends ConsumerWidget {
             children: [
               if (cgu != null && cgu.isNotEmpty) ...[
                 Text(
-                  'Terms of Use',
+                  t.termsOfUse,
                   style: GoogleFonts.jost(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -315,7 +316,7 @@ class TopUpScreen extends ConsumerWidget {
               if (cgs != null && cgs.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
-                  'Terms of Service',
+                  t.termsOfService,
                   style: GoogleFonts.jost(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -337,7 +338,7 @@ class TopUpScreen extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Close',
+              t.close,
               style: GoogleFonts.montserrat(color: AppColors.textMuted),
             ),
           ),
@@ -616,7 +617,7 @@ class _PackCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Pay',
+                                t.amountToPay,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
@@ -638,7 +639,7 @@ class _PackCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Receive',
+                                t.creditReceived,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
@@ -690,7 +691,7 @@ class _PackCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  'BEST VALUE',
+                  t.bestValue,
                   style: GoogleFonts.montserrat(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -839,7 +840,7 @@ class _OrderSummary extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'You pay:',
+              '${t.youPay}:',
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -860,7 +861,7 @@ class _OrderSummary extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'You receive:',
+              '${t.youReceive}:',
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -882,7 +883,7 @@ class _OrderSummary extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Promo discount:',
+                '${t.promoDiscount}:',
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   color: AppColors.textSecondary,

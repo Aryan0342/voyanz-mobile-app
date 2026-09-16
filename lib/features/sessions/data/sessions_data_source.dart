@@ -11,6 +11,7 @@ class SessionLaunchException implements Exception {
   final String? seStatus; // "calling" | "accepted" | "inprogress"
   final String? seRoom; // Agora channel name
   final String? chgrId; // Channel group ID
+  final String? errorCode;
 
   const SessionLaunchException(
     this.message, {
@@ -20,6 +21,7 @@ class SessionLaunchException implements Exception {
     this.seStatus,
     this.seRoom,
     this.chgrId,
+    this.errorCode,
   });
 
   /// Returns true if this exception represents a session already running (409)
@@ -30,6 +32,11 @@ class SessionLaunchException implements Exception {
       sessionId!.isNotEmpty &&
       seType != null &&
       seType!.isNotEmpty;
+
+  bool get isInsufficientBalance =>
+      statusCode == 402 ||
+      (errorCode ?? '').toUpperCase() == 'INSUFFICIENT_BALANCE' ||
+      message.toUpperCase().contains('INSUFFICIENT_BALANCE');
 
   String? get resolvedSessionId {
     final direct = sessionId?.trim();
@@ -140,8 +147,7 @@ class SessionsDataSource {
     try {
       final response = await _dio.get(
         ApiEndpoints.videoAccessToken(seId, coId),
-        queryParameters:
-            connectionId == null || connectionId.trim().isEmpty
+        queryParameters: connectionId == null || connectionId.trim().isEmpty
             ? null
             : {'connectionId': connectionId.trim()},
       );
@@ -511,6 +517,7 @@ class SessionsDataSource {
     String? seStatus;
     String? seRoom;
     String? chgrId;
+    String? errorCode;
 
     String? firstNonEmpty(List<String?> values) {
       for (final value in values) {
@@ -539,6 +546,12 @@ class SessionsDataSource {
 
       final errPayload = data['err'];
       final nestedErr = errPayload is Map<String, dynamic> ? errPayload : null;
+      errorCode = firstNonEmpty([
+        data['errorCode']?.toString(),
+        data['error']?.toString(),
+        nestedErr?['key']?.toString(),
+        nestedErr?['code']?.toString(),
+      ]);
 
       final errDataPayload = nestedErr?['data'];
       final nestedErrData = errDataPayload is Map<String, dynamic>
@@ -607,6 +620,7 @@ class SessionsDataSource {
             seStatus: seStatus,
             seRoom: seRoom,
             chgrId: chgrId,
+            errorCode: errorCode,
           );
         }
       }
@@ -622,6 +636,7 @@ class SessionsDataSource {
       seStatus: seStatus,
       seRoom: seRoom,
       chgrId: chgrId,
+      errorCode: errorCode,
     );
   }
 }

@@ -50,8 +50,22 @@ class ReviewsHistoryDataSource {
   }
 
   Future<void> postReview(Map<String, dynamic> body) async {
-    final response = await _dio.post(ApiEndpoints.postReview, data: body);
-    _throwIfApiError(response.data, fallback: 'Post review failed');
+    try {
+      final response = await _dio.post(ApiEndpoints.postReview, data: body);
+      _throwIfApiError(response.data, fallback: 'Post review failed');
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        final err = data['err'];
+        final message = err is Map<String, dynamic>
+            ? (err['message'] ?? err['key'] ?? err['code'])
+            : (data['message'] ?? data['error'] ?? err);
+        if (message != null && message.toString().trim().isNotEmpty) {
+          throw Exception(message.toString());
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> getCustomerPricing() async {
@@ -183,9 +197,9 @@ class ReviewsHistoryDataSource {
           err['message']?.toString() ??
           err['key']?.toString() ??
           err['code']?.toString();
-      throw Exception(message == null || message.trim().isEmpty
-          ? fallback
-          : message);
+      throw Exception(
+        message == null || message.trim().isEmpty ? fallback : message,
+      );
     }
 
     throw Exception(err.toString());

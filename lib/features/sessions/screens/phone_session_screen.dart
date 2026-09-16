@@ -16,6 +16,7 @@ import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/features/sessions/widgets/insufficient_balance_dialog.dart';
 
 class PhoneSessionScreen extends ConsumerStatefulWidget {
   final String seId;
@@ -75,6 +76,17 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
   void _handleSessionError(Map<String, dynamic> event) {
     final errorCode = (event['errorCode']?.toString() ?? '').toLowerCase();
     final error = event['error']?.toString() ?? '';
+    if (errorCode == 'insufficient_balance') {
+      if (!mounted) return;
+      unawaited(
+        showInsufficientBalanceDialog(
+          context,
+          ref.read(translationsProvider),
+          serverMessage: event['message']?.toString() ?? error,
+        ),
+      );
+      return;
+    }
     if (errorCode.contains('no_star') ||
         errorCode.contains('star_confirm') ||
         error.contains('no_star') ||
@@ -324,8 +336,7 @@ class _PhoneSessionScreenState extends ConsumerState<PhoneSessionScreen> {
                 if (isProfessional) ...[
                   const SizedBox(height: 12),
                   _ProConfirmBanner(
-                    confirmed:
-                        liveStatusAsync.valueOrNull?.isActive ?? false,
+                    confirmed: liveStatusAsync.valueOrNull?.isActive ?? false,
                     remaining: (55 - _elapsed.inSeconds).clamp(0, 55),
                     t: t,
                   ),

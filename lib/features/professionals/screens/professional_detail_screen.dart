@@ -12,6 +12,7 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/reviews/widgets/review_composer.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/sessions/data/sessions_data_source.dart';
@@ -108,6 +109,34 @@ class _ProfessionalDetailScreenState
     _favoriteController.forward().then((_) {
       _favoriteController.reverse();
     });
+
+    try {
+      final ws = ref.read(webSocketServiceProvider);
+      if (!ws.isConnected) {
+        await ws.connect();
+      }
+      if (!ws.isConnected) {
+        throw StateError('WebSocket is not connected');
+      }
+      await ws.sendWithToken(
+        nextValue ? 'session_selectheart' : 'session_unselectheart',
+        {'co_id': coId},
+      );
+      ref.invalidate(favoriteProfessionalsProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isFavorite = currentlyFavorite);
+      ref
+          .read(favoriteProfessionalIdsProvider.notifier)
+          .setFavorite(coId, currentlyFavorite);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ref.read(translationsProvider).couldNotUpdateFavorite),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -442,13 +471,34 @@ class _ProfessionalDetailScreenState
             type: normalizedType,
           );
       if (!mounted) return;
-      if (balance.isInsufficient ||
-          (!balance.success && balance.error != null)) {
-        _showInsufficientBalanceDialog(context, ref);
+      if (balance.isInsufficient) {
+        _showInsufficientBalanceDialog(
+          context,
+          ref,
+          serverMessage: balance.message,
+        );
         return;
       }
-    } catch (_) {
-      // Balance service unreachable — proceed; server still enforces on /call.
+      if (!balance.success && balance.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              balance.message.trim().isEmpty ? balance.error! : balance.message,
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.errorMessage(_cleanErrorMessage(e))),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
     }
 
     try {
@@ -472,7 +522,7 @@ class _ProfessionalDetailScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An error occurred. Please try again.'),
+          content: Text(t.errorMessage(_cleanErrorMessage(e))),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -482,6 +532,11 @@ class _ProfessionalDetailScreenState
       context.go('/login');
     } on SessionLaunchException catch (e) {
       if (!mounted) return;
+
+      if (e.isInsufficientBalance) {
+        _showInsufficientBalanceDialog(context, ref, serverMessage: e.message);
+        return;
+      }
 
       if (_isProfessionalBusyError(e.toString())) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -682,9 +737,7 @@ class _ProfessionalDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isDuplicateLaunch
-                ? t.sessionAlreadyStarted
-                : 'An error occurred. Please try again.',
+            isDuplicateLaunch ? t.sessionAlreadyStarted : _cleanErrorMessage(e),
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -697,12 +750,16 @@ class _ProfessionalDetailScreenState
       if (!mounted) return;
       final msg = e.toString().toLowerCase();
       if (msg.contains('insufficient_balance')) {
-        _showInsufficientBalanceDialog(context, ref);
+        _showInsufficientBalanceDialog(
+          context,
+          ref,
+          serverMessage: _cleanErrorMessage(e),
+        );
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An error occurred. Please try again.'),
+          content: Text(t.errorMessage(_cleanErrorMessage(e))),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -713,7 +770,15 @@ class _ProfessionalDetailScreenState
     }
   }
 
-  void _showInsufficientBalanceDialog(BuildContext context, WidgetRef ref) {
+  String _cleanErrorMessage(Object error) {
+    return error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+  }
+
+  void _showInsufficientBalanceDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    String? serverMessage,
+  }) {
     final t = ref.read(translationsProvider);
     showDialog(
       context: context,
@@ -728,7 +793,9 @@ class _ProfessionalDetailScreenState
           ),
         ),
         content: Text(
-          t.topUpNow,
+          (serverMessage ?? '').trim().isEmpty
+              ? t.insufficientBalanceMessage
+              : _cleanErrorMessage(serverMessage!),
           style: GoogleFonts.montserrat(color: AppColors.textSecondary),
         ),
         actions: [
@@ -868,6 +935,9 @@ class _ProfessionalDetailScreenState
     final listAsync = ref.watch(professionalsListProvider(''));
     final favoriteIds = ref.watch(favoriteProfessionalIdsProvider);
     final isMarkedFavorite = favoriteIds.contains(widget.coId) || _isFavorite;
+    final reviewEligibility = ref.watch(reviewEligibilityProvider(widget.coId));
+    final isCustomer =
+        ref.watch(authStateProvider).valueOrNull?.isProfessional != true;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -1578,7 +1648,7 @@ class _ProfessionalDetailScreenState
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        'Professional biographies are written by each advisor and may remain in their original language.',
+                                        'Professional biographies are written by each psychic and may remain in their original language.',
                                         style: GoogleFonts.montserrat(
                                           fontSize: 11,
                                           height: 1.45,
@@ -1700,6 +1770,22 @@ class _ProfessionalDetailScreenState
                                 ],
                               ),
                             ),
+                          if (isCustomer && !pro.isAssistant) ...[
+                            const SizedBox(height: 12),
+                            reviewEligibility.when(
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
+                              data: (eligibility) => eligibility.canReview
+                                  ? _ActionButton(
+                                      onPressed: () =>
+                                          showReviewComposer(context, ref, pro),
+                                      icon: Icons.rate_review_outlined,
+                                      label: t.writeReview,
+                                      isPrimary: false,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
                         ],
                       ),
                     ),
