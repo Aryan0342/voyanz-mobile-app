@@ -62,7 +62,7 @@ class LanguageSwitcherButton extends ConsumerWidget {
               label: 'Français',
               isSelected: current == 'fr',
               onTap: () {
-                ref.read(languageProvider.notifier).state = 'fr';
+                ref.read(languageProvider.notifier).selectLanguage('fr');
                 Navigator.pop(ctx);
               },
             ),
@@ -72,7 +72,7 @@ class LanguageSwitcherButton extends ConsumerWidget {
               label: 'English',
               isSelected: current == 'en',
               onTap: () {
-                ref.read(languageProvider.notifier).state = 'en';
+                ref.read(languageProvider.notifier).selectLanguage('en');
                 Navigator.pop(ctx);
               },
             ),
@@ -82,7 +82,7 @@ class LanguageSwitcherButton extends ConsumerWidget {
               label: 'Español',
               isSelected: current == 'es',
               onTap: () {
-                ref.read(languageProvider.notifier).state = 'es';
+                ref.read(languageProvider.notifier).selectLanguage('es');
                 Navigator.pop(ctx);
               },
             ),
