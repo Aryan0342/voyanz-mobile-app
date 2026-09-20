@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/utils/date_utils.dart' as date_utils;
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -802,14 +803,10 @@ bool _isKnownHistoryStatus(String status) {
 
 String _formatHistoryDate(String raw) {
   if (raw.isEmpty) return raw;
-  final normalized = raw.replaceFirst(' ', 'T');
-  final parsed = DateTime.tryParse(normalized);
-  if (parsed == null) return raw;
-  final mm = parsed.month.toString().padLeft(2, '0');
-  final dd = parsed.day.toString().padLeft(2, '0');
-  final hh = parsed.hour.toString().padLeft(2, '0');
-  final min = parsed.minute.toString().padLeft(2, '0');
-  return '${parsed.year}-$mm-$dd $hh:$min';
+  // Backend timestamps are Europe/Paris wall-clock (API §8): convert to the
+  // device timezone and format in the selected language, exactly like the
+  // wallet history does.
+  return date_utils.DateUtils.formatDateTime(raw);
 }
 
 class _HistoryStat extends StatelessWidget {

@@ -453,6 +453,29 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                     fontSize: 12,
                   ),
                 ),
+                const SizedBox(height: 24),
+                // The message tells the user to try again, so give them a way
+                // to: the provider caches its error, and without this the only
+                // way out is to restart the app (history already does this).
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.invalidate(
+                      widget.isProfessional
+                          ? professionalReviewsProvider
+                          : customerReviewsProvider,
+                    );
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: Text(t.retry),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.mediumPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

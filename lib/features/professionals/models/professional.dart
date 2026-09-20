@@ -1,3 +1,5 @@
+import 'package:voyanz/core/utils/string_utils.dart';
+
 class Professional {
   final String coId;
   final String? firstName;
@@ -243,16 +245,18 @@ class Professional {
       priceChat,
     ].whereType<double>().where((p) => p > 0).toList();
 
-    final specialties = _readStringList(json, [
-      'co_specialities',
-      'co_speciality',
-      'co_specialty',
-      'specialities',
-      'speciality',
-      'co_subtype',
-    ]);
+    final specialties = _humanizedList(
+      _readStringList(json, [
+        'co_specialities',
+        'co_speciality',
+        'co_specialty',
+        'specialities',
+        'speciality',
+        'co_subtype',
+      ]),
+    );
     final languages = _readStringList(json, ['co_languages', 'languages']);
-    final tools = _readStringList(json, ['co_tools', 'tools']);
+    final tools = _humanizedList(_readStringList(json, ['co_tools', 'tools']));
 
     final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
     final availabilityText = _readString(json, ['disponibilityText']);
@@ -275,12 +279,12 @@ class Professional {
         'co_image',
         'co_photo_url',
       ]),
-      specialty: _readString(json, [
+      specialty: _humanizedSpecialty(_readString(json, [
         'co_specialty',
         'co_subtype',
-        'co_type_label',
-        'co_type',
-      ]),
+        // Never fall back to co_type / co_type_label: those hold the backend
+        // account type ("professional"), which the website never shows.
+      ])),
       bio: _readString(json, ['co_description', 'co_presentation', 'co_bio']),
       specialties: specialties,
       tools: tools,
@@ -413,20 +417,24 @@ class ProfessionalDetail extends Professional {
         'co_image',
         'co_photo_url',
       ]),
-      specialty: Professional._readString(json, [
+      specialty: _humanizedSpecialty(Professional._readString(json, [
         'co_specialty',
         'co_subtype',
-        'co_type_label',
-        'co_type',
-      ]),
-      specialties: Professional._readStringList(json, [
-        'co_specialities',
-        'co_speciality',
-        'co_specialty',
-        'specialities',
-        'speciality',
-      ]),
-      tools: Professional._readStringList(json, ['co_tools', 'tools']),
+        // Never fall back to co_type / co_type_label: those hold the backend
+        // account type ("professional"), which the website never shows.
+      ])),
+      specialties: _humanizedList(
+        Professional._readStringList(json, [
+          'co_specialities',
+          'co_speciality',
+          'co_specialty',
+          'specialities',
+          'speciality',
+        ]),
+      ),
+      tools: _humanizedList(
+        Professional._readStringList(json, ['co_tools', 'tools']),
+      ),
       languages: Professional._readStringList(json, [
         'co_languages',
         'languages',
@@ -535,3 +543,15 @@ class ProfessionalDetail extends Professional {
     );
   }
 }
+
+/// The backend stores specialties as slugs (`intuitive_empath`); the website
+/// renders them as words, so the app does too.
+String? _humanizedSpecialty(String? raw) {
+  if (raw == null) return null;
+  final value = humanizeSlug(raw);
+  return value.isEmpty ? null : value;
+}
+
+/// Same slug-to-label cleanup as [_humanizedSpecialty], for the chip lists.
+List<String> _humanizedList(List<String> raw) =>
+    raw.map(humanizeSlug).where((value) => value.isNotEmpty).toList();

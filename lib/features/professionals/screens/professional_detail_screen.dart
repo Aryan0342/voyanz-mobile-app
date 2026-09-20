@@ -1637,7 +1637,10 @@ class _ProfessionalDetailScreenState
                                       color: Colors.white70,
                                     ),
                                   ),
-                                  if (language == 'en' && !pro.isAssistant) ...[
+                                  // Bios are written by each professional and
+                                  // are mostly French, so the note belongs on
+                                  // every non-French UI, not just English.
+                                  if (language != 'fr' && !pro.isAssistant) ...[
                                     const SizedBox(height: 12),
                                     Container(
                                       padding: const EdgeInsets.all(12),
