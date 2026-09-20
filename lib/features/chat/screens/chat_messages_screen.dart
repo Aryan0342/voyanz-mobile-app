@@ -30,13 +30,7 @@ String _resolveMediaUrl(String raw) {
 
 String _formatTime(String? dateStr) {
   if (dateStr == null || dateStr.isEmpty) return '';
-  final local = date_utils.DateUtils.parisToLocal(dateStr);
-  if (local == null) return '';
-  final hr = local.hour;
-  final min = local.minute.toString().padLeft(2, '0');
-  final period = hr >= 12 ? 'PM' : 'AM';
-  final hr12 = hr == 0 ? 12 : (hr > 12 ? hr - 12 : hr);
-  return '$hr12:$min $period';
+  return date_utils.DateUtils.formatTime(dateStr);
 }
 
 class ChatMessagesScreen extends ConsumerStatefulWidget {

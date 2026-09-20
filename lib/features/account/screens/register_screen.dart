@@ -526,7 +526,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               const SizedBox(height: 6),
                               _RegTextField(
                                 controller: _dobCtrl,
-                                hintText: 'YYYY-MM-DD',
+                                hintText: t.dateOfBirthHint,
                                 prefixIcon: Icons.cake_outlined,
                                 readOnly: true,
                                 onTap: _pickBirthDate,

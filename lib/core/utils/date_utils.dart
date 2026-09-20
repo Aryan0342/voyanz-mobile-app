@@ -11,8 +11,12 @@ import 'package:intl/intl.dart';
 class DateUtils {
   DateUtils._();
 
-  static final DateFormat _dateFormat = DateFormat('dd MMM yyyy');
-  static final DateFormat _dateTimeFormat = DateFormat('dd MMM yyyy · h:mm a');
+  // Built per call, never cached: [Intl.defaultLocale] follows the language the
+  // user picked in-app, so month names and the 12h/24h clock must follow it too
+  // (`h:mm a` would print "10:42 PM" to a Spanish or French reader).
+  static DateFormat get _dateFormat =>
+      DateFormat('dd MMM yyyy', Intl.defaultLocale);
+  static DateFormat get _timeFormat => DateFormat.jm(Intl.defaultLocale);
 
   /// Interprets a naive backend timestamp (e.g. `"2026-03-15T14:00:00"` or
   /// `"2026-06-04 21:15:30"`) as **Europe/Paris** and returns the equivalent
@@ -54,7 +58,15 @@ class DateUtils {
   static String formatDateTime(String? raw) {
     final local = parisToLocal(raw);
     if (local == null) return raw?.toString() ?? '';
-    return _dateTimeFormat.format(local);
+    return '${_dateFormat.format(local)} · ${_timeFormat.format(local)}';
+  }
+
+  /// Formats a backend timestamp as a bare time in the device's timezone,
+  /// using the current locale's clock convention (24h for fr/es, 12h for en).
+  static String formatTime(String? raw) {
+    final local = parisToLocal(raw);
+    if (local == null) return '';
+    return _timeFormat.format(local);
   }
 
   /// UTC offset in hours for Paris on the given (naive, Paris wall-clock) date.

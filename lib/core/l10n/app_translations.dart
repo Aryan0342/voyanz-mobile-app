@@ -117,6 +117,9 @@ class AppTranslations {
     'Date of birth',
     'Fecha de nacimiento',
   );
+  // Placeholder pattern: the letters stand for year/month/day, so they are
+  // translated too (AAAA-MM-JJ in French, AAAA-MM-DD in Spanish).
+  String get dateOfBirthHint => _l('AAAA-MM-JJ', 'YYYY-MM-DD', 'AAAA-MM-DD');
   String get country => _l('Pays', 'Country', 'País');
   String get mobile => _l('Mobile', 'Mobile', 'Móvil');
   String get confirmPassword => _l(
@@ -337,6 +340,11 @@ class AppTranslations {
     'Utilisateur invité',
     'Guest User',
     'Usuario invitado',
+  );
+  String welcomeUser(String name) => _l(
+    'Bienvenue $name',
+    'Welcome $name',
+    'Bienvenido/a $name',
   );
   String get settings => _l('Paramètres', 'Settings', 'Ajustes');
   String get editProfile => _l(

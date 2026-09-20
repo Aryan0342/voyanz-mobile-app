@@ -466,7 +466,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 20),
                     // Name
                     Text(
-                      name.isEmpty ? t.guestUser : 'Welcome $name',
+                      name.isEmpty ? t.guestUser : t.welcomeUser(name),
                       textAlign: TextAlign.center,
                       style: GoogleFonts.lora(
                         fontSize: 26,

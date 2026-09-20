@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:voyanz/core/config/stripe_config.dart';
 import 'package:voyanz/core/routing/router.dart';
 import 'package:voyanz/core/theme/app_theme.dart';
@@ -14,6 +16,9 @@ import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Loads month/day names and clock conventions for every locale, so
+  // `DateFormat` can follow the language the user picked in-app.
+  await initializeDateFormatting();
   // await StripeConfig.init();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -81,6 +86,9 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final language = ref.watch(languageProvider);
+    // Keeps `DateFormat` (wallet history, chat timestamps) on the same language
+    // as the rest of the UI.
+    Intl.defaultLocale = language;
 
     // Listen for auth state changes and initialize WebSocket when user logs in
     ref.listen(authStateProvider, (previous, next) {
