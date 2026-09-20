@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voyanz/core/providers.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/professionals/data/professionals_data_source.dart';
 import 'package:voyanz/features/professionals/data/professionals_repository.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
@@ -29,6 +30,17 @@ class FavoriteProfessionalsNotifier extends StateNotifier<Set<String>> {
     } else {
       next.remove(coId);
     }
+    state = next;
+    _persist(next);
+  }
+
+  /// Adds server-known favorites without dropping the ones already held.
+  /// Used by list responses, which carry `isFavorite` per professional but are
+  /// not the authoritative favorites list.
+  void seed(Iterable<String> coIds) {
+    final incoming = coIds.where((id) => id.trim().isNotEmpty);
+    final next = <String>{...state, ...incoming};
+    if (next.length == state.length) return;
     state = next;
     _persist(next);
   }
@@ -70,10 +82,45 @@ final professionalsRepositoryProvider = Provider<ProfessionalsRepository>((
 final professionalsListProvider =
     FutureProvider.family<List<Professional>, String>((ref, search) async {
       final language = ref.watch(languageProvider);
-      return ref
+      final professionals = await ref
           .watch(professionalsRepositoryProvider)
           .getProfessionals(search: search, language: language);
+      // Keep the heart on each card in sync with the server on a cold start,
+      // before the favorites screen has ever been opened.
+      ref
+          .read(favoriteProfessionalIdsProvider.notifier)
+          .seed(professionals.where((p) => p.isFavorite).map((p) => p.coId));
+      return professionals;
     });
+
+/// Adds or removes a favorite. Favorites are WebSocket-only (API answers §3):
+/// `session_selectheart` / `session_unselectheart`. The local id set is updated
+/// optimistically and rolled back if the frame cannot be sent.
+Future<void> toggleProfessionalFavorite(
+  WidgetRef ref, {
+  required String coId,
+  required bool isFavorite,
+}) async {
+  final ids = ref.read(favoriteProfessionalIdsProvider.notifier);
+  ids.setFavorite(coId, isFavorite);
+  try {
+    final ws = ref.read(webSocketServiceProvider);
+    if (!ws.isConnected) {
+      await ws.connect();
+    }
+    if (!ws.isConnected) {
+      throw StateError('WebSocket is not connected');
+    }
+    await ws.sendWithToken(
+      isFavorite ? 'session_selectheart' : 'session_unselectheart',
+      {'co_id': coId},
+    );
+    ref.invalidate(favoriteProfessionalsProvider);
+  } catch (_) {
+    ids.setFavorite(coId, !isFavorite);
+    rethrow;
+  }
+}
 
 /// Authoritative cross-device favorites list (API answers §3).
 final favoriteProfessionalsProvider = FutureProvider<List<Professional>>((

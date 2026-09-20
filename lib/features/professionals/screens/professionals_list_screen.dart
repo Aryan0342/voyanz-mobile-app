@@ -1368,7 +1368,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _ProfessionalCard extends StatelessWidget {
+class _ProfessionalCard extends ConsumerWidget {
   final Professional professional;
   final AppTranslations translations;
   final VoidCallback onTap;
@@ -1379,8 +1379,40 @@ class _ProfessionalCard extends StatelessWidget {
     required this.onTap,
   });
 
+  Future<void> _toggleFavorite(
+    BuildContext context,
+    WidgetRef ref,
+    bool next,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await toggleProfessionalFavorite(
+        ref,
+        coId: professional.coId,
+        isFavorite: next,
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            next ? translations.addedFavorites : translations.removedFavorites,
+          ),
+          backgroundColor: next ? AppColors.success : AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(translations.couldNotUpdateFavorite),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final imageUrl = _profileImageUrl(
       rawAvatar: professional.avatar,
       seed: professional.coId.isNotEmpty
@@ -1388,6 +1420,9 @@ class _ProfessionalCard extends StatelessWidget {
           : professional.displayName,
     );
     final availability = professional.availabilityText?.trim();
+    final isFavorite = ref
+        .watch(favoriteProfessionalIdsProvider)
+        .contains(professional.coId);
 
     return Material(
       color: Colors.transparent,
@@ -1424,16 +1459,33 @@ class _ProfessionalCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // The heart needs its own hit target, otherwise the tap
+                    // falls through to the card and opens the profile.
                     Positioned(
-                      right: 14,
-                      top: 14,
-                      child: Icon(
-                        professional.isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: professional.isFavorite
-                            ? AppColors.brandPink
-                            : Colors.white,
+                      right: 4,
+                      top: 4,
+                      child: Material(
+                        color: Colors.transparent,
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => _toggleFavorite(context, ref, !isFavorite),
+                          customBorder: const CircleBorder(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFavorite
+                                  ? AppColors.brandPink
+                                  : Colors.white,
+                              semanticLabel: isFavorite
+                                  ? translations.removeFromFavorites
+                                  : translations.addToFavorites,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(

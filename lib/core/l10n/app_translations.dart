@@ -631,6 +631,17 @@ class AppTranslations {
     'Removed from favorites',
     'Eliminado de favoritos',
   );
+  // Screen-reader labels for the heart button on a professional card.
+  String get addToFavorites => _l(
+    'Ajouter aux favoris',
+    'Add to favorites',
+    'Añadir a favoritos',
+  );
+  String get removeFromFavorites => _l(
+    'Retirer des favoris',
+    'Remove from favorites',
+    'Quitar de favoritos',
+  );
   String get couldNotUpdateFavorite => _l(
     'Impossible de mettre à jour les favoris. Réessayez.',
     'Could not update favorite. Please try again.',
