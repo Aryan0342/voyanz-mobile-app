@@ -143,7 +143,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'An error occurred. Please try again.',
+                    t.genericErrorRetry,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: AppColors.textMuted,

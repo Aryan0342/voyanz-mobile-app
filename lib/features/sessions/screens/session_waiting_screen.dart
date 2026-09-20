@@ -123,7 +123,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
               loading: _buildLoading,
               error: (e, _) => _buildError(
                 context,
-                'An error occurred. Please try again.',
+                t.genericErrorRetry,
                 t,
               ),
               data: (status) =>
@@ -515,7 +515,7 @@ class _SessionWaitingScreenState extends ConsumerState<SessionWaitingScreen> {
       final t = ref.read(translationsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An error occurred. Please try again.'),
+          content: Text(t.genericErrorRetry),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

@@ -68,9 +68,7 @@ class _AppointmentBookingScreenState
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Payment is temporarily unavailable. Please try again later.',
-            ),
+            content: Text(t.paymentUnavailable),
             backgroundColor: AppColors.error,
           ),
         );
@@ -183,7 +181,7 @@ class _AppointmentBookingScreenState
           ),
           error: (e, _) => Center(
             child: Text(
-              'An error occurred. Please try again.',
+              t.genericErrorRetry,
               style: GoogleFonts.montserrat(color: AppColors.textSecondary),
             ),
           ),

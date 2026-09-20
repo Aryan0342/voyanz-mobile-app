@@ -107,7 +107,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                               size: 48, color: AppColors.error),
                           const SizedBox(height: 12),
                           Text(
-                            'Could not load your history. Please try again.',
+                            t.couldNotLoadHistory,
                             style: GoogleFonts.montserrat(
                               color: AppColors.error,
                             ),

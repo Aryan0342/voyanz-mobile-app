@@ -411,7 +411,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                   ),
                 ),
                 Text(
-                  'Active now',
+                  t.activeNow,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -636,7 +636,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
                                     fontSize: 15,
                                   ),
                                   decoration: InputDecoration(
-                                    hintText: 'Type a message...',
+                                    hintText: t.typeMessage,
                                     hintStyle: GoogleFonts.manrope(
                                       color: AppColors.textMuted,
                                     ),

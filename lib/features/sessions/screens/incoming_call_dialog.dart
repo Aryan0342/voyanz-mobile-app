@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
@@ -11,6 +12,7 @@ class IncomingCallDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incomingCall = ref.watch(incomingCallProvider);
+    final t = ref.watch(translationsProvider);
 
     if (incomingCall == null) {
       return const SizedBox.shrink();
@@ -39,7 +41,7 @@ class IncomingCallDialog extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Incoming ${incomingCall.type} call',
+            t.incomingCallTitle(incomingCall.type),
             style: Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
@@ -68,7 +70,7 @@ class IncomingCallDialog extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => _handleReject(context, ref, incomingCall),
                   icon: const Icon(Icons.call_end),
-                  label: const Text('Decline'),
+                  label: Text(t.decline),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     foregroundColor: AppColors.error,
@@ -81,7 +83,7 @@ class IncomingCallDialog extends ConsumerWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _handleAccept(context, ref, incomingCall),
                   icon: const Icon(Icons.call),
-                  label: const Text('Start'),
+                  label: Text(t.start),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     backgroundColor: AppColors.mediumPurple,

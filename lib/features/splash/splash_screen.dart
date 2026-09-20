@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/voyanz_brand_logo.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
@@ -33,6 +34,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.brandBackground),
@@ -48,7 +50,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     const VoyanzBrandLogo(width: 280),
                     const SizedBox(height: 32),
                     Text(
-                      'Real-time sessions and expert guidance',
+                      t.splashTagline,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
@@ -67,7 +69,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'Preparing your experience',
+                      t.preparingExperience,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
                         fontSize: 12,

@@ -417,9 +417,7 @@ class TopUpScreen extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Payment is temporarily unavailable. Please try again later.',
-              ),
+              content: Text(t.paymentUnavailable),
               backgroundColor: AppColors.error,
             ),
           );
@@ -923,7 +921,7 @@ class _TermsLink extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Text(
-        'By continuing, you accept our Terms & Conditions',
+        t.acceptTermsNotice,
         style: GoogleFonts.montserrat(
           fontSize: 12,
           color: AppColors.textMuted,

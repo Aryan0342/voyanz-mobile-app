@@ -1012,7 +1012,7 @@ class _ProfessionalDetailScreenState
                     onPressed: () {
                       ref.invalidate(professionalDetailProvider(widget.coId));
                     },
-                    child: const Text('Retry'),
+                    child: Text(t.retry),
                   ),
                 ],
               ),
@@ -1648,7 +1648,7 @@ class _ProfessionalDetailScreenState
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        'Professional biographies are written by each psychic and may remain in their original language.',
+                                        t.bioOriginalLanguageNote,
                                         style: GoogleFonts.montserrat(
                                           fontSize: 11,
                                           height: 1.45,

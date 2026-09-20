@@ -235,6 +235,7 @@ class _InfoActions extends StatelessWidget {
   Widget build(BuildContext context) {
     if (officialUrl == null && email == null) return const SizedBox.shrink();
     final french = language == 'fr';
+    final spanish = language == 'es';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -242,7 +243,11 @@ class _InfoActions extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => launchUrl(Uri(scheme: 'mailto', path: email)),
             icon: const Icon(Icons.mail_outline_rounded),
-            label: Text(french ? 'Contacter le support' : 'Contact support'),
+            label: Text(
+              french
+                  ? 'Contacter le support'
+                  : (spanish ? 'Contactar con soporte' : 'Contact support'),
+            ),
           ),
         if (email != null && officialUrl != null) const SizedBox(height: 10),
         if (officialUrl != null)
@@ -255,7 +260,9 @@ class _InfoActions extends StatelessWidget {
             label: Text(
               french
                   ? 'Voir le document officiel complet'
-                  : 'View the complete official document',
+                  : (spanish
+                        ? 'Ver el documento oficial completo'
+                        : 'View the complete official document'),
             ),
           ),
       ],
@@ -286,20 +293,31 @@ class _InfoContent {
 
   static _InfoContent forKind(InfoScreenKind kind, String language) {
     final fr = language == 'fr';
-    final base = 'https://voyanz.com/${fr ? 'fr' : 'en'}';
+    final es = language == 'es';
+    String pick(String frText, String enText, String esText) =>
+        fr ? frText : (es ? esText : enText);
+    final base = 'https://voyanz.com/${fr ? 'fr' : (es ? 'es' : 'en')}';
     _InfoSection section(
       IconData icon,
       String frTitle,
       String enTitle,
+      String esTitle,
       String frBody,
       String enBody,
-    ) => _InfoSection(icon, fr ? frTitle : enTitle, fr ? frBody : enBody);
+      String esBody,
+    ) => _InfoSection(
+      icon,
+      pick(frTitle, enTitle, esTitle),
+      pick(frBody, enBody, esBody),
+    );
 
     return switch (kind) {
       InfoScreenKind.support => _InfoContent(
-        intro: fr
-            ? 'Des réponses rapides pour votre compte, votre portefeuille et vos consultations.'
-            : 'Quick answers for your account, wallet and consultations.',
+        intro: pick(
+          'Des réponses rapides pour votre compte, votre portefeuille et vos consultations.',
+          'Quick answers for your account, wallet and consultations.',
+          'Respuestas rápidas sobre tu cuenta, tu monedero y tus consultas.',
+        ),
         email: 'contact@voyanz.com',
         officialUrl: '$base/help-center',
         sections: [
@@ -307,245 +325,313 @@ class _InfoContent {
             Icons.person_outline,
             'Compte et connexion',
             'Account and login',
+            'Cuenta e inicio de sesión',
             'Connectez-vous avec votre adresse e-mail. Utilisez la récupération de mot de passe si nécessaire.',
             'Sign in with your email address. Use password recovery when needed.',
+            'Inicia sesión con tu correo electrónico. Usa la recuperación de contraseña cuando lo necesites.',
           ),
           section(
             Icons.account_balance_wallet_outlined,
             'Portefeuille et paiements',
             'Wallet and payments',
+            'Monedero y pagos',
             'Rechargez votre portefeuille avant une consultation payante. Votre solde reste visible dans votre espace.',
             'Top up your wallet before a paid consultation. Your balance remains visible in your account.',
+            'Recarga tu monedero antes de una consulta de pago. Tu saldo siempre está visible en tu cuenta.',
           ),
           section(
             Icons.forum_outlined,
             'Consultations',
             'Consultations',
+            'Consultas',
             'Choisissez un professionnel et démarrez une consultation disponible par chat, téléphone ou vidéo.',
             'Choose a professional and start an available consultation by chat, phone or video.',
+            'Elige un profesional e inicia una consulta disponible por chat, teléfono o vídeo.',
           ),
           section(
             Icons.history_rounded,
             'Historique et avis',
             'History and reviews',
+            'Historial y reseñas',
             'Retrouvez vos consultations passées et laissez un avis depuis votre historique.',
             'Find previous consultations and leave a review from your history.',
+            'Consulta tus consultas anteriores y deja una reseña desde tu historial.',
           ),
         ],
       ),
       InfoScreenKind.privacy => _InfoContent(
-        intro: fr
-            ? 'Comprendre comment vos données sont utilisées et protégées.'
-            : 'Understand how your data is used and protected.',
+        intro: pick(
+          'Comprendre comment vos données sont utilisées et protégées.',
+          'Understand how your data is used and protected.',
+          'Comprende cómo se utilizan y se protegen tus datos.',
+        ),
         officialUrl: '$base/privacy',
         sections: [
           section(
             Icons.inventory_2_outlined,
             'Données collectées',
             'Data collected',
+            'Datos recopilados',
             'Voyanz traite les données nécessaires au compte, aux consultations, aux paiements et au support.',
             'Voyanz processes data needed for accounts, consultations, payments and support.',
+            'Voyanz trata los datos necesarios para las cuentas, las consultas, los pagos y la asistencia.',
           ),
           section(
             Icons.tune_rounded,
             'Utilisation',
             'How data is used',
+            'Uso de los datos',
             'Les données servent à fournir le service, sécuriser les échanges et répondre à vos demandes.',
             'Data is used to provide the service, secure interactions and answer your requests.',
+            'Los datos se utilizan para prestar el servicio, proteger los intercambios y responder a tus solicitudes.',
           ),
           section(
             Icons.lock_outline,
             'Protection et conservation',
             'Protection and retention',
+            'Protección y conservación',
             'Des mesures techniques et organisationnelles protègent les informations.',
             'Technical and organisational measures protect your information.',
+            'Aplicamos medidas técnicas y organizativas para proteger tu información.',
           ),
           section(
             Icons.manage_accounts_outlined,
             'Vos droits',
             'Your rights',
+            'Tus derechos',
             'Vous pouvez exercer vos droits selon les conditions légales décrites dans la politique complète.',
             'You can exercise your rights under the conditions described in the full policy.',
+            'Puedes ejercer tus derechos en las condiciones descritas en la política completa.',
           ),
         ],
       ),
       InfoScreenKind.about => _InfoContent(
-        intro: fr
-            ? 'Une expérience humaine et accessible pour trouver le bon accompagnement.'
-            : 'A human, accessible experience for finding the right guidance.',
+        intro: pick(
+          'Une expérience humaine et accessible pour trouver le bon accompagnement.',
+          'A human, accessible experience for finding the right guidance.',
+          'Una experiencia humana y accesible para encontrar el acompañamiento adecuado.',
+        ),
         sections: [
           section(
             Icons.explore_outlined,
             'Notre mission',
             'Our mission',
+            'Nuestra misión',
             'Voyanz vous met en relation avec des professionnels selon vos besoins et préférences.',
             'Voyanz connects you with professionals according to your needs and preferences.',
+            'Voyanz te pone en contacto con profesionales según tus necesidades y preferencias.',
           ),
           section(
             Icons.phone_iphone_rounded,
             'Une expérience simple',
             'A simple experience',
+            'Una experiencia sencilla',
             'Découvrez les profils, les disponibilités et échangez par chat, téléphone ou vidéo.',
             'Discover profiles and availability, then connect by chat, phone or video.',
+            'Descubre los perfiles y su disponibilidad, y conecta por chat, teléfono o vídeo.',
           ),
           section(
             Icons.favorite_border_rounded,
             'Une approche humaine',
             'A human approach',
+            'Un enfoque humano',
             'Les profils, notes et avis vous aident à choisir en toute transparence.',
             'Profiles, ratings and reviews help you choose transparently.',
+            'Los perfiles, las valoraciones y las reseñas te ayudan a elegir con total transparencia.',
           ),
         ],
       ),
       InfoScreenKind.terms => _InfoContent(
-        intro: fr
-            ? 'Les règles essentielles pour utiliser la plateforme Voyanz.'
-            : 'The essential rules for using the Voyanz platform.',
+        intro: pick(
+          'Les règles essentielles pour utiliser la plateforme Voyanz.',
+          'The essential rules for using the Voyanz platform.',
+          'Las reglas esenciales para usar la plataforma Voyanz.',
+        ),
         officialUrl: '$base/cgu',
         sections: [
           section(
             Icons.login_rounded,
             'Accès au service',
             'Access to the service',
+            'Acceso al servicio',
             'L’utilisation nécessite un compte valide et le respect des conditions d’âge.',
             'Use requires a valid account and compliance with age requirements.',
+            'El uso requiere una cuenta válida y cumplir los requisitos de edad.',
           ),
           section(
             Icons.gavel_outlined,
             'Utilisation responsable',
             'Responsible use',
+            'Uso responsable',
             'Chaque utilisateur s’engage à utiliser la plateforme légalement et à respecter les autres membres.',
             'Each user agrees to use the platform lawfully and respect other members.',
+            'Cada usuario se compromete a usar la plataforma de forma lícita y a respetar a los demás miembros.',
           ),
           section(
             Icons.security_rounded,
             'Sécurité du compte',
             'Account security',
+            'Seguridad de la cuenta',
             'Gardez vos identifiants confidentiels et signalez toute utilisation non autorisée.',
             'Keep your credentials confidential and report unauthorised use.',
+            'Mantén tus credenciales en secreto y comunica cualquier uso no autorizado.',
           ),
         ],
       ),
       InfoScreenKind.service => _InfoContent(
-        intro: fr
-            ? 'Les conditions applicables aux consultations et aux paiements.'
-            : 'The conditions that apply to consultations and payments.',
+        intro: pick(
+          'Les conditions applicables aux consultations et aux paiements.',
+          'The conditions that apply to consultations and payments.',
+          'Las condiciones aplicables a las consultas y los pagos.',
+        ),
         officialUrl: '$base/cgs',
         sections: [
           section(
             Icons.price_check_outlined,
             'Tarification transparente',
             'Transparent pricing',
+            'Tarifas transparentes',
             'Le tarif est affiché avant le démarrage de chaque service payant.',
             'The price is displayed before each paid service begins.',
+            'El precio se muestra antes de que comience cada servicio de pago.',
           ),
           section(
             Icons.account_balance_wallet_outlined,
             'Portefeuille et paiement',
             'Wallet and payment',
+            'Monedero y pago',
             'Les consultations payantes utilisent le solde disponible selon le mode choisi.',
             'Paid consultations use the available balance for the selected mode.',
+            'Las consultas de pago utilizan el saldo disponible según la modalidad elegida.',
           ),
           section(
             Icons.support_agent_rounded,
             'Assistance',
             'Support',
+            'Asistencia',
             'En cas de problème, contactez le support avec les détails utiles.',
             'If there is a problem, contact support with the relevant details.',
+            'Si surge algún problema, contacta con soporte aportando los datos pertinentes.',
           ),
         ],
       ),
       InfoScreenKind.legal => _InfoContent(
-        intro: fr
-            ? 'Informations légales relatives à l’édition et à l’utilisation de Voyanz.'
-            : 'Legal information about the publication and use of Voyanz.',
+        intro: pick(
+          'Informations légales relatives à l’édition et à l’utilisation de Voyanz.',
+          'Legal information about the publication and use of Voyanz.',
+          'Información legal sobre la edición y el uso de Voyanz.',
+        ),
         officialUrl: '$base/legal',
         sections: [
           section(
             Icons.business_outlined,
             'Éditeur',
             'Publisher',
+            'Editor',
             'Les informations complètes sur l’éditeur sont disponibles dans la notice officielle.',
             'Full publisher details are available in the official notice.',
+            'Los datos completos del editor están disponibles en el aviso oficial.',
           ),
           section(
             Icons.dns_outlined,
             'Hébergement',
             'Hosting',
+            'Alojamiento',
             'Les informations d’hébergement sont maintenues dans la version officielle en ligne.',
             'Hosting details are maintained in the official online version.',
+            'Los datos de alojamiento se mantienen actualizados en la versión oficial en línea.',
           ),
           section(
             Icons.copyright_rounded,
             'Propriété intellectuelle',
             'Intellectual property',
+            'Propiedad intelectual',
             'Les marques, contenus et éléments graphiques sont protégés.',
             'Brands, content and visual elements are protected.',
+            'Las marcas, los contenidos y los elementos gráficos están protegidos.',
           ),
         ],
       ),
       InfoScreenKind.trust => _InfoContent(
-        intro: fr
-            ? 'Des repères clairs pour une expérience sûre et transparente.'
-            : 'Clear standards for a safe and transparent experience.',
+        intro: pick(
+          'Des repères clairs pour une expérience sûre et transparente.',
+          'Clear standards for a safe and transparent experience.',
+          'Criterios claros para una experiencia segura y transparente.',
+        ),
         officialUrl: '$base/trust',
         sections: [
           section(
             Icons.badge_outlined,
             'Profils professionnels',
             'Professional profiles',
+            'Perfiles profesionales',
             'Les spécialités et modes de consultation facilitent votre choix.',
             'Specialties and consultation modes help you choose.',
+            'Las especialidades y las modalidades de consulta facilitan tu elección.',
           ),
           section(
             Icons.star_outline_rounded,
             'Notes et avis',
             'Ratings and reviews',
+            'Valoraciones y reseñas',
             'Les retours après consultation apportent un indicateur de confiance.',
             'Feedback after consultations provides an additional trust indicator.',
+            'Los comentarios posteriores a la consulta aportan un indicador de confianza adicional.',
           ),
           section(
             Icons.visibility_outlined,
             'Transparence',
             'Transparency',
+            'Transparencia',
             'Disponibilités, tarifs et conditions sont présentés avant de commencer.',
             'Availability, prices and conditions are shown before you begin.',
+            'La disponibilidad, las tarifas y las condiciones se muestran antes de empezar.',
           ),
           section(
             Icons.shield_outlined,
             'Sécurité',
             'Security',
+            'Seguridad',
             'Les outils de la plateforme contribuent à protéger les comptes et les échanges.',
             'Platform tools help protect accounts and interactions.',
+            'Las herramientas de la plataforma ayudan a proteger las cuentas y los intercambios.',
           ),
         ],
       ),
       InfoScreenKind.contact => _InfoContent(
-        intro: fr
-            ? 'Notre équipe vous accompagne en cas de question ou de difficulté.'
-            : 'Our team is here to help with questions or difficulties.',
+        intro: pick(
+          'Notre équipe vous accompagne en cas de question ou de difficulté.',
+          'Our team is here to help with questions or difficulties.',
+          'Nuestro equipo te acompaña ante cualquier duda o dificultad.',
+        ),
         email: 'contact@voyanz.com',
         sections: [
           section(
             Icons.alternate_email_rounded,
             'Nous écrire',
             'Email us',
+            'Escríbenos',
             'Contactez contact@voyanz.com et décrivez votre demande avec précision.',
             'Email contact@voyanz.com and describe your request precisely.',
+            'Escribe a contact@voyanz.com y describe tu solicitud con precisión.',
           ),
           section(
             Icons.fact_check_outlined,
             'Informations utiles',
             'Helpful information',
+            'Información útil',
             'Indiquez votre adresse de compte et le service concerné. Ne transmettez jamais votre mot de passe.',
             'Include your account email and relevant service. Never send your password.',
+            'Indica el correo de tu cuenta y el servicio afectado. No envíes nunca tu contraseña.',
           ),
           section(
             Icons.schedule_rounded,
             'Suivi',
             'Follow-up',
+            'Seguimiento',
             'Conservez les références communiquées par le support.',
             'Keep any reference supplied by support.',
+            'Conserva cualquier referencia que te facilite el equipo de soporte.',
           ),
         ],
       ),

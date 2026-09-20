@@ -52,7 +52,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'An error occurred. Please try again.',
+                  t.genericErrorRetry,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     color: AppColors.error,
@@ -217,7 +217,7 @@ class _ChatGroupsScreenState extends ConsumerState<ChatGroupsScreen> {
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                         child: Text(
-                          'All Messages',
+                          t.allMessages,
                           style: GoogleFonts.montserrat(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -495,14 +495,15 @@ class _EmptyState extends ConsumerWidget {
   }
 }
 
-class _PinnedSection extends StatelessWidget {
+class _PinnedSection extends ConsumerWidget {
   final List<dynamic> groups;
 
   const _PinnedSection({required this.groups});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (groups.isEmpty) return const SizedBox.shrink();
+    final t = ref.watch(translationsProvider);
 
     // Use up to the first 5 groups for the pinned section
     final pinnedGroups = groups.take(5).toList();
@@ -513,7 +514,7 @@ class _PinnedSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Pinned',
+            t.pinned,
             style: GoogleFonts.montserrat(
               fontSize: 15,
               fontWeight: FontWeight.w500,

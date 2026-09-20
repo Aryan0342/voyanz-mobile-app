@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/config/stripe_config.dart';
 import 'package:voyanz/core/routing/router.dart';
 import 'package:voyanz/core/theme/app_theme.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
 
@@ -78,6 +80,7 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final language = ref.watch(languageProvider);
 
     // Listen for auth state changes and initialize WebSocket when user logs in
     ref.listen(authStateProvider, (previous, next) {
@@ -100,6 +103,15 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.light,
+      // Keep Flutter's own widgets (date pickers, text-selection menus,
+      // semantic labels) in the language the user picked in-app.
+      locale: Locale(language),
+      supportedLocales: const [Locale('fr'), Locale('en'), Locale('es')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
     );
   }

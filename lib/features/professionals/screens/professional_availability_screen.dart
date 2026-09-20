@@ -269,7 +269,7 @@ class _ProfessionalAvailabilityScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.failedAddSlot('Please try again.'))),
+          SnackBar(content: Text(t.failedAddSlot(t.pleaseTryAgain))),
         );
       }
     } finally {
@@ -393,7 +393,7 @@ class _ProfessionalAvailabilityScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.failedDeleteSlot('Please try again.'))),
+          SnackBar(content: Text(t.failedDeleteSlot(t.pleaseTryAgain))),
         );
       }
     } finally {
@@ -484,7 +484,7 @@ class _ProfessionalAvailabilityScreenState
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'An error occurred. Please try again.',
+                    t.genericErrorRetry,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       color: AppColors.textSecondary,

@@ -540,6 +540,7 @@ class _ProfessionalDashboardScreenState
   /// Shows a non-blocking banner for an incoming chat session instead of a
   /// ringing call modal. Auto-dismisses after 20s.
   void _showIncomingChatBanner(BuildContext context, IncomingCall call) {
+    final t = ref.read(translationsProvider);
     final messenger = ScaffoldMessenger.of(context);
     final notifier = ref.read(incomingCallProvider.notifier);
     final customerName = call.customerFullname ?? 'Customer';
@@ -563,7 +564,7 @@ class _ProfessionalDashboardScreenState
             size: 28,
           ),
           content: Text(
-            'New chat session from $customerName',
+            t.newChatSessionFrom(customerName),
             style: GoogleFonts.manrope(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -577,7 +578,7 @@ class _ProfessionalDashboardScreenState
                 _acceptCallDirect(call);
               },
               child: Text(
-                'Open',
+                t.open,
                 style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
               ),
             ),
@@ -588,7 +589,7 @@ class _ProfessionalDashboardScreenState
                 notifier.clear();
               },
               child: Text(
-                'Dismiss',
+                t.dismiss,
                 style: GoogleFonts.manrope(color: AppColors.textMuted),
               ),
             ),

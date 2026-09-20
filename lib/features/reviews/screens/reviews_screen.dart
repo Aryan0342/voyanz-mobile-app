@@ -90,7 +90,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                                 .map(
                                   (v) => DropdownMenuItem<double>(
                                     value: v.toDouble(),
-                                    child: Text('$v star'),
+                                    child: Text(t.starCount(v)),
                                   ),
                                 )
                                 .toList(),
@@ -218,7 +218,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.reviewSubmitFailed('Please try again.')),
+          content: Text(t.reviewSubmitFailed(t.pleaseTryAgain)),
           backgroundColor: AppColors.error,
         ),
       );
@@ -446,7 +446,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'An error occurred. Please try again.',
+                  t.genericErrorRetry,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.manrope(
                     color: AppColors.textMuted,

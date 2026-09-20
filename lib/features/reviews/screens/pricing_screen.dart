@@ -85,7 +85,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.promoCheckFailed('Please try again.')),
+          content: Text(t.promoCheckFailed(t.pleaseTryAgain)),
           backgroundColor: AppColors.error,
         ),
       );
@@ -274,7 +274,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.appointmentRegistrationFailed('Please try again.')),
+          content: Text(t.appointmentRegistrationFailed(t.pleaseTryAgain)),
           backgroundColor: AppColors.error,
         ),
       );
@@ -378,7 +378,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An error occurred. Please try again.'),
+          content: Text(t.genericErrorRetry),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -526,7 +526,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
           content: Text(
             isDuplicateLaunch
                 ? t.sessionAlreadyStarted
-                : 'An error occurred. Please try again.',
+                : t.genericErrorRetry,
           ),
           backgroundColor: AppColors.error,
         ),
@@ -540,7 +540,7 @@ class _PricingScreenState extends ConsumerState<PricingScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An error occurred. Please try again.'),
+          content: Text(t.genericErrorRetry),
           backgroundColor: AppColors.error,
         ),
       );
