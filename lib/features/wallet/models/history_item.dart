@@ -1,4 +1,5 @@
 import 'package:voyanz/core/utils/date_utils.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 class HistoryItem {
   final String date;
@@ -119,6 +120,6 @@ class HistoryItem {
   static String _formatFromCents(int cents) {
     if (cents == 0) return '';
     final sign = cents < 0 ? '-' : '';
-    return '$sign€${(cents.abs() / 100).toStringAsFixed(2)}';
+    return '$sign${formatEuros(cents.abs() / 100)}';
   }
 }

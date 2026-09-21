@@ -15,6 +15,7 @@ import 'package:voyanz/features/professionals/providers/professionals_provider.d
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 String? _resolveImageUrl(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
@@ -1619,6 +1620,7 @@ class _ProfessionalCard extends ConsumerWidget {
                               icon: Icons.chat_bubble_outline,
                               label: translations.tabChat,
                               price: professional.priceChatPerMinute,
+                              freeLabel: translations.free,
                               onTap: onTap,
                             ),
                           ),
@@ -1632,6 +1634,7 @@ class _ProfessionalCard extends ConsumerWidget {
                               icon: Icons.phone_outlined,
                               label: translations.call,
                               price: professional.pricePhonePerMinute,
+                              freeLabel: translations.free,
                               onTap: onTap,
                             ),
                           ),
@@ -1644,6 +1647,7 @@ class _ProfessionalCard extends ConsumerWidget {
                               icon: Icons.videocam_outlined,
                               label: translations.video,
                               price: professional.priceVideoPerMinute,
+                              freeLabel: translations.free,
                               onTap: onTap,
                             ),
                           ),
@@ -1713,12 +1717,14 @@ class _SessionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final double? price;
+  final String freeLabel;
   final VoidCallback onTap;
 
   const _SessionButton({
     required this.icon,
     required this.label,
     required this.price,
+    required this.freeLabel,
     required this.onTap,
   });
 
@@ -1746,7 +1752,7 @@ class _SessionButton extends StatelessWidget {
           ),
           if (price != null)
             Text(
-              price == 0 ? 'Free' : '€${price!.toStringAsFixed(2)}/min',
+              price == 0 ? freeLabel : '${formatEuros(price!)}/min',
               maxLines: 1,
               style: GoogleFonts.montserrat(color: Colors.white60, fontSize: 8),
             ),

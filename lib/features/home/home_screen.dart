@@ -13,6 +13,7 @@ import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 /// Bottom-navigation shell that wraps most authenticated screens.
 /// Shows different tabs based on user role (customer vs professional).
@@ -655,7 +656,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onCreditTap: () => context.push('/wallet'),
                         ),
                         error: (_, __) => _CustomerStatsGrid(
-                          creditValue: '€0.00',
+                          creditValue: formatEuros(0),
                           phoneCount: '0',
                           videoCount: '0',
                           chatCount: '0',
@@ -1326,7 +1327,7 @@ double? _parseCurrencyLike(dynamic value) {
 
 String _formatEuro(double? value) {
   if (value == null) return '--';
-  return '€${value.toStringAsFixed(2)}';
+  return formatEuros(value);
 }
 
 class _ProfileTile extends StatelessWidget {

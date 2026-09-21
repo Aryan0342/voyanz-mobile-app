@@ -21,6 +21,7 @@ import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/navigation/session_navigation.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 String? _resolveImageUrl(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
@@ -1702,8 +1703,7 @@ class _ProfessionalDetailScreenState
                                     _DetailRow(
                                       icon: Icons.payments_outlined,
                                       label: t.pricePerMinute,
-                                      value:
-                                          '€${pro.pricePerMinute!.toStringAsFixed(2)}',
+                                      value: formatEuros(pro.pricePerMinute!),
                                       iconColor: AppColors.online,
                                     ),
                                   ],
@@ -2141,7 +2141,7 @@ class _SessionTypeOption extends StatelessWidget {
     final priceText = price == 0
         ? freeLabel
         : price != null
-        ? '€${price!.toStringAsFixed(2)}/min'
+        ? '${formatEuros(price!)}/min'
         : null;
 
     return GestureDetector(

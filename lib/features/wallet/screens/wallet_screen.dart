@@ -7,6 +7,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/wallet/models/history_item.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
@@ -35,8 +36,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     final creditStr = liveCredit != null
         ? liveCredit.display
         : credit != null
-            ? '€${credit.toStringAsFixed(2)}'
-            : '€0.00';
+            ? formatEuros(credit)
+            : formatEuros(0);
 
     return GradientScaffold(
       appBar: VoyanzAppBar(

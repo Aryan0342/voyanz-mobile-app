@@ -1,3 +1,5 @@
+import 'package:voyanz/core/utils/money.dart';
+
 class WalletBalance {
   final int balance; // cents
   final String balanceFormatted;
@@ -16,7 +18,7 @@ class WalletBalance {
   String get display {
     if (balanceFormatted.isNotEmpty) return balanceFormatted;
     final sign = isNegative ? '-' : '';
-    return '$sign€${balanceInEuros.abs().toStringAsFixed(2)}';
+    return '$sign${formatEuros(balanceInEuros.abs())}';
   }
 
   factory WalletBalance.fromJson(Map<String, dynamic> json) {
