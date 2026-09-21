@@ -1523,11 +1523,6 @@ class AppTranslations {
     '$amount free on your first pack',
     '$amount de regalo en tu primer paquete',
   );
-  String get firstPackOfferSubtitle => _l(
-    'Crédit ajouté automatiquement à votre portefeuille lors de votre premier achat.',
-    'Added automatically to your wallet with your first purchase.',
-    'Se añade automáticamente a tu monedero con tu primera compra.',
-  );
   String get firstPackOfferCta =>
       _l('Voir les forfaits', 'See packs', 'Ver paquetes');
   String get creditReceived =>

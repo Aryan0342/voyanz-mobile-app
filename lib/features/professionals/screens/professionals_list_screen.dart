@@ -510,16 +510,15 @@ class _ProfessionalsListScreenState
                   if (!widget.favoritesOnly)
                     const SliverToBoxAdapter(child: _FirstPackOfferCard()),
 
-                  ..._buildProfessionalSections(context, filteredPros, t),
-
                   // AI assistants are a separate product surface (free,
-                  // chat-only, 24/7): their own section, never mixed into the
-                  // human lists above. Without it a new customer has no way
-                  // to reach them at all.
+                  // chat-only, 24/7): their own section above the psychics,
+                  // never mixed into the human lists below.
                   if (!widget.favoritesOnly)
                     SliverToBoxAdapter(
                       child: _AiAssistantsSection(search: _serverSearchQuery),
                     ),
+
+                  ..._buildProfessionalSections(context, filteredPros, t),
 
                   if (filteredPros.isEmpty)
                     SliverToBoxAdapter(
@@ -2067,16 +2066,7 @@ class _FirstPackOfferCard extends ConsumerWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        t.firstPackOfferSubtitle,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          height: 1.4,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Text(
                         t.firstPackOfferCta,
                         style: GoogleFonts.montserrat(
