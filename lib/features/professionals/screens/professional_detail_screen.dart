@@ -471,16 +471,15 @@ class _ProfessionalDetailScreenState
       if (balance.isInsufficient) {
         // The server's `message` is French whatever the UI language; its
         // formatted amounts let us say the same thing in the user's language.
-        final hasAmounts =
-            balance.balanceFormatted.trim().isNotEmpty &&
-            balance.requiredAmountFormatted.trim().isNotEmpty;
+        // Format the raw cents ourselves so the amounts match the prices
+        // shown on the profile (the `…Formatted` strings are French-style).
         _showInsufficientBalanceDialog(
           context,
           ref,
-          serverMessage: hasAmounts
+          serverMessage: balance.requiredAmount > 0
               ? t.insufficientBalanceDetail(
-                  balance.balanceFormatted,
-                  balance.requiredAmountFormatted,
+                  formatEuros(balance.balance / 100),
+                  formatEuros(balance.requiredAmount / 100),
                 )
               : balance.message,
         );

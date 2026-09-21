@@ -14,6 +14,7 @@ import 'package:voyanz/features/auth/providers/user_session_reset.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
+import 'package:voyanz/features/sessions/providers/sessions_realtime_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +84,7 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
     if (isActive && ref.read(authStateProvider).valueOrNull != null) {
       unawaited(ws.connect());
       ref.read(chatRealtimeProvider);
+      ref.read(sessionsRealtimeProvider);
     }
   }
 
@@ -111,11 +113,13 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
         ref.read(webSocketServiceProvider).connect();
         // Ensure chat realtime listeners are registered while logged in
         ref.read(chatRealtimeProvider);
+        ref.read(sessionsRealtimeProvider);
       } else if (next.valueOrNull == null && previous?.valueOrNull != null) {
         // User just logged out
         ref.read(webSocketServiceProvider).disconnect();
         // Dispose chat realtime listeners
         ref.invalidate(chatRealtimeProvider);
+        ref.invalidate(sessionsRealtimeProvider);
       }
     });
 

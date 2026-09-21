@@ -4,6 +4,21 @@ import 'package:voyanz/core/config/api_endpoints.dart';
 
 final _logger = Logger();
 
+/// A review the server refused.
+///
+/// [serverMessage] is set only when the server sent a ready-to-display
+/// sentence (API_REST §11.1: 403 `no_session`, 403 `max_reviews_reached`).
+/// Bare keys, network failures and unparseable bodies leave it null so the
+/// UI shows its own localized message instead of leaking English or raw
+/// error text into a French screen.
+class ReviewSubmitException implements Exception {
+  final String? serverMessage;
+  const ReviewSubmitException(this.serverMessage);
+
+  @override
+  String toString() => serverMessage ?? 'Review submission failed';
+}
+
 class ReviewsHistoryDataSource {
   final Dio _dio;
 
@@ -50,22 +65,34 @@ class ReviewsHistoryDataSource {
   }
 
   Future<void> postReview(Map<String, dynamic> body) async {
+    dynamic data;
     try {
       final response = await _dio.post(ApiEndpoints.postReview, data: body);
-      _throwIfApiError(response.data, fallback: 'Post review failed');
+      data = response.data;
+      if (!_hasApiError(data)) return;
     } on DioException catch (e) {
-      final data = e.response?.data;
-      if (data is Map<String, dynamic>) {
-        final err = data['err'];
-        final message = err is Map<String, dynamic>
-            ? (err['message'] ?? err['key'] ?? err['code'])
-            : (data['message'] ?? data['error'] ?? err);
-        if (message != null && message.toString().trim().isNotEmpty) {
-          throw Exception(message.toString());
-        }
-      }
-      rethrow;
+      data = e.response?.data;
     }
+    throw ReviewSubmitException(_displayableMessage(data));
+  }
+
+  static bool _hasApiError(dynamic data) {
+    if (data is! Map) return false;
+    bool isSet(dynamic v) =>
+        v != null && v != false && v != 0 && v.toString().trim().isNotEmpty;
+    return isSet(data['error']) || isSet(data['err']);
+  }
+
+  /// The server's human-readable message, if it sent one. Keys such as
+  /// `no_session` are not display text (they contain no space).
+  static String? _displayableMessage(dynamic data) {
+    if (data is! Map) return null;
+    final err = data['err'];
+    for (final candidate in [if (err is Map) err['message'], data['message']]) {
+      final text = candidate?.toString().trim() ?? '';
+      if (text.contains(' ')) return text;
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>> getCustomerPricing() async {

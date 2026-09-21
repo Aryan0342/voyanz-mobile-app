@@ -143,7 +143,7 @@ class AppTranslations {
     'Formato de correo electrónico no válido',
   );
   String get invalidPhone => _l(
-    'Numero de telephone invalide',
+    'Numéro de téléphone invalide',
     'Invalid phone number',
     'Número de teléfono no válido',
   );
@@ -242,12 +242,12 @@ class AppTranslations {
     'El nombre de la empresa es obligatorio para una sociedad.',
   );
   String get emailAlreadyRegistered => _l(
-    'Cette adresse e-mail est deja inscrite.',
+    'Cette adresse e-mail est déjà inscrite.',
     'This email is already registered.',
     'Este correo electrónico ya está registrado.',
   );
   String get phoneAlreadyRegistered => _l(
-    'Ce numero de telephone est deja inscrit.',
+    'Ce numéro de téléphone est déjà inscrit.',
     'This phone number is already registered.',
     'Este número de teléfono ya está registrado.',
   );
@@ -257,7 +257,7 @@ class AppTranslations {
     'Se requiere la verificación antispam para crear esta cuenta.',
   );
   String get accountCreated => _l(
-    'Compte cree ! Bienvenue.',
+    'Compte créé ! Bienvenue.',
     'Account created! Welcome.',
     '¡Cuenta creada! Te damos la bienvenida.',
   );
@@ -546,7 +546,9 @@ class AppTranslations {
       _l('En ligne maintenant', 'Online now', 'En línea ahora');
   String get allAdvisors =>
       _l('Tous les voyants', 'All psychics', 'Todos los profesionales');
-  String nResults(int n) => _l('$n résultats', '$n results', '$n resultados');
+  String nResults(int n) => n == 1
+      ? _l('1 résultat', '1 result', '1 resultado')
+      : _l('$n résultats', '$n results', '$n resultados');
   String get noAdvisorsMatch => _l(
     'Aucun voyant ne correspond à votre recherche.',
     'No psychics match your search right now.',
@@ -584,11 +586,17 @@ class AppTranslations {
   );
   String get discoverYourGuide =>
       _l('Découvrez votre guide', 'Discover Your Guide', 'Descubre tu guía');
-  String nAdvisorsAvailable(int n) => _l(
-    '$n voyants disponibles pour chat et vidéo',
-    '$n psychics available for chat and video sessions',
-    '$n profesionales disponibles para chat y vídeo',
-  );
+  String nAdvisorsAvailable(int n) => n == 1
+      ? _l(
+          '1 voyant disponible pour chat et vidéo',
+          '1 psychic available for chat and video sessions',
+          '1 profesional disponible para chat y vídeo',
+        )
+      : _l(
+          '$n voyants disponibles pour chat et vidéo',
+          '$n psychics available for chat and video sessions',
+          '$n profesionales disponibles para chat y vídeo',
+        );
   String specialtyFilterLabel(String s) => _l(
     'Spécialité : $s',
     'Specialty: $s',
@@ -937,8 +945,9 @@ class AppTranslations {
     'Failed to submit review: $err',
     'No se pudo enviar la reseña: $err',
   );
-  String nReviews(int count) =>
-      _l('$count avis', '$count reviews', '$count reseñas');
+  String nReviews(int count) => count == 1
+      ? _l('1 avis', '1 review', '1 reseña')
+      : _l('$count avis', '$count reviews', '$count reseñas');
   String get reviewsFromClientsWillAppear => _l(
     'Les avis de vos clients\napparaîtront ici',
     'Reviews from your clients\nwill appear here',
@@ -1166,52 +1175,52 @@ class AppTranslations {
     'Sesión telefónica',
   );
   String get answerPhoneTitle => _l(
-    'Repondez a votre telephone',
+    'Répondez à votre téléphone',
     'Answer your phone',
     'Responde a tu teléfono',
   );
   String get phonePstnSessionMessage => _l(
-    'Voyanz appelle les deux participants sur leur numero mobile verifie.',
+    'Voyanz appelle les deux participants sur leur numéro mobile vérifié.',
     'Voyanz is calling both participants on their verified mobile numbers.',
     'Voyanz está llamando a ambos participantes a sus números de móvil verificados.',
   );
   String get phonePstnNoInAppAudio => _l(
-    'L\'audio se fait par appel telephonique classique, pas dans l\'app.',
+    'L\'audio se fait par appel téléphonique classique, pas dans l\'app.',
     'Audio happens through a regular phone call, not inside the app.',
     'El audio se realiza mediante una llamada telefónica normal, no dentro de la app.',
   );
   String get phonePstnPressKeyInstruction => _l(
-    'Quand vous repondez, appuyez sur la touche 1 pour confirmer que vous etes bien la.',
+    'Quand vous répondez, appuyez sur la touche 1 pour confirmer que vous êtes bien là.',
     'When you answer, press key 1 to confirm you are really there.',
     'Cuando respondas, pulsa la tecla 1 para confirmar que estás al aparato.',
   );
   String phonePstnPressKeyCountdown(int seconds) => _l(
-    'Confirmez dans $seconds s, sinon la session sera annulee.',
+    'Confirmez dans $seconds s, sinon la session sera annulée.',
     'Confirm within $seconds s, or the session will be cancelled.',
     'Confirma en $seconds s o la sesión se cancelará.',
   );
   String get phonePstnCallConfirmed => _l(
-    'Appel confirme.',
+    'Appel confirmé.',
     'Call confirmed.',
     'Llamada confirmada.',
   );
   String get sessionStatusNoStarConfirmLabel => _l(
-    'Appel non confirme',
+    'Appel non confirmé',
     'Call not confirmed',
     'Llamada no confirmada',
   );
   String get sessionStatusNoStarConfirmMessage => _l(
-    'Le professionnel n\'a pas appuye sur la touche 1 pour confirmer. La session a ete annulee.',
+    'Le professionnel n\'a pas appuyé sur la touche 1 pour confirmer. La session a été annulée.',
     'The professional did not press key 1 to confirm. The session was cancelled.',
     'El profesional no pulsó la tecla 1 para confirmar. La sesión se ha cancelado.',
   );
   String get phoneEndReasonProfessionalUnavailable => _l(
-    'La ligne du professionnel n\'a pas repondu (messagerie).',
+    'La ligne du professionnel n\'a pas répondu (messagerie).',
     'The professional\'s line was unavailable (voicemail).',
     'La línea del profesional no estaba disponible (buzón de voz).',
   );
   String get phoneEndReasonCustomerNoAnswer => _l(
-    'Le client n\'a pas repondu. La session a ete annulee.',
+    'Le client n\'a pas répondu. La session a été annulée.',
     'The customer did not answer. The session was cancelled.',
     'El cliente no respondió. La sesión se ha cancelado.',
   );

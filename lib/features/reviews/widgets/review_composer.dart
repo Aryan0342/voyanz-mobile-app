@@ -5,6 +5,7 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
+import 'package:voyanz/features/reviews/data/reviews_history_data_source.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 
 Future<void> showReviewComposer(
@@ -95,13 +96,16 @@ Future<void> showReviewComposer(
     }
   } catch (error) {
     if (context.mounted) {
-      final message = error
-          .toString()
-          .replaceFirst(RegExp(r'^Exception:\s*'), '')
-          .trim();
+      // Show the server's own sentence as-is (API_REST §11.1); anything else
+      // gets a fully localized message, never a half-translated one.
+      final serverMessage = error is ReviewSubmitException
+          ? error.serverMessage
+          : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.reviewSubmitFailed(message)),
+          content: Text(
+            serverMessage ?? t.reviewSubmitFailed(t.genericErrorRetry),
+          ),
           backgroundColor: AppColors.error,
         ),
       );
