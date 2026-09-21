@@ -15,8 +15,8 @@ class WalletBalance {
 
   bool get isNegative => balance < 0;
 
+  // From the raw cents: `balanceFormatted` is always French-formatted.
   String get display {
-    if (balanceFormatted.isNotEmpty) return balanceFormatted;
     final sign = isNegative ? '-' : '';
     return '$sign${formatEuros(balanceInEuros.abs())}';
   }

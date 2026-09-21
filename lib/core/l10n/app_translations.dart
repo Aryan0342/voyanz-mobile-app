@@ -629,6 +629,13 @@ class AppTranslations {
   );
   String get free => _l('Gratuit', 'Free', 'Gratis');
   // Explore section listing the Voyanz AI assistants (co_isassistant = 1).
+  // Shown while an AI assistant composes its answer, in place of the
+  // server's fr/en-only placeholder.
+  String get aiThinking => _l(
+    'Notre voyante IA réfléchit…',
+    'Our AI psychic is thinking…',
+    'Nuestra vidente IA está pensando…',
+  );
   String get aiSectionTitle => _l(
     'Essayez gratuitement, 24h/24 !',
     'Try for free, 24/7!',
@@ -1032,6 +1039,22 @@ class AppTranslations {
   String get typeMessage =>
       _l('Écrire un message...', 'Type a message...', 'Escribe un mensaje...');
   String get send => _l('Envoyer', 'Send', 'Enviar');
+  String get couldNotOpenGallery => _l(
+    'Impossible d\'ouvrir la galerie.',
+    'Could not open the gallery.',
+    'No se pudo abrir la galería.',
+  );
+  String imagesFailedToSend(int n) => n == 1
+      ? _l(
+          '1 image n\'a pas pu être envoyée. Réessayez.',
+          '1 image could not be sent. Please try again.',
+          '1 imagen no se pudo enviar. Inténtalo de nuevo.',
+        )
+      : _l(
+          '$n images n\'ont pas pu être envoyées. Réessayez.',
+          '$n images could not be sent. Please try again.',
+          '$n imágenes no se pudieron enviar. Inténtalo de nuevo.',
+        );
   String sendMessageFailed(String err) => _l(
     'Échec de l\'envoi du message : $err',
     'Failed to send message: $err',

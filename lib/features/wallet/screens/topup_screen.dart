@@ -15,6 +15,7 @@ import 'package:voyanz/features/wallet/models/payment_status.dart';
 import 'package:voyanz/features/wallet/models/topup_pack.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/config/stripe_config.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 class TopUpScreen extends ConsumerWidget {
   const TopUpScreen({super.key});
@@ -95,36 +96,17 @@ class TopUpScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                liveCredit != null
-                                    ? liveCredit.display
-                                          .replaceAll('€', '')
-                                          .trim()
-                                    : credit != null
-                                    ? credit
-                                          .toStringAsFixed(2)
-                                          .replaceAll('.', ',')
-                                    : '0,00',
-                                style: GoogleFonts.jost(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '€',
-                                style: GoogleFonts.jost(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
+                          // One locale-formatted amount: "0,00 €" in French
+                          // and Spanish, "€0.00" in English.
+                          Text(
+                            liveCredit != null
+                                ? liveCredit.display
+                                : formatEuros(credit ?? 0),
+                            style: GoogleFonts.jost(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),
@@ -445,7 +427,7 @@ class TopUpScreen extends ConsumerWidget {
         if (context.mounted) {
           context.push(
             '/wallet/success',
-            extra: {'amount': pack.tocomptabilizef, 'packName': pack.name},
+            extra: {'amount': pack.creditLabel, 'packName': pack.name},
           );
         }
         return;
@@ -474,7 +456,7 @@ class TopUpScreen extends ConsumerWidget {
           if (context.mounted) {
             context.push(
               '/wallet/success',
-              extra: {'amount': pack.tocomptabilizef, 'packName': pack.name},
+              extra: {'amount': pack.creditLabel, 'packName': pack.name},
             );
           }
         } else if (context.mounted) {
@@ -624,7 +606,7 @@ class _PackCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                pack.topayf,
+                                pack.topayLabel,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -646,7 +628,7 @@ class _PackCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                pack.tocomptabilizef,
+                                pack.creditLabel,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -846,7 +828,7 @@ class _OrderSummary extends StatelessWidget {
               ),
             ),
             Text(
-              pack.topayf,
+              pack.topayLabel,
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -867,7 +849,7 @@ class _OrderSummary extends StatelessWidget {
               ),
             ),
             Text(
-              pack.tocomptabilizef,
+              pack.creditLabel,
               style: GoogleFonts.montserrat(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -889,7 +871,7 @@ class _OrderSummary extends StatelessWidget {
                 ),
               ),
               Text(
-                '-${pack.promotionf}',
+                '-${pack.promotionLabel}',
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

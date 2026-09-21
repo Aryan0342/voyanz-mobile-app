@@ -82,7 +82,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
             content: Text(
               ref
                   .read(translationsProvider)
-                  .sendMessageFailed('Please try again.'),
+                  .sendMessageFailed(
+                    ref.read(translationsProvider).genericErrorRetry,
+                  ),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -157,7 +159,7 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
       });
     } catch (e) {
       debugPrint('[chat-image] PICK FAILED: $e');
-      _showImageError('Could not open gallery: $e');
+      _showImageError(ref.read(translationsProvider).couldNotOpenGallery);
     }
   }
 
@@ -198,7 +200,9 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
         }
       }
       if (failed > 0) {
-        _showImageError('$failed image(s) failed to send. Try again.');
+        _showImageError(
+          ref.read(translationsProvider).imagesFailedToSend(failed),
+        );
       }
     } finally {
       if (mounted) setState(() => _sendingImage = false);
@@ -393,26 +397,32 @@ class _ChatMessagesScreenState extends ConsumerState<ChatMessagesScreen> {
               ],
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayTitle,
-                  style: GoogleFonts.jost(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+            // Expanded + ellipsis: long names ("Voyanz-AI Lithothérapie")
+            // overflowed the title row.
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.jost(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                Text(
-                  t.activeNow,
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.mediumPurple,
+                  Text(
+                    t.activeNow,
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mediumPurple,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -797,7 +807,11 @@ class _MessageBubble extends ConsumerWidget {
                     ],
                     if ((message.content ?? '').toString().trim().isNotEmpty)
                       Text(
-                        message.content ?? '',
+                        // Never render the server's thinking label: it is
+                        // French or English only.
+                        message.isAiThinking
+                            ? ref.watch(translationsProvider).aiThinking
+                            : message.content ?? '',
                         style: GoogleFonts.manrope(
                           fontSize: 15,
                           color: isMe ? Colors.white : AppColors.textPrimary,

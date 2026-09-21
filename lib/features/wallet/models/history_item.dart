@@ -43,14 +43,16 @@ class HistoryItem {
         _defaultTitle(rawType, rawSubtype),
       ]),
       amount: _parseAmount(json),
-      amountFormatted: _firstNonEmpty([
-        json['amountFormatted'],
-        json['amountf'],
-        json['pricef'],
-        json['totalf'],
-        json['topayf'],
-        _formatFromCents(_parseAmount(json)),
-      ]),
+      amountFormatted: localizeServerAmount(
+        _firstNonEmpty([
+          json['amountFormatted'],
+          json['amountf'],
+          json['pricef'],
+          json['totalf'],
+          json['topayf'],
+          _formatFromCents(_parseAmount(json)),
+        ]),
+      ),
       inWhat: _firstNonEmpty([
         json['in_what'],
         json['inWhat'],

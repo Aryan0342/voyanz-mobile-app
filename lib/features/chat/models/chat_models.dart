@@ -48,9 +48,10 @@ class ChatGroup {
     return ChatGroup(
       chgrId: json['chgr_id']?.toString() ?? '',
       name: json['chgr_name'] as String?,
-      lastMessage:
-          json['lastmessage'] as String? ??
-          json['chgr_last_message'] as String?,
+      lastMessage: _stripEmptySender(
+        json['lastmessage'] as String? ??
+            json['chgr_last_message'] as String?,
+      ),
       lastMessageDate:
           json['lastmessagedate'] as String? ??
           json['chgr_last_message_date'] as String?,
@@ -76,6 +77,11 @@ class ChatMessage {
   final String? imageUrl;
   final String? createdAt;
 
+  /// True for the server's AI "thinking" placeholder, which streams into the
+  /// real answer. Its label is fr/en only server-side, so the UI shows its
+  /// own translation instead (Amaury, 2026-09-21).
+  final bool isAiThinking;
+
   const ChatMessage({
     required this.chmeId,
     this.chgrId,
@@ -85,9 +91,32 @@ class ChatMessage {
     this.content,
     this.imageUrl,
     this.createdAt,
+    this.isAiThinking = false,
   });
 
   bool get isImage => type == 'image';
+
+  /// The server's placeholder labels. They are replaced by the first
+  /// `chat_message_chunk` of the answer.
+  static const _thinkingLabels = <String>{
+    'notre voyante ia réfléchit',
+    'notre voyant ia réfléchit',
+    'our ai psychic is thinking',
+    'our ai is thinking',
+  };
+
+  static bool _isThinkingLabel(String text) {
+    final normalized = text
+        .toLowerCase()
+        .replaceAll(RegExp(r'[.…\s]+$'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (normalized.isEmpty || normalized.length > 60) return false;
+    if (_thinkingLabels.contains(normalized)) return true;
+    // Tolerate wording variants of the same short status line.
+    return normalized.endsWith('réfléchit') ||
+        normalized.endsWith('is thinking');
+  }
 
   int? get numericId => int.tryParse(chmeId);
 
@@ -98,6 +127,10 @@ class ChatMessage {
     final type = json['chme_type']?.toString() ?? 'text';
     final rawText = json['chme_text_raw']?.toString();
     final htmlText = json['chme_text']?.toString();
+    // An empty `chme_text_raw` must not hide the HTML text.
+    final plainText = (rawText != null && rawText.trim().isNotEmpty)
+        ? rawText
+        : _stripHtml(htmlText ?? '') ?? '';
 
     return ChatMessage(
       chmeId: json['chme_id']?.toString() ?? '',
@@ -107,8 +140,14 @@ class ChatMessage {
           contact['co_fullname'] as String? ??
           contact['co_firstname'] as String?,
       type: type,
-      content: rawText ?? _stripHtml(htmlText ?? ''),
+      content: plainText,
       createdAt: json['createdAt'] as String? ?? json['updatedAt'] as String?,
+      // The server marks its placeholder with the `chat-ai-thinking` class
+      // (seen in production, 2026-09-21); the label match is a fallback.
+      isAiThinking:
+          type == 'text' &&
+          ((htmlText ?? '').contains('chat-ai-thinking') ||
+              _isThinkingLabel(plainText)),
     );
   }
 }
@@ -192,4 +231,11 @@ String? _stripHtml(String value) {
       .replaceAll(RegExp(r'<[^>]+>'), '')
       .trim();
   return text.isEmpty ? null : text;
+}
+
+/// The server formats `lastmessage` as "Sender : text". AI assistants have an
+/// empty sender name, which left a stray ": Bonjour…" in the conversation list.
+String? _stripEmptySender(String? preview) {
+  if (preview == null) return null;
+  return preview.replaceFirst(RegExp(r'^\s*:\s*'), '');
 }

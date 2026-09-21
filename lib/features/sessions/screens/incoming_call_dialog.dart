@@ -108,11 +108,12 @@ class IncomingCallDialog extends ConsumerWidget {
     notifier.markAccepted();
 
     // Send session_callaccepted to backend.
-    // WEBSOCKET §5.2: isGroupSession is true only for scheduled group
-    // sessions (ap_id set) — appointmentId is the client-side signal.
+    // An incoming call always has a customer: it is 1-to-1 even when it
+    // carries an appointment id. Group (Club) sessions have no customer and
+    // are web-only (Amaury, 2026-09-21).
     ws.send('session_callaccepted', {
       'callParams': call.toCallParams(),
-      'isGroupSession': call.appointmentId != null,
+      'isGroupSession': call.isGroupSession,
     });
 
     // Close the dialog first, then clear the notification (clearing triggers

@@ -1,3 +1,5 @@
+import 'package:voyanz/core/utils/money.dart';
+
 class TopUpPack {
   final String id;
   final String name;
@@ -40,6 +42,12 @@ class TopUpPack {
     this.isFirstInvoice = false,
     this.firstPackGiftCents = 0,
   });
+
+  // Amounts come from the raw cents, in the app language: the server's
+  // `…f` strings are always French-formatted (Amaury, 2026-09-21).
+  String get topayLabel => formatCents(topay);
+  String get creditLabel => formatCents(tocomptabilize);
+  String get promotionLabel => formatCents(promotion);
 
   bool get isFirstPurchaseBonus =>
       whypromo == 'firstinvoice' || (isFirstInvoice && firstPackGiftCents > 0);

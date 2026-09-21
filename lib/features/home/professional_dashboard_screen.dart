@@ -91,8 +91,12 @@ class _ProfessionalDashboardScreenState
     // Listen for session started events and navigate directly to the session.
     ref.listen(sessionStartedProvider, (previous, next) {
       if (next == null) return;
-      _stopRingtone();
       ref.read(sessionStartedProvider.notifier).clear();
+      // Club Voyanz (co_id_customer == null) is hosted on the website only:
+      // never open it as in-app video. 1-to-1 sessions are kept even when
+      // they carry an ap_id.
+      if (next.isGroupSession) return;
+      _stopRingtone();
       _navigateToSession(context, next);
     });
 
@@ -532,7 +536,7 @@ class _ProfessionalDashboardScreenState
     notifier.markAccepted();
     ws.send('session_callaccepted', {
       'callParams': call.toCallParams(),
-      'isGroupSession': call.appointmentId != null,
+      'isGroupSession': call.isGroupSession,
     });
     notifier.clear();
   }

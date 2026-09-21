@@ -1429,7 +1429,6 @@ class _ProfessionalCard extends ConsumerWidget {
           ? professional.coId
           : professional.displayName,
     );
-    final availability = professional.availabilityText?.trim();
     final isFavorite = ref
         .watch(favoriteProfessionalIdsProvider)
         .contains(professional.coId);
@@ -1596,11 +1595,9 @@ class _ProfessionalCard extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        availability != null && availability.isNotEmpty
-                            ? availability
-                            : professional.isAvailableNow
+                        professional.isAvailableNow
                             ? translations.availableNow
-                            : translations.viewAvailability,
+                            : translations.noAvailabilityAtMoment,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

@@ -42,6 +42,10 @@ class SessionStartedEvent {
     this.reviewsPro,
   });
 
+  /// Club Voyanz group sessions have no customer (Amaury, 2026-09-21).
+  /// They are web-only; 1-to-1 sessions keep a customer even with an `ap_id`.
+  bool get isGroupSession => coIdCustomer.trim().isEmpty;
+
   factory SessionStartedEvent.fromSession(Map<String, dynamic> session) {
     return SessionStartedEvent.fromEvent({'session': session});
   }
@@ -72,6 +76,9 @@ class SessionStartedEvent {
 
 /// Incoming call state model
 class IncomingCall {
+  /// A call without a customer can only be a group (Club) session.
+  bool get isGroupSession => (customerId ?? '').trim().isEmpty;
+
   final String? professionalId;
   final String? customerId;
   final String? professionalFullname;

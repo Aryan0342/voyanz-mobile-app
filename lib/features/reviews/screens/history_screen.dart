@@ -8,6 +8,7 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
+import 'package:voyanz/core/utils/money.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   final bool isProfessional;
@@ -46,7 +47,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             .toString()
             .trim();
     final type = (item['type'] ?? '').toString().trim().toLowerCase();
-    final price = (item['pricef'] ?? item['price'] ?? '').toString().trim();
+    final price = localizeServerAmount(
+      (item['pricef'] ?? item['price'] ?? '').toString(),
+    );
     final isEnded = item['is_ended'] == true || item['ended'] == true;
     final recordings = item['recording'];
     final hasRecordings = recordings is List && recordings.isNotEmpty;

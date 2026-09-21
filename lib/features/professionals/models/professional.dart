@@ -24,7 +24,6 @@ class Professional {
   final int? experienceYears;
   final bool isVerified;
   final bool isAvailableNow;
-  final String? availabilityText;
   final bool isAssistant;
 
   const Professional({
@@ -51,7 +50,6 @@ class Professional {
     this.experienceYears,
     this.isVerified = false,
     this.isAvailableNow = false,
-    this.availabilityText,
     this.isAssistant = false,
   });
 
@@ -195,26 +193,6 @@ class Professional {
     return years < 0 ? 0 : years;
   }
 
-  static bool? _inferAvailabilityFromText(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    final text = value.toLowerCase();
-
-    if (text.contains('no availability') ||
-        text.contains('not available') ||
-        text.contains('indisponible') ||
-        text.contains('pas disponible')) {
-      return false;
-    }
-
-    if (text.contains('available now') ||
-        text.contains('disponible') ||
-        text.contains('available')) {
-      return true;
-    }
-
-    return null;
-  }
-
   factory Professional.fromJson(Map<String, dynamic> json) {
     // `co_name` is the legal surname while `co_fullname` is the public name
     // shown by Voyanz. Never append the former to the latter (for example,
@@ -259,11 +237,12 @@ class Professional {
     final tools = _humanizedList(_readStringList(json, ['co_tools', 'tools']));
 
     final online = _readBool(json, ['co_is_online', 'co_online', 'is_online']);
-    final availabilityText = _readString(json, ['disponibilityText']);
+    // `disponibilityText` is deliberately ignored (Amaury, 2026-09-21): it is
+    // French-dated and mentions a booking button the app doesn't have. The
+    // UI builds its own wording from `disponibilityNow`.
     final availableNow =
         _readBool(json, ['disponibilityNow']) ??
         _readBool(json, ['is_available_now', 'availability_now']) ??
-        _inferAvailabilityFromText(availabilityText) ??
         false;
 
     return Professional(
@@ -317,7 +296,6 @@ class Professional {
       experienceYears: _readExperienceYears(json),
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
-      availabilityText: availabilityText,
       isAssistant: _readBool(json, ['co_isassistant', 'is_assistant']) ?? false,
     );
   }
@@ -346,7 +324,6 @@ class ProfessionalDetail extends Professional {
     super.isOnline,
     super.isVerified,
     super.isAvailableNow,
-    super.availabilityText,
     super.isFavorite,
     super.isRecommended,
     super.experienceYears,
@@ -382,16 +359,12 @@ class ProfessionalDetail extends Professional {
       'co_online',
       'is_online',
     ]);
-    final availabilityText = Professional._readString(json, [
-      'disponibilityText',
-    ]);
     final availableNow =
         Professional._readBool(json, ['disponibilityNow']) ??
         Professional._readBool(json, [
           'is_available_now',
           'availability_now',
         ]) ??
-        Professional._inferAvailabilityFromText(availabilityText) ??
         false;
 
     final publicName = Professional._readString(json, ['co_fullname']);
@@ -461,7 +434,6 @@ class ProfessionalDetail extends Professional {
       isVerified:
           Professional._readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
-      availabilityText: availabilityText,
       isFavorite:
           Professional._readBool(json, ['isFavorite', 'co_favorite', 'favorite']) ?? false,
       isRecommended:
@@ -529,7 +501,6 @@ class ProfessionalDetail extends Professional {
       isOnline: isOnline ?? fallback.isOnline,
       isVerified: isVerified || fallback.isVerified,
       isAvailableNow: isAvailableNow || fallback.isAvailableNow,
-      availabilityText: preferText(availabilityText, fallback.availabilityText),
       isFavorite: isFavorite || fallback.isFavorite,
       isRecommended: isRecommended || fallback.isRecommended,
       experienceYears: experienceYears ?? fallback.experienceYears,

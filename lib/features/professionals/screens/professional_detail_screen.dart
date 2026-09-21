@@ -1044,20 +1044,13 @@ class _ProfessionalDetailScreenState
               pro.isAvailableNow ||
               (listPro?.isAvailableNow ?? false);
 
-          String? effectiveAvailabilityText = pro.availabilityText;
-          if (effectiveAvailabilityText == null ||
-              effectiveAvailabilityText.trim().isEmpty) {
-            final fallbackText = listPro?.availabilityText;
-            if (fallbackText != null && fallbackText.trim().isNotEmpty) {
-              effectiveAvailabilityText = fallbackText;
-            }
-          }
-
+          // Built from disponibilityNow + app i18n, never the server's
+          // disponibilityText (French dates, a booking button we don't have).
           final availabilityLabel = pro.isAssistant
               ? t.available24Hours
               : effectiveAvailableNow
               ? t.availableNow
-              : (effectiveAvailabilityText ?? t.noAvailabilityAtMoment);
+              : t.noAvailabilityAtMoment;
 
           // Stats shown only from real data (no fake placeholders).
           final statCells = <Widget>[];
