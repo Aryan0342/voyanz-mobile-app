@@ -10,6 +10,7 @@ import 'package:voyanz/core/config/stripe_config.dart';
 import 'package:voyanz/core/routing/router.dart';
 import 'package:voyanz/core/theme/app_theme.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/features/auth/providers/user_session_reset.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
@@ -42,6 +43,9 @@ class VoyanzApp extends ConsumerStatefulWidget {
 
 class _VoyanzAppState extends ConsumerState<VoyanzApp>
     with WidgetsBindingObserver {
+  /// The account whose data the providers currently hold.
+  String? _lastUserId;
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +96,16 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
 
     // Listen for auth state changes and initialize WebSocket when user logs in
     ref.listen(authStateProvider, (previous, next) {
+      // Compare settled identities only: a loading state (session restore,
+      // profile refresh) is not an account change.
+      if (!next.isLoading) {
+        final nextUserId = next.valueOrNull?.coId;
+        if (_lastUserId != null && nextUserId != _lastUserId) {
+          resetUserScopedState(ref);
+        }
+        _lastUserId = nextUserId;
+      }
+
       if (next.valueOrNull != null && previous?.valueOrNull == null) {
         // User just logged in
         ref.read(webSocketServiceProvider).connect();

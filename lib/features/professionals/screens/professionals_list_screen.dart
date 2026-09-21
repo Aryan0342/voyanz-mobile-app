@@ -512,6 +512,15 @@ class _ProfessionalsListScreenState
 
                   ..._buildProfessionalSections(context, filteredPros, t),
 
+                  // AI assistants are a separate product surface (free,
+                  // chat-only, 24/7): their own section, never mixed into the
+                  // human lists above. Without it a new customer has no way
+                  // to reach them at all.
+                  if (!widget.favoritesOnly)
+                    SliverToBoxAdapter(
+                      child: _AiAssistantsSection(search: _serverSearchQuery),
+                    ),
+
                   if (filteredPros.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
@@ -1756,6 +1765,7 @@ class _AiAssistantsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final aiAsync = ref.watch(aiAssistantsProvider(search));
+    final t = ref.watch(translationsProvider);
 
     return aiAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -1793,7 +1803,7 @@ class _AiAssistantsSection extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Try for free, 24/7!',
+                          t.aiSectionTitle,
                           style: GoogleFonts.jost(
                             fontSize: 19,
                             fontWeight: FontWeight.w600,
@@ -1802,7 +1812,7 @@ class _AiAssistantsSection extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'AI-powered guidance, always available',
+                          t.aiSectionSubtitle,
                           style: GoogleFonts.montserrat(
                             fontSize: 12,
                             color: Colors.white60,
@@ -1832,14 +1842,14 @@ class _AiAssistantsSection extends ConsumerWidget {
   }
 }
 
-class _AiAssistantCard extends StatelessWidget {
+class _AiAssistantCard extends ConsumerWidget {
   final Professional professional;
   final int index;
 
   const _AiAssistantCard({required this.professional, required this.index});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final imageUrl = _profileImageUrl(
       rawAvatar: professional.avatar,
       seed: professional.coId.isNotEmpty
@@ -1946,7 +1956,7 @@ class _AiAssistantCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
-                'Free',
+                ref.watch(translationsProvider).free,
                 style: GoogleFonts.montserrat(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,

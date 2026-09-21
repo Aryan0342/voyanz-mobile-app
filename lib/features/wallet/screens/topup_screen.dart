@@ -564,10 +564,11 @@ class _PackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // "Best value" marks the packs with their own volume bonus (`promotion`).
+    // The first-purchase gift is added to every pack alike, so it must not
+    // light the badge — otherwise a new customer sees it on all of them.
     final isPremium =
-        pack.promotion > 0 ||
-        pack.isFirstPurchaseBonus ||
-        pack.name.toLowerCase().contains('premium');
+        pack.promotion > 0 || pack.name.toLowerCase().contains('premium');
 
     return GestureDetector(
       onTap: onTap,

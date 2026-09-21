@@ -468,10 +468,20 @@ class _ProfessionalDetailScreenState
           );
       if (!mounted) return;
       if (balance.isInsufficient) {
+        // The server's `message` is French whatever the UI language; its
+        // formatted amounts let us say the same thing in the user's language.
+        final hasAmounts =
+            balance.balanceFormatted.trim().isNotEmpty &&
+            balance.requiredAmountFormatted.trim().isNotEmpty;
         _showInsufficientBalanceDialog(
           context,
           ref,
-          serverMessage: balance.message,
+          serverMessage: hasAmounts
+              ? t.insufficientBalanceDetail(
+                  balance.balanceFormatted,
+                  balance.requiredAmountFormatted,
+                )
+              : balance.message,
         );
         return;
       }
@@ -951,9 +961,11 @@ class _ProfessionalDetailScreenState
               scale: _favoriteScale,
               child: IconButton(
                 onPressed: _toggleFavorite,
+                // Describe the action the tap performs, not the confirmation
+                // snackbar text ("Added to favorites ❤️" on an empty heart).
                 tooltip: isMarkedFavorite
-                    ? t.removedFavorites
-                    : t.addedFavorites,
+                    ? t.removeFromFavorites
+                    : t.addToFavorites,
                 icon: Icon(
                   isMarkedFavorite ? Icons.favorite : Icons.favorite_border,
                   size: 22,

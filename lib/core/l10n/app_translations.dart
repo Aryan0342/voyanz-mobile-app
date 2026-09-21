@@ -620,6 +620,17 @@ class AppTranslations {
     'Disponible 24/7',
   );
   String get free => _l('Gratuit', 'Free', 'Gratis');
+  // Explore section listing the Voyanz AI assistants (co_isassistant = 1).
+  String get aiSectionTitle => _l(
+    'Essayez gratuitement, 24h/24 !',
+    'Try for free, 24/7!',
+    '¡Pruébalo gratis, 24/7!',
+  );
+  String get aiSectionSubtitle => _l(
+    'Une guidance par IA, toujours disponible',
+    'AI-powered guidance, always available',
+    'Orientación con IA, siempre disponible',
+  );
   String get cancel => _l('Annuler', 'Cancel', 'Cancelar');
   String get addedFavorites => _l(
     'Ajouté aux favoris ❤️',
@@ -1546,6 +1557,13 @@ class AppTranslations {
       _l('Paiement échoué', 'Payment Failed', 'Pago fallido');
   String get insufficientBalance =>
       _l('Solde insuffisant', 'Insufficient Balance', 'Saldo insuficiente');
+  /// Built from POST /web/1.0/check-balance's formatted amounts, so the
+  /// dialog keeps the server's exact figures without its French-only text.
+  String insufficientBalanceDetail(String balance, String required) => _l(
+    'Solde insuffisant. Solde actuel : $balance, montant requis : $required. Veuillez recharger votre compte.',
+    'Insufficient balance. Current balance: $balance, amount required: $required. Please top up your wallet.',
+    'Saldo insuficiente. Saldo actual: $balance, importe requerido: $required. Recarga tu monedero.',
+  );
   String get insufficientBalanceMessage => _l(
     'Votre solde est insuffisant. Rechargez votre portefeuille pour continuer.',
     'Your balance is insufficient. Top up your wallet to continue.',
