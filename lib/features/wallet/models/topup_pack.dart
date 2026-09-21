@@ -14,6 +14,14 @@ class TopUpPack {
   final String? code;
   final int? codepurcent;
 
+  /// True while the customer has never bought a pack: the server then adds
+  /// the first-purchase gift on top of the pack's own volume bonus.
+  final bool isFirstInvoice;
+
+  /// The first-purchase gift in cents (0 once the customer has bought a pack).
+  /// Already included in [tocomptabilize]; exposed so it can be advertised.
+  final int firstPackGiftCents;
+
   const TopUpPack({
     required this.id,
     required this.name,
@@ -29,9 +37,12 @@ class TopUpPack {
     this.description,
     this.code,
     this.codepurcent,
+    this.isFirstInvoice = false,
+    this.firstPackGiftCents = 0,
   });
 
-  bool get isFirstPurchaseBonus => whypromo == 'firstinvoice';
+  bool get isFirstPurchaseBonus =>
+      whypromo == 'firstinvoice' || (isFirstInvoice && firstPackGiftCents > 0);
 
   factory TopUpPack.fromJson(Map<String, dynamic> json) {
     return TopUpPack(
@@ -49,6 +60,8 @@ class TopUpPack {
       description: json['description']?.toString(),
       code: json['code']?.toString(),
       codepurcent: _parseIntOrNull(json['codepurcent']),
+      isFirstInvoice: json['isFirstInvoice'] == true,
+      firstPackGiftCents: _parseInt(json['firstPackGiftCents']),
     );
   }
 

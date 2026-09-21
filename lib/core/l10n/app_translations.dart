@@ -1505,6 +1505,20 @@ class AppTranslations {
   String get buyPack => _l('Acheter', 'Buy', 'Comprar');
   String get selectPack =>
       _l('Choisir un pack', 'Select a pack', 'Seleccionar un paquete');
+  // First-purchase offer card on Explore. The French title is the website's
+  // own wording ("20 € offerts sur votre premier forfait").
+  String firstPackOfferTitle(String amount) => _l(
+    '$amount offerts sur votre premier forfait',
+    '$amount free on your first pack',
+    '$amount de regalo en tu primer paquete',
+  );
+  String get firstPackOfferSubtitle => _l(
+    'Crédit ajouté automatiquement à votre portefeuille lors de votre premier achat.',
+    'Added automatically to your wallet with your first purchase.',
+    'Se añade automáticamente a tu monedero con tu primera compra.',
+  );
+  String get firstPackOfferCta =>
+      _l('Voir les forfaits', 'See packs', 'Ver paquetes');
   String get creditReceived =>
       _l('Crédit reçu', 'Credit received', 'Crédito recibido');
   String get amountToPay =>

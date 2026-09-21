@@ -157,10 +157,6 @@ class _ProfessionalDetailScreenState
     );
   }
 
-  void _bookSession(BuildContext context, dynamic pro) {
-    context.push('/appointment-booking/${pro.coId}');
-  }
-
   double? _sessionTypePrice(
     String type,
     Professional pro, {
@@ -549,7 +545,6 @@ class _ProfessionalDetailScreenState
             ),
           ),
         );
-        _bookSession(context, pro);
         return;
       }
 
@@ -1731,17 +1726,6 @@ class _ProfessionalDetailScreenState
                               ),
                             ),
                             const SizedBox(height: 20),
-                          ],
-
-                          // AI guidance is always available and chat-only.
-                          if (!pro.isAssistant) ...[
-                            _ActionButton(
-                              onPressed: () => _bookSession(context, pro),
-                              icon: Icons.calendar_today_rounded,
-                              label: t.bookSession,
-                              isPrimary: true,
-                            ),
-                            const SizedBox(height: 12),
                           ],
 
                           // ── Start Session CTA ──

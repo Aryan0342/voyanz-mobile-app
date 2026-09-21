@@ -17,7 +17,6 @@ import 'package:voyanz/features/chat/screens/chat_groups_screen.dart';
 import 'package:voyanz/features/chat/screens/chat_messages_screen.dart';
 import 'package:voyanz/features/reviews/screens/history_screen.dart';
 import 'package:voyanz/features/reviews/screens/reviews_screen.dart';
-import 'package:voyanz/features/reviews/screens/pricing_screen.dart';
 import 'package:voyanz/features/home/home_screen.dart';
 import 'package:voyanz/features/home/screens/info_screen.dart';
 import 'package:voyanz/features/home/professional_dashboard_screen.dart';
@@ -25,9 +24,6 @@ import 'package:voyanz/features/splash/splash_screen.dart';
 import 'package:voyanz/features/wallet/screens/wallet_screen.dart';
 import 'package:voyanz/features/wallet/screens/topup_screen.dart';
 import 'package:voyanz/features/wallet/screens/payment_success_screen.dart';
-import 'package:voyanz/features/appointments/screens/appointment_booking_screen.dart';
-import 'package:voyanz/features/appointments/screens/customer_appointments_screen.dart';
-import 'package:voyanz/features/appointments/screens/group_calendar_screen.dart';
 
 final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
   return _SafeRouterConfig(
@@ -121,27 +117,12 @@ final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
               builder: (context, state) => const ProfessionalAccountScreen(),
             ),
             GoRoute(
-              path: '/pricing/:coId',
-              builder: (context, state) =>
-                  PricingScreen(coId: state.pathParameters['coId']),
-            ),
-            GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
             ),
-            GoRoute(
-              path: '/appointment-booking/:coId',
-              builder: (context, state) =>
-                  AppointmentBookingScreen(coId: state.pathParameters['coId']!),
-            ),
-            GoRoute(
-              path: '/appointments',
-              builder: (context, state) => const CustomerAppointmentsScreen(),
-            ),
-            GoRoute(
-              path: '/group-calendar',
-              builder: (context, state) => const GroupCalendarScreen(),
-            ),
+            // Club Voyanz (group sessions: calendar, registration, joining) is
+            // web-only: one-to-many services would require Apple IAP, while
+            // Stripe wallet credit is limited to 1-to-1 human consultations.
             GoRoute(
               path: '/wallet',
               builder: (context, state) => const WalletScreen(),

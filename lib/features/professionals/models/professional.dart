@@ -313,7 +313,7 @@ class Professional {
           _readBool(json, ['co_use_chat', 'use_chat']) ?? (priceChat ?? 0) > 0,
       isRecommended:
           _readBool(json, ['co_recommended', 'recommended']) ?? false,
-      isFavorite: _readBool(json, ['co_favorite', 'favorite']) ?? false,
+      isFavorite: _readBool(json, ['isFavorite', 'co_favorite', 'favorite']) ?? false,
       experienceYears: _readExperienceYears(json),
       isVerified: _readBool(json, ['co_profile_verified_at']) ?? false,
       isAvailableNow: availableNow,
@@ -463,7 +463,7 @@ class ProfessionalDetail extends Professional {
       isAvailableNow: availableNow,
       availabilityText: availabilityText,
       isFavorite:
-          Professional._readBool(json, ['co_favorite', 'favorite']) ?? false,
+          Professional._readBool(json, ['isFavorite', 'co_favorite', 'favorite']) ?? false,
       isRecommended:
           Professional._readBool(json, ['co_recommended', 'recommended']) ??
           false,

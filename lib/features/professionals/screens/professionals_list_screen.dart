@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:voyanz/core/config/env.dart';
 import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
@@ -11,6 +12,7 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/l10n/language_switcher.dart';
 
@@ -281,12 +283,6 @@ class _ProfessionalsListScreenState
               onPressed: () => context.push('/favorites'),
               icon: const Icon(Icons.favorite_outline),
             ),
-          if (!widget.favoritesOnly)
-            IconButton(
-              tooltip: t.groupCalendar,
-              onPressed: () => context.push('/group-calendar'),
-              icon: const Icon(Icons.groups_outlined),
-            ),
           const LanguageSwitcherButton(),
           const SizedBox(width: 8),
         ],
@@ -508,6 +504,11 @@ class _ProfessionalsListScreenState
                       ),
                     ),
                   ),
+
+                  // First-purchase gift: below search, before the sections.
+                  // Explore only — never on the Favorites view.
+                  if (!widget.favoritesOnly)
+                    const SliverToBoxAdapter(child: _FirstPackOfferCard()),
 
                   ..._buildProfessionalSections(context, filteredPros, t),
 
@@ -1982,6 +1983,110 @@ class _RevealIn extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+/// "20 € offerts sur votre premier forfait" — the website's first-purchase
+/// block, as a native card. Amount and eligibility come from the pricing packs
+/// ([firstPackOfferProvider]); the CTA opens the in-app top-up flow (Stripe
+/// PaymentSheet), never an external link.
+class _FirstPackOfferCard extends ConsumerWidget {
+  const _FirstPackOfferCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final giftCents = ref.watch(firstPackOfferProvider).valueOrNull;
+    if (giftCents == null) return const SizedBox.shrink();
+
+    final t = ref.watch(translationsProvider);
+    final language = ref.watch(languageProvider);
+    final amount = NumberFormat.currency(
+      locale: language,
+      symbol: '€',
+      decimalDigits: giftCents % 100 == 0 ? 0 : 2,
+    ).format(giftCents / 100);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/wallet/topup'),
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.brandPink.withValues(alpha: 0.22),
+                  AppColors.mediumPurple.withValues(alpha: 0.28),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: AppColors.brandPink.withValues(alpha: 0.55),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.brandPink.withValues(alpha: 0.2),
+                  ),
+                  child: const Icon(
+                    Icons.card_giftcard_rounded,
+                    color: AppColors.rosePink,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.firstPackOfferTitle(amount),
+                        style: GoogleFonts.lora(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t.firstPackOfferSubtitle,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        t.firstPackOfferCta,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.rosePink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.rosePink,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
