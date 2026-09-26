@@ -1505,6 +1505,8 @@ String _capitalizeDay(String s) =>
 
 String _localizedDay(String englishDay, AppTranslations t) {
   switch (englishDay) {
+    case 'Unknown day':
+      return t.unknownDay;
     case 'Monday':
       return t.monday;
     case 'Tuesday':

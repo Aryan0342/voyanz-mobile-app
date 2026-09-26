@@ -6,6 +6,7 @@ import 'package:voyanz/features/auth/data/auth_data_source.dart';
 import 'package:voyanz/features/auth/data/auth_repository.dart';
 import 'package:voyanz/features/auth/models/agency.dart';
 import 'package:voyanz/features/auth/models/user.dart';
+import 'package:voyanz/features/professionals/providers/catalog_items_provider.dart';
 
 final authDataSourceProvider = Provider<AuthDataSource>((ref) {
   return AuthDataSource(ref.watch(dioProvider));
@@ -42,6 +43,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = await AsyncValue.guard(() async {
       final response = await _repo.login(email: email, password: password);
       _ref.read(agencyProvider.notifier).state = response.agency;
+      // Allowed profile values only ever arrive with the login response.
+      _ref
+          .read(catalogItemsProvider.notifier)
+          .save(CatalogItems.fromLogin(response.items));
       await _restartWebSocket();
       return response.user;
     });

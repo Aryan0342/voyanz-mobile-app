@@ -347,6 +347,183 @@ class AppTranslations {
     'Bienvenido/a $name',
   );
   String get settings => _l('Paramètres', 'Settings', 'Ajustes');
+  // ── Professional public profile (contract P1) ───────────────────────────────
+  String get myProfile => _l('Mon profil', 'My profile', 'Mi perfil');
+  String get yourProfile =>
+      _l('Votre profil', 'Your profile', 'Tu perfil');
+  String get displayedName =>
+      _l('Nom affiché', 'Displayed name', 'Nombre mostrado');
+  String get activityStartedLabel => _l(
+    "Début d'activité (calcule vos années d'expérience)",
+    'Activity started on (calculates your years of experience)',
+    'Inicio de actividad (calcula tus años de experiencia)',
+  );
+  String descriptionMinChars(int n) => _l(
+    'Minimum $n caractères pour apparaître au catalogue.',
+    'At least $n characters to appear in the catalogue.',
+    'Mínimo $n caracteres para aparecer en el catálogo.',
+  );
+  String descriptionTooShort(int n) => _l(
+    'La description doit faire au moins $n caractères.',
+    'The description must be at least $n characters long.',
+    'La descripción debe tener al menos $n caracteres.',
+  );
+  String get sessionTypesAndPrices => _l(
+    'Types de consultation et tarifs',
+    'Consultation types and prices',
+    'Tipos de consulta y tarifas',
+  );
+  String get priceGuidance => _l(
+    'Tarif conseillé : 1,50 € à 3,50 € la minute (minimum 0,50 €). Les séances de moins de 45 secondes sont gratuites.',
+    'Suggested rate: €1.50 to €3.50 per minute (minimum €0.50). Sessions under 45 seconds are free.',
+    'Tarifa recomendada: de 1,50 € a 3,50 € por minuto (mínimo 0,50 €). Las sesiones de menos de 45 segundos son gratuitas.',
+  );
+  String categoriesMax(int n) => _l(
+    'Catégories (max. $n)',
+    'Categories (max. $n)',
+    'Categorías (máx. $n)',
+  );
+  String specialitiesMax(int n) => _l(
+    'Spécialités (max. $n)',
+    'Specialities (max. $n)',
+    'Especialidades (máx. $n)',
+  );
+  String get spokenLanguages =>
+      _l('Langues parlées', 'Spoken languages', 'Idiomas hablados');
+  String get catalogUnavailable => _l(
+    'Liste indisponible. Reconnectez-vous pour la recharger.',
+    'List unavailable. Sign in again to reload it.',
+    'Lista no disponible. Vuelve a iniciar sesión para recargarla.',
+  );
+  String get profilePhoto =>
+      _l('Photo de profil', 'Profile photo', 'Foto de perfil');
+  String get choosePhoto =>
+      _l('Choisir une photo', 'Choose a photo', 'Elegir una foto');
+  String get photoUpdated =>
+      _l('Photo mise à jour.', 'Photo updated.', 'Foto actualizada.');
+  String get catalogueChecklist => _l(
+    'Pour apparaître au catalogue',
+    'To appear in the catalogue',
+    'Para aparecer en el catálogo',
+  );
+  String get profileActive => _l(
+    'Votre compte est activé.',
+    'Your account is active.',
+    'Tu cuenta está activada.',
+  );
+  String get profilePendingActivation => _l(
+    "Votre compte doit encore être activé par notre équipe. Complétez les éléments ci-dessous.",
+    'Your account still needs to be activated by our team. Complete the items below.',
+    'Tu cuenta aún debe ser activada por nuestro equipo. Completa los elementos siguientes.',
+  );
+  String get checklistPhoto => _l('Photo de profil', 'Profile photo', 'Foto de perfil');
+  String get checklistDescription =>
+      _l('Description', 'Description', 'Descripción');
+  String get checklistCategories =>
+      _l('Catégories', 'Categories', 'Categorías');
+  String get checklistSpecialities =>
+      _l('Spécialités', 'Specialities', 'Especialidades');
+  String get checklistPrice =>
+      _l('Au moins un tarif', 'At least one price', 'Al menos una tarifa');
+  String get checklistLanguages =>
+      _l('Langues parlées', 'Spoken languages', 'Idiomas hablados');
+
+  // ── Professional CGS gate (contract P3) ─────────────────────────────────────
+  String get cgsUpdatedTitle => _l(
+    'Vos Conditions générales de service ont été mises à jour',
+    'Your Terms of Service have been updated',
+    'Tus Condiciones generales de servicio se han actualizado',
+  );
+  String get cgsUpdatedBody => _l(
+    'Pour continuer à utiliser votre espace professionnel, lisez et acceptez les CGS PRO en vigueur.',
+    'To keep using your professional space, please read and accept the current professional Terms of Service.',
+    'Para seguir usando tu espacio profesional, lee y acepta las Condiciones generales de servicio vigentes.',
+  );
+  String get readCgs =>
+      _l('Lire les CGS à jour', 'Read the current Terms', 'Leer las condiciones');
+  String get cgsAcceptCheckbox => _l(
+    "J'accepte les CGS PRO en vigueur",
+    'I accept the current professional Terms of Service',
+    'Acepto las Condiciones generales de servicio vigentes',
+  );
+  String get cgsValidate => _l(
+    'Valider et accéder à mon espace',
+    'Confirm and open my space',
+    'Validar y acceder a mi espacio',
+  );
+  String get cgsAccepted => _l(
+    'Merci, vos CGS sont à jour.',
+    'Thank you, your Terms are up to date.',
+    'Gracias, tus condiciones están al día.',
+  );
+  String get emailNotVerifiedNotice => _l(
+    'Vérifiez votre adresse e-mail pour continuer. Consultez votre boîte de réception (et les spams).',
+    'Verify your email address to continue. Check your inbox (and spam folder).',
+    'Verifica tu correo electrónico para continuar. Revisa tu bandeja de entrada (y el spam).',
+  );
+  String get smsNotVerifiedNotice => _l(
+    'Vérifiez votre numéro de téléphone pour continuer.',
+    'Verify your phone number to continue.',
+    'Verifica tu número de teléfono para continuar.',
+  );
+
+  // ── Account & security (contracts P4) ───────────────────────────────────────
+  String get accountSecurity =>
+      _l('Compte et sécurité', 'Account & security', 'Cuenta y seguridad');
+  String get accountSecuritySubtitle => _l(
+    'Mot de passe, e-mail, suppression du compte',
+    'Password, email, account deletion',
+    'Contraseña, correo y eliminación de la cuenta',
+  );
+  String get changePassword =>
+      _l('Changer le mot de passe', 'Change password', 'Cambiar la contraseña');
+  String get newPassword =>
+      _l('Nouveau mot de passe', 'New password', 'Nueva contraseña');
+  String get passwordsDoNotMatch => _l(
+    'Les mots de passe ne correspondent pas.',
+    'The passwords do not match.',
+    'Las contraseñas no coinciden.',
+  );
+  String get passwordUpdated => _l(
+    'Mot de passe mis à jour.',
+    'Password updated.',
+    'Contraseña actualizada.',
+  );
+  String get changeEmail =>
+      _l("Changer l'e-mail", 'Change email', 'Cambiar el correo');
+  String get newEmail =>
+      _l('Nouvelle adresse e-mail', 'New email address', 'Nuevo correo electrónico');
+  String get emailUpdated =>
+      _l('E-mail mis à jour.', 'Email updated.', 'Correo actualizado.');
+  String get deleteAccount =>
+      _l('Supprimer mon compte', 'Delete my account', 'Eliminar mi cuenta');
+  String get deleteAccountCustomerWarning => _l(
+    'Votre compte et vos données personnelles seront anonymisés immédiatement. Cette action est définitive.',
+    'Your account and personal data will be anonymised immediately. This cannot be undone.',
+    'Tu cuenta y tus datos personales se anonimizarán de inmediato. Esta acción es definitiva.',
+  );
+  String get deleteAccountProWarning => _l(
+    'Votre profil sera désactivé, mis hors ligne et déconnecté immédiatement. Notre équipe finalise la suppression une fois vos paiements et factures réglés.',
+    'Your profile will be deactivated, set offline and logged out immediately. Our team finalises the deletion once your payouts and invoices are settled.',
+    'Tu perfil se desactivará, se pondrá sin conexión y se cerrará la sesión de inmediato. Nuestro equipo finaliza la eliminación cuando se liquiden tus pagos y facturas.',
+  );
+  String get deleteAccountConfirm => _l(
+    'Supprimer définitivement ?',
+    'Delete permanently?',
+    '¿Eliminar definitivamente?',
+  );
+  String get accountDeleted =>
+      _l('Compte supprimé.', 'Account deleted.', 'Cuenta eliminada.');
+  String get accountDeletionRequested => _l(
+    'Demande de suppression enregistrée. Votre profil est désactivé.',
+    'Deletion request recorded. Your profile is deactivated.',
+    'Solicitud de eliminación registrada. Tu perfil está desactivado.',
+  );
+  String get accountDeletionInSession => _l(
+    'Impossible de supprimer votre compte pendant une session. Terminez la session et réessayez.',
+    'Your account cannot be deleted during a session. End the session and try again.',
+    'No se puede eliminar tu cuenta durante una sesión. Finaliza la sesión e inténtalo de nuevo.',
+  );
   String get editProfile => _l(
     'Modifier le profil',
     'Edit Profile',
@@ -861,6 +1038,32 @@ class AppTranslations {
   );
 
   // Days of week
+  // Professional presence toggle (WEBSOCKET §5 `disponibility_change`).
+  String get goOnline => _l('Passer en ligne', 'Go online', 'Ponerse en línea');
+  String get youAreOnline =>
+      _l('Vous êtes en ligne', 'You are online', 'Estás en línea');
+  String get youAreOffline =>
+      _l('Vous êtes hors ligne', 'You are offline', 'Estás desconectado');
+  String get youAreInSession =>
+      _l('Vous êtes en session', 'You are in session', 'Estás en sesión');
+  String get presenceLockedInSession => _l(
+    'Vous êtes en session. Vous redeviendrez disponible automatiquement à la fin de la séance.',
+    'You are in a session. You will become available again automatically once the session ends.',
+    'Estás en una sesión. Volverás a estar disponible automáticamente cuando termine.',
+  );
+  String get presenceUpdateFailed => _l(
+    'Impossible de changer votre statut. Réessayez.',
+    'Could not change your status. Please try again.',
+    'No se pudo cambiar tu estado. Inténtalo de nuevo.',
+  );
+  String get stripeRequiredToGoOnline => _l(
+    'Terminez la configuration de votre compte Stripe pour passer en ligne.',
+    'Finish setting up your Stripe account to go online.',
+    'Completa la configuración de tu cuenta de Stripe para ponerte en línea.',
+  );
+  String get unknownDay => _l('Jour inconnu', 'Unknown day', 'Día desconocido');
+  /// Short "not available" marker, e.g. an empty rating.
+  String get notAvailableShort => _l('N/D', 'N/A', 'N/D');
   String get monday => _l('Lundi', 'Monday', 'Lunes');
   String get tuesday => _l('Mardi', 'Tuesday', 'Martes');
   String get wednesday => _l('Mercredi', 'Wednesday', 'Miércoles');

@@ -73,6 +73,7 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/reviews')) return 3;
     if (location.startsWith('/favorites') ||
         location.startsWith('/profile') ||
+        location.startsWith('/account-security') ||
         location.startsWith('/support') ||
         location.startsWith('/privacy') ||
         location.startsWith('/about')) {
@@ -87,6 +88,8 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/chat')) return 2;
     if (location.startsWith('/clients')) return 3;
     if (location.startsWith('/profile') ||
+        location.startsWith('/account-security') ||
+        location.startsWith('/professional-profile') ||
         location.startsWith('/professional-account') ||
         location.startsWith('/wallet') ||
         location.startsWith('/support') ||
@@ -625,7 +628,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       icon: Icons.star,
                                       value: avgRating > 0
                                           ? avgRating.toStringAsFixed(1)
-                                          : 'N/A',
+                                          : t.notAvailableShort,
                                       label: t.rating,
                                     ),
                                   ),
@@ -771,6 +774,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       title: t.editProfile,
                       subtitle: t.updateInfo,
                       onTap: () => _showEditProfileDialog(context, ref, user),
+                    ),
+                    if (user?.isProfessional == true) ...[
+                      const SizedBox(height: 10),
+                      // Photo, prices, categories, specialities and languages
+                      // — what the catalogue needs (contract P1).
+                      _ProfileTile(
+                        icon: Icons.badge_outlined,
+                        title: t.myProfile,
+                        subtitle: t.catalogueChecklist,
+                        onTap: () => context.push('/professional-profile'),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    // Account deletion must be reachable in-app (App Store
+                    // guideline 5.1.1(v)).
+                    _ProfileTile(
+                      icon: Icons.lock_outline,
+                      title: t.accountSecurity,
+                      subtitle: t.accountSecuritySubtitle,
+                      onTap: () => context.push('/account-security'),
                     ),
                     if (user?.isProfessional != true) ...[
                       const SizedBox(height: 10),

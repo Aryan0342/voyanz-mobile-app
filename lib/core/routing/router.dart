@@ -5,10 +5,12 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/auth/screens/login_screen.dart';
 import 'package:voyanz/features/auth/screens/forgot_password_screen.dart';
 import 'package:voyanz/features/account/screens/register_screen.dart';
+import 'package:voyanz/features/account/screens/account_security_screen.dart';
 import 'package:voyanz/features/professionals/screens/professionals_list_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_detail_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_availability_screen.dart';
 import 'package:voyanz/features/professionals/screens/professional_account_screen.dart';
+import 'package:voyanz/features/professionals/screens/professional_profile_edit_screen.dart';
 import 'package:voyanz/features/sessions/screens/video_call_screen.dart';
 import 'package:voyanz/features/sessions/screens/phone_session_screen.dart';
 import 'package:voyanz/features/sessions/screens/chat_session_screen.dart';
@@ -115,6 +117,15 @@ final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
             GoRoute(
               path: '/professional-account',
               builder: (context, state) => const ProfessionalAccountScreen(),
+            ),
+            GoRoute(
+              path: '/professional-profile',
+              builder: (context, state) =>
+                  const ProfessionalProfileEditScreen(),
+            ),
+            GoRoute(
+              path: '/account-security',
+              builder: (context, state) => const AccountSecurityScreen(),
             ),
             GoRoute(
               path: '/profile',

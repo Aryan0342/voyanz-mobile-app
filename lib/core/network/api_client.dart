@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/network/account_requirement_interceptor.dart';
 import 'package:voyanz/core/network/auth_interceptor.dart';
 import 'package:voyanz/core/storage/token_storage.dart';
 
@@ -51,6 +52,7 @@ class ApiClient {
       _instance!.interceptors.add(CookieManager(_cookieJar!));
     }
     _instance!.interceptors.add(AuthInterceptor(tokenStorage));
+    _instance!.interceptors.add(AccountRequirementInterceptor());
 
     _logger.i(
       'ApiClient initialized: baseUrl=${EnvConfig.current.baseUrl}, '

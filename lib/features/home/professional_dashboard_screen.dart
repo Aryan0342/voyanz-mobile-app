@@ -15,6 +15,11 @@ import 'package:voyanz/core/l10n/language_switcher.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/sessions/models/session_type.dart';
 import 'package:voyanz/features/sessions/screens/incoming_call_dialog.dart';
+import 'package:voyanz/core/utils/date_utils.dart' as date_utils;
+import 'package:voyanz/core/utils/money.dart';
+import 'package:voyanz/features/professionals/providers/presence_provider.dart';
+import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
+import 'package:voyanz/features/professionals/screens/professional_cgs_gate.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
 class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
@@ -88,6 +93,20 @@ class _ProfessionalDashboardScreenState
       }
     });
 
+    // The server refuses to put a professional online without Stripe payouts
+    // (WEBSOCKET §6 `stripe_required_for_disponibility`).
+    ref.listen(presenceErrorProvider, (previous, next) {
+      if (next == null) return;
+      ref.read(presenceErrorProvider.notifier).state = null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(next.isEmpty ? t.stripeRequiredToGoOnline : next),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    });
+
     // Listen for session started events and navigate directly to the session.
     ref.listen(sessionStartedProvider, (previous, next) {
       if (next == null) return;
@@ -110,9 +129,19 @@ class _ProfessionalDashboardScreenState
             color: AppColors.textPrimary,
           ),
         ),
-        actions: const [LanguageSwitcherButton(), SizedBox(width: 8)],
+        actions: const [
+          _OnlineToggle(),
+          SizedBox(width: 4),
+          LanguageSwitcherButton(),
+          SizedBox(width: 8),
+        ],
       ),
-      body: SafeArea(
+      body: ref.watch(professionalProfileProvider).maybeWhen(
+        data: (profile) =>
+            profile.cgsAccepted ? null : const ProfessionalCgsGate(),
+        orElse: () => null,
+      ) ??
+      SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
@@ -321,11 +350,15 @@ class _ProfessionalDashboardScreenState
                       'call_duration',
                       'timef',
                     ]);
-                    final price = _sessionValue(session, const [
-                      'totalf',
-                      'pricef',
-                      'price',
-                    ]);
+                    // `…f` amounts are French-formatted whatever the
+                    // language (Amaury, 2026-09-21).
+                    final price = localizeServerAmount(
+                      _sessionValue(session, const [
+                        'totalf',
+                        'pricef',
+                        'price',
+                      ]),
+                    );
 
                     final statusColor = rawStatus == 'completed'
                         ? AppColors.success
@@ -992,14 +1025,9 @@ bool _isKnownHistoryStatus(String status) {
 
 String _formatSessionDate(String raw) {
   if (raw.isEmpty) return raw;
-  final normalized = raw.replaceFirst(' ', 'T');
-  final parsed = DateTime.tryParse(normalized);
-  if (parsed == null) return raw;
-  final mm = parsed.month.toString().padLeft(2, '0');
-  final dd = parsed.day.toString().padLeft(2, '0');
-  final hh = parsed.hour.toString().padLeft(2, '0');
-  final min = parsed.minute.toString().padLeft(2, '0');
-  return '${parsed.year}-$mm-$dd $hh:$min';
+  // Backend timestamps are Europe/Paris (API §8): convert to the device
+  // timezone and format in the selected language, like every other list.
+  return date_utils.DateUtils.formatDateTime(raw);
 }
 
 DateTime? _parseSessionDateTime(String raw) {
@@ -1119,6 +1147,84 @@ class _StatCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Online/offline switch for the signed-in professional. Customers can only
+/// start an instant session with a professional the server sees as online
+/// (WEBSOCKET §5 `disponibility_change`).
+class _OnlineToggle extends ConsumerWidget {
+  const _OnlineToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
+    final presence = ref.watch(professionalPresenceProvider);
+    final isOnline = presence == Presence.online;
+    final inSession = presence.isLockedByServer;
+
+    final label = inSession
+        ? t.youAreInSession
+        : isOnline
+        ? t.youAreOnline
+        : t.youAreOffline;
+    final color = inSession
+        ? AppColors.warning
+        : isOnline
+        ? AppColors.online
+        : AppColors.textMuted;
+
+    void explainLock() {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.presenceLockedInSession),
+          backgroundColor: AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.montserrat(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+        // While in session the server owns the status and clears it when the
+        // session ends, so the switch explains instead of fighting it.
+        GestureDetector(
+          onTap: inSession ? explainLock : null,
+          child: Switch(
+            value: isOnline || inSession,
+            activeThumbColor: Colors.white,
+            activeTrackColor: inSession
+                ? AppColors.warning
+                : AppColors.online,
+            onChanged: inSession
+                ? null
+                : (_) async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await toggleProfessionalPresence(ref);
+                    } catch (_) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(t.presenceUpdateFailed),
+                          backgroundColor: AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+          ),
+        ),
+      ],
     );
   }
 }

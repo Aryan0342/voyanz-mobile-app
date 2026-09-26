@@ -1,5 +1,6 @@
 import 'package:voyanz/core/config/mock_backend.dart';
 import 'package:voyanz/features/professionals/data/professional_account_data_source.dart';
+import 'package:voyanz/features/professionals/models/professional_profile.dart';
 
 class ProfessionalAccountRepository {
   final ProfessionalAccountDataSource _ds;
@@ -17,4 +18,8 @@ class ProfessionalAccountRepository {
     }
     return _ds.getAccount();
   }
+
+  Future<ProfessionalProfile> getProfile() => _ds.getProfile();
+
+  Future<void> acceptCgs() => _ds.acceptCgs();
 }

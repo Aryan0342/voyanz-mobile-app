@@ -11,6 +11,10 @@ class User {
   final double? credit;
   final String? siret;
 
+  /// `co_online` for a professional: 1 = online, 0 = offline, 2 = busy.
+  /// Null when the backend did not send it.
+  final int? online;
+
   bool get isProfessional => role == 'professional';
 
   const User({
@@ -23,9 +27,10 @@ class User {
     this.avatar,
     this.credit,
     this.siret,
+    this.online,
   });
 
-  User copyWith({double? credit}) => User(
+  User copyWith({double? credit, int? online}) => User(
         coId: coId,
         email: email,
         firstName: firstName,
@@ -35,6 +40,7 @@ class User {
         avatar: avatar,
         credit: credit ?? this.credit,
         siret: siret,
+        online: online ?? this.online,
       );
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -48,6 +54,7 @@ class User {
 
     return User(
       coId: json['co_id']?.toString() ?? '',
+      online: _toInt(json['co_online'] ?? json['online'] ?? json['is_online']),
       email:
           json['co_email'] as String? ??
           json['co_email1'] as String? ??
@@ -100,6 +107,13 @@ class User {
     return null;
   }
 
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString().trim());
+  }
+
   static double? _toDouble(dynamic raw) {
     if (raw is num) return raw.toDouble();
     final text = raw?.toString() ?? '';
@@ -146,6 +160,11 @@ class LoginResponse {
   final Map<String, dynamic>? preferences;
   final Map<String, dynamic>? i18n;
 
+  /// Allowed values for the professional profile (contract P1). The server
+  /// sends either an object keyed by list name or a flat list of rows, so it
+  /// is kept raw and normalised by `CatalogItems`.
+  final dynamic items;
+
   const LoginResponse({
     required this.user,
     required this.accessToken,
@@ -153,6 +172,7 @@ class LoginResponse {
     this.agency,
     this.preferences,
     this.i18n,
+    this.items,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -165,6 +185,7 @@ class LoginResponse {
           : null,
       preferences: json['preferences'] as Map<String, dynamic>?,
       i18n: json['i18n'] as Map<String, dynamic>?,
+      items: json['items'],
     );
   }
 }

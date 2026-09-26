@@ -10,6 +10,7 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/core/utils/date_utils.dart' as date_utils;
 
 class ReviewsScreen extends ConsumerStatefulWidget {
   final bool isProfessional;
@@ -851,14 +852,8 @@ String _sessionDateLabel(Map<String, dynamic> session) {
           ?.toString() ??
       '';
   if (raw.isEmpty) return '';
-  final normalized = raw.replaceFirst(' ', 'T');
-  final parsed = DateTime.tryParse(normalized);
-  if (parsed == null) return raw;
-  final mm = parsed.month.toString().padLeft(2, '0');
-  final dd = parsed.day.toString().padLeft(2, '0');
-  final hh = parsed.hour.toString().padLeft(2, '0');
-  final min = parsed.minute.toString().padLeft(2, '0');
-  return '${parsed.year}-$mm-$dd $hh:$min';
+  // Europe/Paris in, device timezone and app language out (API §8).
+  return date_utils.DateUtils.formatDateTime(raw);
 }
 
 class _Avatar extends StatelessWidget {
@@ -1188,7 +1183,11 @@ String _reviewSubject(Map<String, dynamic> review) {
 }
 
 String _reviewDate(Map<String, dynamic> review) {
-  return (review['createdAt'] ?? review['re_date'] ?? '').toString();
+  // Europe/Paris in, device timezone and app language out (API §8) — the raw
+  // value reads "2026-08-14 23:14:58".
+  return date_utils.DateUtils.formatDateTime(
+    (review['createdAt'] ?? review['re_date'] ?? '').toString(),
+  );
 }
 
 class _EmptyState extends ConsumerWidget {

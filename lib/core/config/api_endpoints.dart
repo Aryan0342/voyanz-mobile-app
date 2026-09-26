@@ -12,12 +12,20 @@ class ApiEndpoints {
   static String updateAccount(String coId) => '/web/1.0/account/$coId';
   static String updateProDescription(String coId) =>
       '/web/1.0/account/description/$coId';
+  /// DELETE: anonymises a customer immediately; for a professional it opens a
+  /// deletion request and logs them out (contract P4).
+  static String deleteAccount(String coId) => '/web/1.0/account/$coId';
+  static String accountImage(String coId) => '/web/1.0/account/$coId/image';
 
   // ── Professionals ──────────────────────────────────────────────────────
   static const String professionals = '/web/1.0/professionals';
   static String professionalInfos(String coId) =>
       '/web/1.0/professional/$coId/infos';
   static const String professionalAccount = '/web/1.0/professional/account';
+  /// Everything the professional edit screen needs, readable before
+  /// activation and before CGS acceptance (contract P1).
+  static const String professionalProfile = '/web/1.0/professional/profile';
+  static const String acceptCgs = '/web/1.0/professional/accept-cgs';
   static String professionalFavorite(String coId) =>
       '/web/1.0/professional/favorite/$coId';
   static const String professionalDisponibilities =

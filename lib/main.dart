@@ -15,6 +15,10 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_realtime_provider.dart';
 import 'package:voyanz/features/sessions/providers/sessions_realtime_provider.dart';
+import 'package:voyanz/features/professionals/providers/presence_provider.dart';
+import 'package:voyanz/core/network/account_requirement_interceptor.dart';
+import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +46,9 @@ class VoyanzApp extends ConsumerStatefulWidget {
   ConsumerState<VoyanzApp> createState() => _VoyanzAppState();
 }
 
+/// Lets the API layer surface account requirements from anywhere.
+final rootMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 class _VoyanzAppState extends ConsumerState<VoyanzApp>
     with WidgetsBindingObserver {
   /// The account whose data the providers currently hold.
@@ -51,6 +58,30 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The backend answers with err.key instead of an HTML redirect when an
+    // account still needs something (contract P3).
+    AccountRequirementInterceptor.onRequirement = (requirement, message) {
+      if (!mounted) return;
+      if (requirement == AccountRequirement.cgsAcceptance) {
+        // The professional space swaps itself for the acceptance screen.
+        ref.invalidate(professionalProfileProvider);
+        return;
+      }
+      final t = ref.read(translationsProvider);
+      final text = (message != null && message.trim().isNotEmpty)
+          ? message
+          : requirement == AccountRequirement.emailNotVerified
+          ? t.emailNotVerifiedNotice
+          : t.smsNotVerifiedNotice;
+      rootMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(text),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    };
     if (widget.initializeStripe) {
       _initStripe();
     }
@@ -85,6 +116,7 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
       unawaited(ws.connect());
       ref.read(chatRealtimeProvider);
       ref.read(sessionsRealtimeProvider);
+      ref.read(presenceRealtimeProvider);
     }
   }
 
@@ -114,16 +146,19 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
         // Ensure chat realtime listeners are registered while logged in
         ref.read(chatRealtimeProvider);
         ref.read(sessionsRealtimeProvider);
+        ref.read(presenceRealtimeProvider);
       } else if (next.valueOrNull == null && previous?.valueOrNull != null) {
         // User just logged out
         ref.read(webSocketServiceProvider).disconnect();
         // Dispose chat realtime listeners
         ref.invalidate(chatRealtimeProvider);
         ref.invalidate(sessionsRealtimeProvider);
+        ref.invalidate(presenceRealtimeProvider);
       }
     });
 
     return MaterialApp.router(
+      scaffoldMessengerKey: rootMessengerKey,
       title: 'Voyanz',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,

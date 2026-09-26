@@ -6,6 +6,7 @@ import 'package:voyanz/features/professionals/providers/professionals_provider.d
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
+import 'package:voyanz/features/professionals/providers/presence_provider.dart';
 
 /// Drops every piece of state that belongs to the signed-in user.
 ///
@@ -26,6 +27,10 @@ void resetUserScopedState(WidgetRef ref) {
   ref.invalidate(favoriteProfessionalsProvider);
   ref.invalidate(aiAssistantsProvider);
   ref.invalidate(professionalDetailProvider);
+
+  // Presence (the professional's own online switch).
+  ref.invalidate(professionalPresenceProvider);
+  ref.invalidate(presenceErrorProvider);
 
   // Professional-side data.
   ref.invalidate(professionalDisponibilitiesProvider);
