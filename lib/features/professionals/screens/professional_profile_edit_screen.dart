@@ -12,6 +12,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/utils/string_utils.dart';
 import 'package:voyanz/features/professionals/models/professional_profile.dart';
 import 'package:voyanz/features/professionals/providers/catalog_items_provider.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
@@ -567,15 +568,39 @@ class _ChipSection extends StatelessWidget {
     return _Section(
       title: title,
       children: [
-        if (items.isEmpty)
+        // With no catalog there is nothing to choose from, but the values
+        // already on the profile are still sent back untouched when the
+        // professional saves, so show them read-only rather than leaving the
+        // section looking empty.
+        if (items.isEmpty) ...[
           Text(
             emptyHint,
             style: GoogleFonts.montserrat(
               fontSize: 12,
               color: AppColors.textMuted,
             ),
-          )
-        else
+          ),
+          if (selected.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: selected.map((key) {
+                return Chip(
+                  label: Text(humanizeSlug(key)),
+                  backgroundColor: AppColors.surfaceElevated,
+                  labelStyle: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                  side: BorderSide(
+                    color: AppColors.textMuted.withValues(alpha: 0.35),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ] else
           Wrap(
             spacing: 8,
             runSpacing: 8,

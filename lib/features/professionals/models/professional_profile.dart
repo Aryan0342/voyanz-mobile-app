@@ -21,6 +21,12 @@ class ProfessionalProfile {
 
   final bool hasPhoto;
   final bool active;
+
+  /// Raw `co_online` (0 unavailable, 1 available, 2 in session). This is the
+  /// only endpoint that reports it: neither the login payload nor
+  /// `GET /user/infos` carries it, so the dashboard switch has to be seeded
+  /// from here or it always starts on "offline".
+  final int? online;
   final bool cgsAccepted;
   final bool stripePayoutsEnabled;
 
@@ -42,6 +48,7 @@ class ProfessionalProfile {
     this.specialities = const [],
     this.hasPhoto = false,
     this.active = false,
+    this.online,
     this.cgsAccepted = true,
     this.stripePayoutsEnabled = false,
     this.completion = const {},
@@ -73,6 +80,7 @@ class ProfessionalProfile {
       specialities: _list(data, ['co_specialities', 'specialities']),
       hasPhoto: _bool(data, ['has_photo', 'co_has_photo']),
       active: _bool(data, ['co_active', 'active']),
+      online: _intOrNull(data, ['co_online', 'online']),
       cgsAccepted: _bool(data, ['cgs_accepted']),
       stripePayoutsEnabled: _bool(data, [
         'stripe_payouts_enabled',
@@ -80,6 +88,20 @@ class ProfessionalProfile {
       ]),
       completion: _completion(data['completion'] ?? data['checklist']),
     );
+  }
+
+  /// Distinguishes "the server said 0" from "the server did not say", so a
+  /// missing field never claims the professional is offline.
+  static int? _intOrNull(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value == null) continue;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      final parsed = int.tryParse(value.toString().trim());
+      if (parsed != null) return parsed;
+    }
+    return null;
   }
 
   static String _str(Map<String, dynamic> json, List<String> keys) {

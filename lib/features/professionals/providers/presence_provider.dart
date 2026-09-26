@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 
 /// A professional's availability, as the backend models it in `co_online`
@@ -21,9 +22,18 @@ enum Presence {
   bool get isLockedByServer => this == Presence.inSession;
 }
 
-/// Availability of the signed-in professional, seeded from `co_online` in
-/// `GET /web/1.0/user/infos` and kept current by `disponibility_changed`.
+/// Availability of the signed-in professional, seeded from `co_online` and
+/// kept current by `disponibility_changed`.
+///
+/// The seed has to come from `GET /web/1.0/professional/profile`: observed on
+/// 2026-09-26, neither the login response nor `GET /web/1.0/user/infos`
+/// returns `co_online`, so reading it from the session user pinned the switch
+/// to "offline" while the server had the professional available — the first
+/// tap then took them offline instead of online. The session user stays as a
+/// fallback in case the field is added there later.
 final professionalPresenceProvider = StateProvider<Presence>((ref) {
+  final fromProfile = ref.watch(professionalProfileProvider).valueOrNull?.online;
+  if (fromProfile != null) return Presence.fromCode(fromProfile);
   return Presence.fromCode(ref.watch(authStateProvider).valueOrNull?.online);
 });
 

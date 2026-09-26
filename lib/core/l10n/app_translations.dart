@@ -390,10 +390,12 @@ class AppTranslations {
   );
   String get spokenLanguages =>
       _l('Langues parlées', 'Spoken languages', 'Idiomas hablados');
+  // Signing in again cannot help: the login response carries no `items`
+  // payload today, so the choices simply are not available to the app yet.
   String get catalogUnavailable => _l(
-    'Liste indisponible. Reconnectez-vous pour la recharger.',
-    'List unavailable. Sign in again to reload it.',
-    'Lista no disponible. Vuelve a iniciar sesión para recargarla.',
+    'Liste pas encore disponible. Vos choix actuels sont conservés.',
+    'This list is not available yet. Your current choices are kept.',
+    'Esta lista aún no está disponible. Se conservan tus selecciones actuales.',
   );
   String get profilePhoto =>
       _l('Photo de profil', 'Profile photo', 'Foto de perfil');

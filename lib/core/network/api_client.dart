@@ -61,18 +61,49 @@ class ApiClient {
       'mockBackend=$kUseMockBackend',
     );
 
-    // Keep logs light in mock mode to avoid noisy output and extra work.
-    if (!kUseMockBackend) {
+    // Debug builds only: a release build must never write request bodies to
+    // the device log, because the login body carries the plain-text password
+    // and the response carries the access and refresh tokens. Even in debug
+    // the known secrets are masked, so a shared log or a bug report cannot
+    // leak a usable credential.
+    if (!kUseMockBackend && kDebugMode) {
       _instance!.interceptors.add(
         LogInterceptor(
           requestBody: true,
           responseBody: true,
-          logPrint: (obj) => debugPrint('[DIO] $obj'),
+          logPrint: (obj) => debugPrint('[DIO] ${_redactSecrets('$obj')}'),
         ),
       );
     }
 
     return _instance!;
+  }
+
+  @visibleForTesting
+  static String redactForTesting(String line) => _redactSecrets(line);
+
+  /// Masks credentials in a log line: passwords, bearer tokens and the
+  /// access/refresh tokens the login response returns.
+  static String _redactSecrets(String line) {
+    // `replaceAll` inserts `$1` literally -- only `replaceAllMapped` expands a
+    // group -- so the prefix is carried over from the match itself.
+    String mask(String input, RegExp pattern) =>
+        input.replaceAllMapped(pattern, (m) => '${m[1]}<redacted>');
+
+    var out = mask(
+      line,
+      RegExp(r'(password\w*"?\s*[:=]\s*"?)([^",}\s]+)', caseSensitive: false),
+    );
+    out = mask(
+      out,
+      RegExp(
+        r'((?:access|refresh)token"?\s*[:=]\s*"?)([^",}\s]+)',
+        caseSensitive: false,
+      ),
+    );
+    out = mask(out, RegExp(r'(Bearer\s+)(\S+)', caseSensitive: false));
+    out = mask(out, RegExp(r'(cooktoken=)([^;\s]+)', caseSensitive: false));
+    return out;
   }
 
   static void _sanitizeExistingClient(Dio dio) {
