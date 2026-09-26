@@ -1689,6 +1689,45 @@ class AppTranslations {
   String get french => _l('Français', 'French', 'Francés');
   String get spanish => _l('Espagnol', 'Spanish', 'Español');
 
+  /// Localised name for an ISO 639-1 code as stored in `co_languages`.
+  ///
+  /// The catalogue and the professional profile both hand out bare codes, so
+  /// showing them raw put "fr" in front of the customer in every language.
+  /// An unknown code falls back to its own capitalisation rather than being
+  /// hidden, because a professional really does speak it.
+  String languageLabel(String code) {
+    switch (code.trim().toLowerCase()) {
+      case 'fr':
+        return french;
+      case 'en':
+        return english;
+      case 'es':
+        return spanish;
+      case 'ar':
+        return _l('Arabe', 'Arabic', 'Árabe');
+      case 'de':
+        return _l('Allemand', 'German', 'Alemán');
+      case 'it':
+        return _l('Italien', 'Italian', 'Italiano');
+      case 'pt':
+        return _l('Portugais', 'Portuguese', 'Português');
+      case 'nl':
+        return _l('Néerlandais', 'Dutch', 'Neerlandés');
+      case 'ru':
+        return _l('Russe', 'Russian', 'Ruso');
+      case 'zh':
+        return _l('Chinois', 'Chinese', 'Chino');
+      case 'tr':
+        return _l('Turc', 'Turkish', 'Turco');
+      case 'pl':
+        return _l('Polonais', 'Polish', 'Polaco');
+      default:
+        final trimmed = code.trim();
+        if (trimmed.isEmpty) return trimmed;
+        return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
+    }
+  }
+
   // ── Profile / About dialogs ──────────────────────────────────────────────────
   String get privacyPolicy => _l(
     'Politique de confidentialité',

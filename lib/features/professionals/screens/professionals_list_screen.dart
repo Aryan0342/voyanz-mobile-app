@@ -1049,7 +1049,7 @@ class _FilterPanel extends ConsumerWidget {
                     children: const ['All', '0-5', '5-10', '10-15', '15+']
                         .map(
                           (value) => ChoiceChip(
-                            label: Text(value),
+                            label: Text(value == 'All' ? t.all : value),
                             selected: selectedExperience == value,
                             onSelected: (_) => onExperienceChanged(value),
                           ),
@@ -1065,7 +1065,7 @@ class _FilterPanel extends ConsumerWidget {
                     children: const ['All', '<2', '2-3', '3-4', '4+']
                         .map(
                           (value) => ChoiceChip(
-                            label: Text(value),
+                            label: Text(value == 'All' ? t.all : value),
                             selected: selectedPrice == value,
                             onSelected: (_) => onPriceChanged(value),
                           ),
@@ -1105,7 +1105,7 @@ class _FilterPanel extends ConsumerWidget {
                           .take(8)
                           .map(
                             (value) => ChoiceChip(
-                              label: Text(value),
+                              label: Text(value == 'All' ? t.all : t.languageLabel(value)),
                               selected: selectedLanguage == value,
                               onSelected: (_) => onLanguageChanged(value),
                             ),

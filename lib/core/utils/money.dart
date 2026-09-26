@@ -34,3 +34,19 @@ String localizeServerAmount(String formatted) {
   final value = double.tryParse(numeric);
   return value == null ? text : formatEuros(value);
 }
+
+/// The decimal separator of the selected language: `,` in French and Spanish,
+/// `.` in English.
+String decimalSeparator() =>
+    NumberFormat.decimalPatternDigits(
+      locale: Intl.defaultLocale,
+      decimalDigits: 2,
+    ).symbols.DECIMAL_SEP;
+
+/// A plain amount for an editable price field — no currency symbol, but the
+/// separator the language uses, so a Spanish professional is not shown `2.50`
+/// while every price elsewhere in the app reads `2,50 €`.
+///
+/// Parsing accepts either separator, so an edited value still round-trips.
+String formatAmountForInput(num amount) =>
+    amount.toStringAsFixed(2).replaceAll('.', decimalSeparator());

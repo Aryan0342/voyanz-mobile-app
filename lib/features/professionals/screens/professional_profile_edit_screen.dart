@@ -12,6 +12,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/utils/money.dart';
 import 'package:voyanz/core/utils/string_utils.dart';
 import 'package:voyanz/features/professionals/models/professional_profile.dart';
 import 'package:voyanz/features/professionals/providers/catalog_items_provider.dart';
@@ -82,7 +83,7 @@ class _ProfessionalProfileEditScreenState
   }
 
   String _euros(int cents) =>
-      cents <= 0 ? '' : (cents / 100).toStringAsFixed(2);
+      cents <= 0 ? '' : formatAmountForInput(cents / 100);
 
   /// Prices go out in euros per minute; the server stores cents (P1).
   double? _priceOf(TextEditingController ctrl) {
@@ -318,6 +319,7 @@ class _ProfessionalProfileEditScreenState
                   selected: _languages,
                   onTap: (key) => _toggle(_languages, key, 99),
                   emptyHint: t.catalogUnavailable,
+                  isLanguages: true,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -548,12 +550,15 @@ class _PriceRow extends StatelessWidget {
   }
 }
 
-class _ChipSection extends StatelessWidget {
+class _ChipSection extends ConsumerWidget {
   final String title;
   final List<CatalogItem> items;
   final Set<String> selected;
   final ValueChanged<String> onTap;
   final String emptyHint;
+
+  /// Language codes need their localised name; the other lists are slugs.
+  final bool isLanguages;
 
   const _ChipSection({
     required this.title,
@@ -561,10 +566,12 @@ class _ChipSection extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.emptyHint,
+    this.isLanguages = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(translationsProvider);
     return _Section(
       title: title,
       children: [
@@ -587,7 +594,7 @@ class _ChipSection extends StatelessWidget {
               runSpacing: 8,
               children: selected.map((key) {
                 return Chip(
-                  label: Text(humanizeSlug(key)),
+                  label: Text(isLanguages ? t.languageLabel(key) : humanizeSlug(key)),
                   backgroundColor: AppColors.surfaceElevated,
                   labelStyle: GoogleFonts.montserrat(
                     fontSize: 12,
