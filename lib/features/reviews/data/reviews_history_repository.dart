@@ -179,6 +179,26 @@ class ReviewsHistoryRepository {
     return _ds.getProfessionalReviews();
   }
 
+  Future<Map<String, dynamic>> getProfessionalReviewsRaw() =>
+      _ds.getProfessionalReviewsRaw();
+
+  /// A professional's review of one of their clients (contract §11.1).
+  ///
+  /// `rv_ispro` marks the direction. No `rv_note`: a star rating only applies
+  /// to a customer reviewing a professional, and the website sends none here.
+  Future<void> postProfessionalReview({
+    required String coIdProfessional,
+    required String coIdCustomer,
+    required String text,
+  }) {
+    return postReview({
+      'co_id_professional': coIdProfessional,
+      'co_id_customer': coIdCustomer,
+      'rv_ispro': 1,
+      'rv_text': text,
+    });
+  }
+
   Future<void> postReview(Map<String, dynamic> body) async {
     if (kUseMockBackend) {
       await Future<void>.delayed(const Duration(milliseconds: 250));

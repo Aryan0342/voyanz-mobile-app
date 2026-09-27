@@ -7,6 +7,8 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
+import 'package:voyanz/features/professionals/widgets/availability_rule_dialog.dart';
 
 class ProfessionalAvailabilityScreen extends ConsumerStatefulWidget {
   const ProfessionalAvailabilityScreen({super.key});
@@ -23,195 +25,27 @@ class _ProfessionalAvailabilityScreenState
 
   Future<void> _showAddSlotDialog() => _showSlotDialog();
 
-  Future<void> _showSlotDialog({
-    String? diId,
-    String? day,
-    String? startTime,
-    String? endTime,
-  }) async {
+  Future<void> _showSlotDialog({String? diId, AvailabilityRule? initial}) async {
     final t = ref.read(translationsProvider);
-    final dayCtrl = TextEditingController(text: day ?? 'Monday');
-    final timeCtrl = TextEditingController(text: startTime ?? '');
-    final timeEndCtrl = TextEditingController(text: endTime ?? '');
-    final formKey = GlobalKey<FormState>();
 
-    String selectedDay = day ?? 'Monday';
-    const days = <String>[
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-
-    final shouldSubmit = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: AppColors.surfaceCard,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-                decoration: const BoxDecoration(
-                  gradient: AppGradients.accent,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: Icon(
-                        diId == null
-                            ? Icons.add_alarm_rounded
-                            : Icons.edit_calendar_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        diId == null ? t.addAvailabilitySlot : t.editSlot,
-                        style: GoogleFonts.jost(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedDay,
-                      decoration: InputDecoration(labelText: t.day),
-                      items: days
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => DropdownMenuItem(
-                              value: entry.value,
-                              child: Text(t.days[entry.key]),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        if (v == null) return;
-                        setDialogState(() => selectedDay = v);
-                        dayCtrl.text = v;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: timeCtrl,
-                      decoration: InputDecoration(
-                        labelText: t.startTime,
-                        hintText: t.startTimeHint,
-                        prefixIcon: const Icon(
-                          Icons.wb_twilight_rounded,
-                          size: 20,
-                        ),
-                      ),
-                      validator: (v) {
-                        final value = (v ?? '').trim();
-                        if (value.isEmpty) return t.startTimeRequired;
-                        final ok = RegExp(
-                          r'^([01]\d|2[0-3]):[0-5]\d$',
-                        ).hasMatch(value);
-                        if (!ok) return t.use24hFormat;
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: timeEndCtrl,
-                      decoration: InputDecoration(
-                        labelText: t.endTime,
-                        hintText: t.endTimeHint,
-                        prefixIcon: const Icon(
-                          Icons.dark_mode_rounded,
-                          size: 20,
-                        ),
-                      ),
-                      validator: (v) {
-                        final value = (v ?? '').trim();
-                        if (value.isEmpty) return null; // optional
-                        final ok = RegExp(
-                          r'^([01]\d|2[0-3]):[0-5]\d$',
-                        ).hasMatch(value);
-                        if (!ok) return t.use24hFormat;
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actionsPadding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(t.cancel),
-                ),
-                GradientButton(
-                  onPressed: () {
-                    if (!formKey.currentState!.validate()) return;
-                    Navigator.pop(ctx, true);
-                  },
-                  height: 46,
-                  width: 130,
-                  child: Text(t.save),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (shouldSubmit != true) return;
+    // The editor owns its own state and controllers (contract §10.4): the rule
+    // can be available or blocking, weekly / over a period / a single date,
+    // cover several weekdays, and apply to one session type or all of them.
+    final rule = await showAvailabilityRuleDialog(context, initial: initial);
+    if (rule == null || !mounted) return;
 
     setState(() => _submitting = true);
     try {
-      final startTime = timeCtrl.text.trim();
-      final endTime = timeEndCtrl.text.trim().isEmpty
-          ? startTime
-          : timeEndCtrl.text.trim();
-      final weekday = _toBackendWeekday(selectedDay);
-      final nextDate = _nextDateForWeekday(weekday);
-      final dateWindow = _formatDate(nextDate);
-      final payload = {
-        'di_days': [weekday],
-        'di_what': 'days',
-        'di_how': ['period'],
-        'di_date_from': dateWindow,
-        'di_date_to': dateWindow,
-        'di_hour_from': startTime,
-        'di_hour_to': endTime,
-        'di_include': true,
-      };
+      final payload = rule.toPayload();
 
       if (diId != null) {
         await ref
             .read(professionalsRepositoryProvider)
             .updateDisponibility(diId, payload);
         ref.invalidate(professionalDisponibilitiesPayloadProvider);
+      // §10.4 side effect: saving a rule makes the server recalculate
+      // co_online straight away, so the dashboard switch must be resynced.
+      ref.invalidate(professionalProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -224,21 +58,16 @@ class _ProfessionalAvailabilityScreenState
           .read(professionalsRepositoryProvider)
           .createDisponibility(payload);
 
+      // Show it straight away; the entry is dropped once the same rule comes
+      // back from the server.
       if (mounted) {
-        setState(() {
-          _pendingCreatedItems.add({
-            'di_days': [weekday],
-            'di_what': 'days',
-            'di_how': ['period'],
-            'di_date_from': dateWindow,
-            'di_date_to': dateWindow,
-            'di_hour_from': startTime,
-            'di_hour_to': endTime,
-          });
-        });
+        setState(() => _pendingCreatedItems.add(Map<String, dynamic>.from(payload)));
       }
 
       ref.invalidate(professionalDisponibilitiesPayloadProvider);
+      // §10.4 side effect: saving a rule makes the server recalculate
+      // co_online straight away, so the dashboard switch must be resynced.
+      ref.invalidate(professionalProfileProvider);
       final refreshed = await ref.read(
         professionalDisponibilitiesPayloadProvider.future,
       );
@@ -274,9 +103,6 @@ class _ProfessionalAvailabilityScreenState
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
-      dayCtrl.dispose();
-      timeCtrl.dispose();
-      timeEndCtrl.dispose();
     }
   }
 
@@ -294,11 +120,20 @@ class _ProfessionalAvailabilityScreenState
         ? ''
         : start;
 
+    // Seed the editor from the rule as it stands, so editing keeps whatever
+    // the professional chose rather than resetting to a weekly default.
     _showSlotDialog(
       diId: diId,
-      day: day,
-      startTime: start,
-      endTime: range.length > 1 ? end : '',
+      initial: AvailabilityRule(
+        include: slot.include,
+        what: slot.what.isEmpty ? 'days' : slot.what,
+        days: slot.days.isEmpty ? [_toBackendWeekday(day)] : slot.days,
+        how: slot.how.isEmpty ? const ['period'] : slot.how,
+        dateFrom: slot.dateFrom,
+        dateTo: slot.dateTo,
+        hourFrom: start,
+        hourTo: range.length > 1 ? end : start,
+      ),
     );
   }
 
@@ -385,6 +220,9 @@ class _ProfessionalAvailabilityScreenState
     try {
       await ref.read(professionalsRepositoryProvider).deleteDisponibility(diId);
       ref.invalidate(professionalDisponibilitiesPayloadProvider);
+      // §10.4 side effect: saving a rule makes the server recalculate
+      // co_online straight away, so the dashboard switch must be resynced.
+      ref.invalidate(professionalProfileProvider);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -940,16 +778,54 @@ class _SlotRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.access_time_rounded, color: accent, size: 18),
+          // A rule with `di_include: false` blocks these hours rather than
+          // offering them, so it must not read like an available slot.
+          Icon(
+            slot.include
+                ? Icons.access_time_rounded
+                : Icons.block_rounded,
+            color: slot.include ? accent : AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              slot.timeLabel,
-              style: GoogleFonts.manrope(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  slot.timeLabel,
+                  style: GoogleFonts.manrope(
+                    color: slot.include
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    decoration: slot.include
+                        ? null
+                        : TextDecoration.lineThrough,
+                  ),
+                ),
+                if (!slot.include)
+                  Text(
+                    t.unavailableLabel,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: AppColors.error,
+                    ),
+                  )
+                else if (slot.channels.isNotEmpty &&
+                    !slot.channels.contains('period'))
+                  Text(
+                    slot.channels
+                        .map((c) => _channelLabel(c, t))
+                        .join(' · '),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+              ],
             ),
           ),
           if (slot.diId != null) ...[
@@ -1159,11 +1035,54 @@ class _AvailabilitySlot {
   final List<String> channels;
   final String? diId;
 
+  // The rest of the rule (contract §10.4), carried so the editor can be
+  // seeded with what the professional actually chose. Defaults keep the
+  // legacy construction sites, which only ever knew a time label, working.
+  final bool include;
+  final String what;
+  final List<int> days;
+  final List<String> how;
+  final String dateFrom;
+  final String dateTo;
+
   const _AvailabilitySlot({
     required this.timeLabel,
     required this.channels,
     this.diId,
+    this.include = true,
+    this.what = '',
+    this.days = const [],
+    this.how = const [],
+    this.dateFrom = '',
+    this.dateTo = '',
   });
+}
+
+/// Names a `di_how` channel for the slot list.
+String _channelLabel(String raw, dynamic t) {
+  switch (raw.trim().toLowerCase()) {
+    case 'phone':
+    case 'audio':
+      return t.phoneCall;
+    case 'chat':
+      return t.textChat;
+    case 'video':
+      return t.videoCall;
+    default:
+      return raw;
+  }
+}
+
+/// `di_how` arrives as a list, occasionally as a single string.
+List<String> _extractHowValues(dynamic raw) {
+  if (raw is List) {
+    return raw
+        .map((e) => e.toString().trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+  final text = raw?.toString().trim().toLowerCase() ?? '';
+  return text.isEmpty ? const [] : [text];
 }
 
 List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
@@ -1194,8 +1113,19 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
             slots: [
               _AvailabilitySlot(
                 timeLabel: timeLabel,
-                channels: const [],
+                channels: _extractHowValues(item['di_how']),
                 diId: diId,
+                include: item['di_include'] != false &&
+                    item['di_include'] != 0 &&
+                    item['di_include'] != '0',
+                what: item['di_what']?.toString() ?? '',
+                days: diDays
+                    .map((d) => int.tryParse(d.toString()) ?? 0)
+                    .where((d) => d >= 1 && d <= 7)
+                    .toList(),
+                how: _extractHowValues(item['di_how']),
+                dateFrom: item['di_date_from']?.toString().split(' ').first ?? '',
+                dateTo: item['di_date_to']?.toString().split(' ').first ?? '',
               ),
             ],
           ),
@@ -1416,19 +1346,7 @@ String _formatDayTitle(String rawDay, AppTranslations t) {
   return '$weekday  $dd/$mm/${date.year}';
 }
 
-DateTime _nextDateForWeekday(int weekday) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final delta = (weekday - today.weekday + 7) % 7;
-  return today.add(Duration(days: delta));
-}
 
-String _formatDate(DateTime date) {
-  final y = date.year.toString().padLeft(4, '0');
-  final m = date.month.toString().padLeft(2, '0');
-  final d = date.day.toString().padLeft(2, '0');
-  return '$y-$m-$d';
-}
 
 int _toBackendWeekday(String englishDay) {
   const map = {

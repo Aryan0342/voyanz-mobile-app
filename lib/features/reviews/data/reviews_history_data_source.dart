@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:voyanz/core/config/api_endpoints.dart';
+import 'package:voyanz/features/reviews/data/review_sanitizer.dart';
 
 final _logger = Logger();
 
@@ -62,6 +63,23 @@ class ReviewsHistoryDataSource {
       _logger.e('Error fetching professional reviews: $e');
       rethrow;
     }
+  }
+
+  /// The professional reviews payload untouched, so callers can read the
+  /// sibling lists (`mycustomers`, `reviewspro`) that `_parseReviewsResponse`
+  /// drops when it returns only the received reviews.
+  Future<Map<String, dynamic>> getProfessionalReviewsRaw() async {
+    final response = await _dio.get(ApiEndpoints.professionalReviews);
+    final body = response.data;
+    if (body is! Map<String, dynamic>) return <String, dynamic>{};
+    // `mycustomers` is only `{key, value}` pairs, but the review arrays carry
+    // the embedded account records, so strip those before anything holds them.
+    final out = <String, dynamic>{...body};
+    for (final key in const ['reviews', 'reviewspro']) {
+      final list = out[key];
+      if (list is List) out[key] = sanitizeReviews(list);
+    }
+    return out;
   }
 
   Future<void> postReview(Map<String, dynamic> body) async {
@@ -174,28 +192,26 @@ class ReviewsHistoryDataSource {
     try {
       if (responseData == null) return [];
 
-      // Direct list response
+      // Every path is sanitised: the server embeds the reviewer's whole
+      // account record, credentials included (see review_sanitizer.dart).
       if (responseData is List) {
-        return responseData;
+        return sanitizeReviews(responseData);
       }
 
-      // Map with 'data' key
       if (responseData is Map<String, dynamic>) {
         for (final key in const ['reviews', 'reviewspro', 'histories']) {
           final list = responseData[key];
-          if (list is List) return list;
+          if (list is List) return sanitizeReviews(list);
         }
 
         final data = responseData['data'];
 
-        // If data is already a list, return it
         if (data is List) {
-          return data;
+          return sanitizeReviews(data);
         }
 
-        // If data is a map (single item), wrap it in a list
         if (data is Map<String, dynamic>) {
-          return [data];
+          return sanitizeReviews([data]);
         }
       }
 

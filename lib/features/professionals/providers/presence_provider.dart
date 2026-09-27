@@ -97,7 +97,14 @@ final presenceRealtimeProvider = Provider<void>((ref) {
   }
 
   void onStripeRequired(Map<String, dynamic> event) {
-    ref.read(professionalPresenceProvider.notifier).state = Presence.offline;
+    // P2: this one action covers both refusals -- Stripe payouts not enabled,
+    // and the professional already being in a session (`co_online = 2`). So it
+    // must not claim "offline": a professional refused mid-session is at 2,
+    // not 0. Re-read the profile and let the server say what the state is.
+    final current = ref.read(professionalPresenceProvider);
+    if (!current.isLockedByServer) {
+      ref.invalidate(professionalProfileProvider);
+    }
     final data = event['data'];
     final nested = data is Map<String, dynamic> ? data : const {};
     final message = (event['message'] ?? nested['message'])?.toString();

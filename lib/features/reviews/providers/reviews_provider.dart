@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/providers.dart';
 import 'package:voyanz/features/reviews/data/reviews_history_data_source.dart';
 import 'package:voyanz/features/reviews/data/reviews_history_repository.dart';
+import 'package:voyanz/features/reviews/models/review_client.dart';
 
 final reviewsHistoryDataSourceProvider = Provider<ReviewsHistoryDataSource>((
   ref,
@@ -29,6 +30,28 @@ final customerReviewsProvider = FutureProvider<List<dynamic>>((ref) async {
 
 final professionalReviewsProvider = FutureProvider<List<dynamic>>((ref) async {
   return ref.watch(reviewsHistoryRepositoryProvider).getProfessionalReviews();
+});
+
+/// The clients a professional may review, from `mycustomers` on the same
+/// endpoint that lists their reviews (contract §11.1).
+///
+/// Fetched only while the composer is open, hence `autoDispose`.
+final proReviewClientsProvider =
+    FutureProvider.autoDispose<List<ReviewClient>>((ref) async {
+      final body = await ref
+          .watch(reviewsHistoryRepositoryProvider)
+          .getProfessionalReviewsRaw();
+      return ReviewClient.listFrom(body);
+    });
+
+/// The reviews a professional has written about their clients (`reviewspro`).
+final proWrittenReviewsProvider = FutureProvider<List<dynamic>>((ref) async {
+  final body = await ref
+      .watch(reviewsHistoryRepositoryProvider)
+      .getProfessionalReviewsRaw();
+  final root = body['data'] is Map ? body['data'] as Map : body;
+  final list = root['reviewspro'];
+  return list is List ? list : const [];
 });
 
 final customerPricingProvider = FutureProvider<Map<String, dynamic>>((

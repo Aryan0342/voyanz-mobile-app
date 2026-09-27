@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:voyanz/core/config/api_endpoints.dart';
 import 'package:voyanz/features/auth/models/user.dart';
+import 'package:voyanz/core/network/api_exception.dart';
 
 class AuthDataSource {
   final Dio _dio;
@@ -108,11 +109,17 @@ class AuthDataSource {
 
     if (err is Map) {
       final errBody = _asMap(err);
+      final key = errBody['key']?.toString();
+      final rawCode = errBody['code'];
       final message =
-          errBody['message']?.toString() ??
-          errBody['key']?.toString() ??
-          'API error';
-      throw Exception(message);
+          errBody['message']?.toString() ?? key ?? 'API error';
+      // Carry the key: the message is the server's prose, in French, and
+      // matching on it breaks whenever the wording changes.
+      throw ApiException(
+        message,
+        key: key,
+        code: rawCode is int ? rawCode : int.tryParse('$rawCode'),
+      );
     }
 
     throw Exception(err.toString());

@@ -18,6 +18,20 @@ class AccountDataSource {
   }
 
   /// PUT /web/1.0/account/:co_id
+  /// GET /web/1.0/user/infos — the stored account record, which is what the
+  /// account form edits. The login response omits several of these fields.
+  Future<Map<String, dynamic>> getUserInfos() async {
+    final response = await _dio.get(ApiEndpoints.userInfos);
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      _throwIfApiError(body);
+      final data = body['data'];
+      if (data is Map<String, dynamic>) return data;
+      return body;
+    }
+    return {};
+  }
+
   Future<Map<String, dynamic>> updateAccount({
     required String coId,
     required Map<String, dynamic> body,

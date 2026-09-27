@@ -157,6 +157,21 @@ class _ProfessionalProfileEditScreenState
       return _toast(t.descriptionTooShort(_minDescription), error: true);
     }
 
+    // P1: anything under 0.50 €/min is silently raised to 0.50 server-side, so
+    // an enabled session type left blank would quietly start selling at 50
+    // cents a minute. Make the professional set it.
+    final missingPrice = <String>[
+      if (_usePhone && (_priceOf(_phonePriceCtrl) ?? 0) < 0.50) t.phoneCall,
+      if (_useVideo && (_priceOf(_videoPriceCtrl) ?? 0) < 0.50) t.videoCall,
+      if (_useChat && (_priceOf(_chatPriceCtrl) ?? 0) < 0.50) t.textChat,
+    ];
+    if (missingPrice.isNotEmpty) {
+      return _toast(
+        t.priceRequiredForType(missingPrice.join(', ')),
+        error: true,
+      );
+    }
+
     setState(() => _saving = true);
     try {
       // Every field, every time: the server replaces the whole profile.
@@ -369,7 +384,8 @@ class _ProfessionalProfileEditScreenState
         'specialities',
         profile.specialities.isNotEmpty,
       ),
-      t.checklistPrice: done('price', profile.hasAnyPrice),
+      // The server's key is `rates`, not `price` (P1a).
+      t.checklistPrice: done('rates', profile.hasAnyPrice),
       t.checklistLanguages: done('languages', profile.languages.isNotEmpty),
     };
     // Show the server's score so the professional sees the same number as the

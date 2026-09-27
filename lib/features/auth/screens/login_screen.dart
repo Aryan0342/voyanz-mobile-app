@@ -10,6 +10,7 @@ import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/core/theme/voyanz_brand_logo.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/network/api_exception.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -63,9 +64,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   String _friendlyLoginError(Object? error, AppTranslations t) {
+    // Match `err.key`, not the server's prose: the message is French and
+    // rewording it upstream would silently break every check below (§8.1).
+    if (error is ApiException) {
+      switch (error.key) {
+        // §8.1 asks for one generic message so neither field is revealed.
+        case 'not_found_user':
+        case 'wrong_password':
+          return t.invalidLoginCredentials;
+        case 'account_pending_approval':
+          return t.accountPendingApproval;
+        case 'user_not_active':
+          return t.accountDisabled;
+        case 'email_not_verified':
+          return t.emailNotVerifiedNotice;
+        case 'sms_not_verified':
+          return t.smsNotVerifiedNotice;
+      }
+    }
+
     final message = error.toString();
     final normalized = message.toLowerCase();
 
+    // Kept as a fallback for older builds that still throw a plain Exception.
     if (normalized.contains('mauvais mot de passe') ||
         normalized.contains('mot de passe incorrect') ||
         normalized.contains('wrong password') ||

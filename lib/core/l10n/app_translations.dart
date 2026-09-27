@@ -406,6 +406,155 @@ class AppTranslations {
     'Número guardado. Debe verificarse por SMS de nuevo: hasta entonces tu perfil no aparece en el catálogo.',
   );
 
+  // ── Professional reviewing a client (contract §11.1, rv_ispro) ────────
+  String get reviewAClient =>
+      _l('Évaluer un client', 'Review a client', 'Valorar a un cliente');
+  String get chooseClient => _l(
+    'Choisir un client',
+    'Choose a client',
+    'Elegir un cliente',
+  );
+  String get clientRequired => _l(
+    'Choisissez un client.',
+    'Choose a client.',
+    'Elige un cliente.',
+  );
+  String get yourCommentRequired => _l(
+    'Saisissez un commentaire.',
+    'Enter a comment.',
+    'Escribe un comentario.',
+  );
+  String get noClientsToReview => _l(
+    "Vous n'avez pas encore de client à évaluer.",
+    'You have no client to review yet.',
+    'Aún no tienes ningún cliente que valorar.',
+  );
+  String get reviewsYouWrote => _l(
+    'Vos évaluations de clients',
+    'Your reviews of clients',
+    'Tus valoraciones de clientes',
+  );
+
+  // ── My account (identity, legal and contact details) ─────────────────
+  String get myAccount => _l('Mon compte', 'My account', 'Mi cuenta');
+  String get myAccountSubtitle => _l(
+    'Identité, coordonnées et informations légales',
+    'Identity, contact and legal details',
+    'Identidad, contacto y datos legales',
+  );
+  String get identitySection => _l('Identité', 'Identity', 'Identidad');
+  String get contactSection => _l('Coordonnées', 'Contact', 'Contacto');
+  String get legalSection =>
+      _l('Informations légales', 'Legal details', 'Datos legales');
+  String get addressSection => _l('Adresse', 'Address', 'Dirección');
+  String get gender => _l('Civilité', 'Gender', 'Género');
+  String get individualStructure => _l(
+    'Indépendant / Auto-entrepreneur',
+    'Self-employed / Freelance',
+    'Autónomo / Freelance',
+  );
+  String get companyStructure => _l(
+    'Société (SARL, SAS…)',
+    'Company (SARL, SAS…)',
+    'Empresa (SARL, SAS…)',
+  );
+  String get iban => _l('IBAN', 'IBAN', 'IBAN');
+  String get ibanHint => _l(
+    'Les virements passent par Stripe ; ce champ est conservé pour votre dossier.',
+    'Payouts go through Stripe; this field is kept for your records.',
+    'Los pagos se realizan por Stripe; este campo se guarda para tu registro.',
+  );
+  String get addressLine1 => _l('Adresse', 'Address', 'Dirección');
+  String get addressLine2 => _l(
+    "Complément d'adresse",
+    'Address line 2',
+    'Dirección línea 2',
+  );
+  String get postalCode => _l('Code postal', 'Postal code', 'Código postal');
+  String get cityLabel => _l('Ville', 'City', 'Ciudad');
+  String get accountUpdated => _l(
+    'Compte mis à jour.',
+    'Account updated.',
+    'Cuenta actualizada.',
+  );
+  // ── Availability rules (contract §10.4) ─────────────────────────
+  String get availabilityRule =>
+      _l('Règle de disponibilité', 'Availability rule', 'Regla de disponibilidad');
+  String get availableLabel =>
+      _l('Disponible', 'Available', 'Disponible');
+  String get unavailableLabel =>
+      _l('Indisponible', 'Unavailable', 'No disponible');
+  String get unavailableHint => _l(
+    'Bloque ces heures, par exemple pour des vacances.',
+    'Blocks these hours, for a holiday for instance.',
+    'Bloquea estas horas, por ejemplo para vacaciones.',
+  );
+  String get repeatLabel => _l('Répétition', 'Repeat', 'Repetición');
+  String get repeatWeekly =>
+      _l('Chaque semaine', 'Every week', 'Cada semana');
+  String get repeatPeriod =>
+      _l('Sur une période', 'Over a period', 'Durante un periodo');
+  String get repeatSingleDate =>
+      _l('Une seule date', 'A single date', 'Una sola fecha');
+  String get selectDays =>
+      _l('Jours', 'Days', 'Días');
+  String get selectDaysRequired => _l(
+    'Choisissez au moins un jour.',
+    'Choose at least one day.',
+    'Elige al menos un día.',
+  );
+  String get dateFrom => _l('Du', 'From', 'Desde');
+  String get dateTo => _l('Au', 'To', 'Hasta');
+  String get theDate => _l('Date', 'Date', 'Fecha');
+  String get channelsLabel =>
+      _l('Types de consultation', 'Session types', 'Tipos de consulta');
+  String get allChannels =>
+      _l('Tous', 'All', 'Todos');
+  String get endBeforeStart => _l(
+    "L'heure de fin doit suivre l'heure de début.",
+    'The end time must come after the start time.',
+    'La hora de fin debe ser posterior a la de inicio.',
+  );
+  String get dateToBeforeFrom => _l(
+    'La date de fin doit suivre la date de début.',
+    'The end date must come after the start date.',
+    'La fecha de fin debe ser posterior a la de inicio.',
+  );
+
+  /// `GET /web/1.0/user/infos` returns only a subset of the account record
+  /// (verified 2026-09-28), so most of these fields cannot be prefilled.
+  String get accountPartialLoadNotice => _l(
+    "Le serveur ne renvoie pas encore tous ces champs : ceux que vous ne modifiez pas restent inchangés.",
+    'The server does not return all of these fields yet: anything you leave untouched is not changed.',
+    'El servidor aún no devuelve todos estos campos: lo que no modifiques no se cambia.',
+  );
+  String get nothingToSave => _l(
+    'Aucune modification.',
+    'Nothing to save.',
+    'No hay cambios.',
+  );
+
+  /// P1: the server silently raises anything under 0.50 €/min to 0.50, so an
+  /// enabled session type left blank would quietly start selling at 50 cents.
+  String priceRequiredForType(String type) => _l(
+    "Indiquez un tarif d'au moins 0,50 €/min pour : $type.",
+    'Set a rate of at least €0.50/min for: $type.',
+    'Indica una tarifa de al menos 0,50 €/min para: $type.',
+  );
+
+  /// A professional is created with `co_active = 0` and activated by hand by
+  /// the Voyanz team; until then login answers `account_pending_approval`.
+  String get accountPendingApproval => _l(
+    "Votre compte est en cours de validation par l'équipe Voyanz. Vous recevrez un e-mail dès qu'il est activé.",
+    'Your account is being reviewed by the Voyanz team. You will get an email as soon as it is activated.',
+    'Tu cuenta está siendo revisada por el equipo de Voyanz. Recibirás un correo en cuanto se active.',
+  );
+  String get accountDisabled => _l(
+    'Ce compte est désactivé. Contactez le support.',
+    'This account is disabled. Please contact support.',
+    'Esta cuenta está desactivada. Contacta con soporte.',
+  );
+
   String get profilePhoto =>
       _l('Photo de profil', 'Profile photo', 'Foto de perfil');
   String get choosePhoto =>

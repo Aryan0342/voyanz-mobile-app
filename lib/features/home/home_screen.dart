@@ -7,8 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
-import 'package:voyanz/features/account/data/account_repository.dart';
-import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
@@ -281,148 +279,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
   }
 
-  Future<void> _showEditProfileDialog(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic user,
-  ) async {
-    final t = ref.read(translationsProvider);
-    final firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
-    final lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
-    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
-    final siretCtrl = TextEditingController(text: user?.siret ?? '');
-    final descCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceCard,
-        title: Text(
-          t.editProfile,
-          style: GoogleFonts.jost(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: firstNameCtrl,
-                  decoration: InputDecoration(labelText: t.firstName),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? t.required : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: lastNameCtrl,
-                  decoration: InputDecoration(labelText: t.lastName),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: phoneCtrl,
-                  decoration: InputDecoration(labelText: t.mobile),
-                  keyboardType: TextInputType.phone,
-                ),
-                if (user?.isProfessional == true) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: siretCtrl,
-                    decoration: InputDecoration(labelText: t.siretNumber),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: descCtrl,
-                    decoration: InputDecoration(
-                      labelText: t.descriptionOptional,
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(ctx).pop(true);
-              }
-            },
-            child: Text(t.saveChanges),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldSave != true ||
-        user?.coId == null ||
-        user.coId.toString().isEmpty) {
-      return;
-    }
-
-    final previousPhone = (user?.phone ?? '').toString().trim();
-    final newPhone = phoneCtrl.text.trim();
-
-    try {
-      final response = await ref
-          .read(accountRepositoryProvider)
-          .updateAccount(user.coId, {
-            'co_firstname': firstNameCtrl.text.trim(),
-            'co_name': lastNameCtrl.text.trim(),
-            'co_mobile1': newPhone,
-            if (user.isProfessional == true && siretCtrl.text.trim().isNotEmpty)
-              'co_siret': siretCtrl.text.trim(),
-          });
-      // P4: changing a professional's mobile requires SMS verification again,
-      // and until it is done the profile is absent from the catalogue. The
-      // response is the only place the server says so.
-      final needsReverification =
-          mobileReverificationRequired(response) && newPhone != previousPhone;
-
-      if (user.isProfessional == true && descCtrl.text.trim().isNotEmpty) {
-        await ref.read(accountRepositoryProvider).updateProDescription(
-          user.coId,
-          {'co_description': descCtrl.text.trim()},
-        );
-      }
-
-      await ref.read(authStateProvider.notifier).fetchUser();
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            needsReverification
-                ? t.mobileReverificationNeeded
-                : t.profileUpdated,
-          ),
-          backgroundColor: needsReverification
-              ? AppColors.warning
-              : AppColors.online,
-          duration: Duration(seconds: needsReverification ? 8 : 4),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.profileUpdateFailed('Please try again.')),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -787,11 +643,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
+                    // Identity, contact and legal details. This replaced an
+                    // "Edit profile" dialog that wrote the same description
+                    // as the professional profile screen and edited the name
+                    // as co_firstname/co_name while that screen wrote
+                    // co_fullname, so the two could disagree. The website
+                    // draws the same line between "My Account" and "My
+                    // Description".
                     _ProfileTile(
                       icon: Icons.person_outline,
-                      title: t.editProfile,
-                      subtitle: t.updateInfo,
-                      onTap: () => _showEditProfileDialog(context, ref, user),
+                      title: t.myAccount,
+                      subtitle: t.myAccountSubtitle,
+                      onTap: () => context.push('/my-account'),
                     ),
                     if (user?.isProfessional == true) ...[
                       const SizedBox(height: 10),

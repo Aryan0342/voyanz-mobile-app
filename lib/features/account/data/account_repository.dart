@@ -8,6 +8,8 @@ class AccountRepository {
   Future<Map<String, dynamic>> createAccount(Map<String, dynamic> body) =>
       _ds.createAccount(body: body);
 
+  Future<Map<String, dynamic>> getUserInfos() => _ds.getUserInfos();
+
   Future<Map<String, dynamic>> updateAccount(
     String coId,
     Map<String, dynamic> body,

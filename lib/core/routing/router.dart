@@ -26,6 +26,7 @@ import 'package:voyanz/features/splash/splash_screen.dart';
 import 'package:voyanz/features/wallet/screens/wallet_screen.dart';
 import 'package:voyanz/features/wallet/screens/topup_screen.dart';
 import 'package:voyanz/features/wallet/screens/payment_success_screen.dart';
+import 'package:voyanz/features/account/screens/my_account_screen.dart';
 
 final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
   return _SafeRouterConfig(
@@ -131,6 +132,10 @@ final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
               path: '/professional-profile',
               builder: (context, state) =>
                   const ProfessionalProfileEditScreen(),
+            ),
+            GoRoute(
+              path: '/my-account',
+              builder: (context, state) => const MyAccountScreen(),
             ),
             GoRoute(
               path: '/account-security',

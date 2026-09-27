@@ -11,6 +11,7 @@ import 'package:voyanz/features/professionals/models/professional.dart';
 import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
 import 'package:voyanz/core/utils/date_utils.dart' as date_utils;
+import 'package:voyanz/features/reviews/widgets/pro_review_composer.dart';
 
 class ReviewsScreen extends ConsumerStatefulWidget {
   final bool isProfessional;
@@ -423,6 +424,19 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
     );
 
     return GradientScaffold(
+      // A professional can review a client too (contract §11.1,
+      // `rv_ispro: 1`), which the website offers on this same page.
+      floatingActionButton: widget.isProfessional
+          ? FloatingActionButton.extended(
+              onPressed: () => showProReviewComposer(context, ref),
+              backgroundColor: AppColors.brandPink,
+              icon: const Icon(Icons.rate_review_outlined),
+              label: Text(
+                t.reviewAClient,
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: reviewsAsync.when(
           loading: () => const Center(
