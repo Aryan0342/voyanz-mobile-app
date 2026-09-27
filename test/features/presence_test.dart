@@ -88,4 +88,58 @@ void main() {
       expect(profile.online, 0);
     });
   });
+
+  // The server sends `completion: { score, missing, isComplete, isMinimal }`.
+  // It was being coerced to a map of bools, which turned score 64 into `false`
+  // and dropped `missing` entirely, so the app scored the profile itself and
+  // showed a different figure from the website.
+  group('ProfessionalProfile.completion', () {
+    // Captured from GET /web/1.0/professional/profile, 2026-09-27.
+    ProfessionalProfile parse(Map<String, dynamic> completion) =>
+        ProfessionalProfile.fromJson({
+          'data': {'co_id': 139, 'completion': completion},
+        });
+
+    test('keeps the score as a number', () {
+      final profile = parse(const {
+        'score': 64,
+        'missing': ['photo', 'description'],
+        'isComplete': false,
+        'isMinimal': false,
+      });
+      expect(profile.completionScore, 64);
+      expect(profile.completionIsComplete, isFalse);
+    });
+
+    test('keeps the missing keys', () {
+      final profile = parse(const {
+        'score': 64,
+        'missing': ['photo', 'description'],
+      });
+      expect(profile.completionMissing, ['photo', 'description']);
+      expect(profile.isMissing('photo'), isTrue);
+      expect(profile.isMissing('tools'), isFalse);
+      expect(profile.hasServerCompletion, isTrue);
+    });
+
+    test('a complete profile reports nothing missing', () {
+      final profile = parse(const {
+        'score': 100,
+        'missing': [],
+        'isComplete': true,
+      });
+      expect(profile.completionScore, 100);
+      expect(profile.completionIsComplete, isTrue);
+      expect(profile.isMissing('photo'), isFalse);
+    });
+
+    test('no completion block leaves the app to score it itself', () {
+      final profile = ProfessionalProfile.fromJson(const {
+        'data': {'co_id': 139},
+      });
+      expect(profile.completionScore, isNull);
+      expect(profile.completionMissing, isEmpty);
+      expect(profile.hasServerCompletion, isFalse);
+    });
+  });
 }

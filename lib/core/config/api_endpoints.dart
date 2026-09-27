@@ -65,6 +65,12 @@ class ApiEndpoints {
   static const String registration = '/web/1.0/registration';
   static const String publicVideoSessions = '/web/1.0/public/video-sessions';
 
+  // ── Catalogue (contract P1c) ─────────────────────────────────────
+  /// Allowed tools, specialities and languages. Called at sign-in and on
+  /// session restore, because a restored session never replays the login
+  /// response that also carries them.
+  static const String items = '/web/1.0/items';
+
   // ── Wallet / Payment ──────────────────────────────────────────────────
   static const String stripePaymentIntent = '/stripe/payment-intent';
   static const String checkBalance = '/web/1.0/check-balance';

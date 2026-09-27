@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
+import 'package:voyanz/features/professionals/providers/cgs_provider.dart';
 
 /// Shown in place of the professional space while the updated professional
 /// CGS have not been accepted (contract P3), the same way voyanz.com blocks
@@ -26,6 +27,8 @@ class _ProfessionalCgsGateState extends ConsumerState<ProfessionalCgsGate> {
     setState(() => _submitting = true);
     try {
       await ref.read(professionalAccountRepositoryProvider).acceptCgs();
+      // Clear the refusal that opened this gate, then reload the profile.
+      ref.read(cgsRequiredProvider.notifier).state = false;
       ref.invalidate(professionalProfileProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

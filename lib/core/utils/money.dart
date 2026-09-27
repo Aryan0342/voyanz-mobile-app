@@ -50,3 +50,29 @@ String decimalSeparator() =>
 /// Parsing accepts either separator, so an edited value still round-trips.
 String formatAmountForInput(num amount) =>
     amount.toStringAsFixed(2).replaceAll('.', decimalSeparator());
+
+/// A session or history amount, preferring the raw integer cents the API sends
+/// (`total`, `price`, `co_price_*`) over its French-only `…f` string.
+///
+/// Amaury confirmed (2026-09-27) that raw cents accompany the formatted
+/// strings, and they are the ones to use: reformatting the French string means
+/// parsing prose, which loses the thousands separator on large amounts.
+/// [centsKeys] are tried in order, then [formattedKeys] as a fallback.
+String amountFromApi(
+  Map<String, dynamic> row, {
+  required List<String> centsKeys,
+  required List<String> formattedKeys,
+}) {
+  for (final key in centsKeys) {
+    final value = row[key];
+    if (value == null) continue;
+    if (value is num) return formatCents(value.round());
+    final parsed = int.tryParse(value.toString().trim());
+    if (parsed != null) return formatCents(parsed);
+  }
+  for (final key in formattedKeys) {
+    final text = row[key]?.toString().trim() ?? '';
+    if (text.isNotEmpty) return localizeServerAmount(text);
+  }
+  return '';
+}

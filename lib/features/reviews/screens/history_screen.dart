@@ -47,8 +47,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             .toString()
             .trim();
     final type = (item['type'] ?? '').toString().trim().toLowerCase();
-    final price = localizeServerAmount(
-      (item['pricef'] ?? item['price'] ?? '').toString(),
+    final price = amountFromApi(
+      item,
+      centsKeys: const ['total', 'price'],
+      formattedKeys: const ['totalf', 'pricef'],
     );
     final isEnded = item['is_ended'] == true || item['ended'] == true;
     final recordings = item['recording'];

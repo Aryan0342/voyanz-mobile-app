@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:voyanz/core/config/env.dart';
+import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
@@ -351,15 +352,31 @@ class _ProfessionalProfileEditScreenState
   }
 
   Widget _completionCard(dynamic t, ProfessionalProfile profile) {
+    // A row is done when the profile has the value AND the server has not
+    // listed it as missing: the server applies rules the app cannot see, such
+    // as the minimum description length.
+    bool done(String serverKey, bool local) =>
+        local && !profile.isMissing(serverKey);
+
     final checks = <String, bool>{
-      t.checklistPhoto: profile.hasPhoto,
-      t.checklistDescription: profile.description.length >= _minDescription,
-      t.checklistCategories: profile.tools.isNotEmpty,
-      t.checklistSpecialities: profile.specialities.isNotEmpty,
-      t.checklistPrice: profile.hasAnyPrice,
-      t.checklistLanguages: profile.languages.isNotEmpty,
+      t.checklistPhoto: done('photo', profile.hasPhoto),
+      t.checklistDescription: done(
+        'description',
+        profile.description.length >= _minDescription,
+      ),
+      t.checklistCategories: done('tools', profile.tools.isNotEmpty),
+      t.checklistSpecialities: done(
+        'specialities',
+        profile.specialities.isNotEmpty,
+      ),
+      t.checklistPrice: done('price', profile.hasAnyPrice),
+      t.checklistLanguages: done('languages', profile.languages.isNotEmpty),
     };
-    final done = checks.values.where((v) => v).length;
+    // Show the server's score so the professional sees the same number as the
+    // website; fall back to the rows only when the server sends none.
+    final progress = profile.completionScore != null
+        ? (profile.completionScore! / 100).clamp(0.0, 1.0)
+        : checks.values.where((v) => v).length / checks.length;
 
     return _Section(
       title: t.catalogueChecklist,
@@ -374,7 +391,7 @@ class _ProfessionalProfileEditScreenState
         ),
         const SizedBox(height: 12),
         LinearProgressIndicator(
-          value: done / checks.length,
+          value: progress,
           backgroundColor: AppColors.surfaceElevated,
           color: AppColors.brandPink,
         ),
@@ -569,9 +586,19 @@ class _ChipSection extends ConsumerWidget {
     this.isLanguages = false,
   });
 
+  /// The chip text. Languages are named from their ISO code rather than the
+  /// server label, because that translation is wrong for German: `li_key` "de"
+  /// comes back labelled "From" in English and "De" in French and Spanish
+  /// (observed 2026-09-27), while `li_val` correctly says "Allemand".
+  String _labelOf(CatalogItem item, AppTranslations t, String language) {
+    if (isLanguages) return t.languageLabel(item.key);
+    return item.labelFor(language);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
+    final language = ref.watch(languageProvider);
     return _Section(
       title: title,
       children: [
@@ -594,7 +621,9 @@ class _ChipSection extends ConsumerWidget {
               runSpacing: 8,
               children: selected.map((key) {
                 return Chip(
-                  label: Text(isLanguages ? t.languageLabel(key) : humanizeSlug(key)),
+                  label: Text(
+                    isLanguages ? t.languageLabel(key) : humanizeSlug(key),
+                  ),
                   backgroundColor: AppColors.surfaceElevated,
                   labelStyle: GoogleFonts.montserrat(
                     fontSize: 12,
@@ -614,7 +643,7 @@ class _ChipSection extends ConsumerWidget {
             children: items.map((item) {
               final isSelected = selected.contains(item.key);
               return FilterChip(
-                label: Text(item.label),
+                label: Text(_labelOf(item, t, language)),
                 selected: isSelected,
                 onSelected: (_) => onTap(item.key),
                 backgroundColor: AppColors.surfaceElevated,

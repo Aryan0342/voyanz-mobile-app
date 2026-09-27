@@ -20,6 +20,7 @@ import 'package:voyanz/core/utils/money.dart';
 import 'package:voyanz/features/professionals/providers/presence_provider.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 import 'package:voyanz/features/professionals/screens/professional_cgs_gate.dart';
+import 'package:voyanz/features/professionals/providers/cgs_provider.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
 class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
@@ -138,7 +139,9 @@ class _ProfessionalDashboardScreenState
       ),
       body: ref.watch(professionalProfileProvider).maybeWhen(
         data: (profile) =>
-            profile.cgsAccepted ? null : const ProfessionalCgsGate(),
+            (profile.cgsAccepted && !ref.watch(cgsRequiredProvider))
+                ? null
+                : const ProfessionalCgsGate(),
         orElse: () => null,
       ) ??
       SafeArea(
@@ -350,14 +353,12 @@ class _ProfessionalDashboardScreenState
                       'call_duration',
                       'timef',
                     ]);
-                    // `…f` amounts are French-formatted whatever the
-                    // language (Amaury, 2026-09-21).
-                    final price = localizeServerAmount(
-                      _sessionValue(session, const [
-                        'totalf',
-                        'pricef',
-                        'price',
-                      ]),
+                    // Raw cents where the API sends them; the `…f` strings
+                    // are French whatever the language (Amaury, 2026-09-27).
+                    final price = amountFromApi(
+                      session,
+                      centsKeys: const ['total', 'price'],
+                      formattedKeys: const ['totalf', 'pricef'],
                     );
 
                     final statusColor = rawStatus == 'completed'

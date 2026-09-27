@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:voyanz/core/network/auth_interceptor.dart';
 import 'package:voyanz/core/providers.dart';
@@ -43,10 +44,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = await AsyncValue.guard(() async {
       final response = await _repo.login(email: email, password: password);
       _ref.read(agencyProvider.notifier).state = response.agency;
-      // Allowed profile values only ever arrive with the login response.
-      _ref
-          .read(catalogItemsProvider.notifier)
-          .save(CatalogItems.fromLogin(response.items));
+      // The login response may carry `items`; either way the catalogue is
+      // fetched from its own endpoint, which is the source to rely on
+      // (contract P1c).
+      final catalog = _ref.read(catalogItemsProvider.notifier);
+      await catalog.save(CatalogItems.fromLogin(response.items));
+      unawaited(catalog.refresh());
       await _restartWebSocket();
       return response.user;
     });
@@ -112,6 +115,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       state = const AsyncValue.loading();
       final user = await _repo.getUserInfos();
       state = AsyncValue.data(user);
+      // A restored session never replays the login response, so this is the
+      // only chance to load the catalogue (contract P1c).
+      unawaited(_ref.read(catalogItemsProvider.notifier).refresh());
       await _restartWebSocket();
       return true;
     } catch (_) {

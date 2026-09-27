@@ -18,6 +18,7 @@ import 'package:voyanz/features/sessions/providers/sessions_realtime_provider.da
 import 'package:voyanz/features/professionals/providers/presence_provider.dart';
 import 'package:voyanz/core/network/account_requirement_interceptor.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
+import 'package:voyanz/features/professionals/providers/cgs_provider.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 
 void main() async {
@@ -63,7 +64,10 @@ class _VoyanzAppState extends ConsumerState<VoyanzApp>
     AccountRequirementInterceptor.onRequirement = (requirement, message) {
       if (!mounted) return;
       if (requirement == AccountRequirement.cgsAcceptance) {
-        // The professional space swaps itself for the acceptance screen.
+        // The professional space swaps itself for the acceptance screen. The
+        // refusal is the trigger, not the profile's `cgs_accepted` flag, which
+        // has been seen to disagree with it.
+        ref.read(cgsRequiredProvider.notifier).state = true;
         ref.invalidate(professionalProfileProvider);
         return;
       }

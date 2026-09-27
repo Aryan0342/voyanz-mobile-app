@@ -30,8 +30,17 @@ class ProfessionalProfile {
   final bool cgsAccepted;
   final bool stripePayoutsEnabled;
 
-  /// The same checklist the website dashboard shows, when the server sends it.
-  final Map<String, bool> completion;
+  /// The server's own catalogue score out of 100, as the website shows it.
+  /// Null when the server omits `completion`.
+  final int? completionScore;
+
+  /// The `completion.missing` keys: `photo`, `description`, `tools`,
+  /// `specialities`. The server applies rules the app cannot see (the minimum
+  /// description length among them), so a key listed here is incomplete even
+  /// when the field looks filled in.
+  final List<String> completionMissing;
+
+  final bool completionIsComplete;
 
   const ProfessionalProfile({
     this.fullName = '',
@@ -51,7 +60,9 @@ class ProfessionalProfile {
     this.online,
     this.cgsAccepted = true,
     this.stripePayoutsEnabled = false,
-    this.completion = const {},
+    this.completionScore,
+    this.completionMissing = const [],
+    this.completionIsComplete = false,
   });
 
   bool get hasAnyPrice =>
@@ -86,7 +97,16 @@ class ProfessionalProfile {
         'stripe_payouts_enabled',
         'payouts_enabled',
       ]),
-      completion: _completion(data['completion'] ?? data['checklist']),
+      completionScore: _intOrNull(
+        _completionMap(data) ?? const {},
+        const ['score'],
+      ),
+      completionMissing: _list(_completionMap(data) ?? const {}, const [
+        'missing',
+      ]),
+      completionIsComplete: _bool(_completionMap(data) ?? const {}, const [
+        'isComplete',
+      ]),
     );
   }
 
@@ -160,11 +180,18 @@ class ProfessionalProfile {
     return const [];
   }
 
-  static Map<String, bool> _completion(dynamic raw) {
-    if (raw is! Map) return const {};
-    return {
-      for (final entry in raw.entries)
-        entry.key.toString(): entry.value == true || entry.value == 1,
-    };
+  static Map<String, dynamic>? _completionMap(Map<String, dynamic> data) {
+    final raw = data['completion'] ?? data['checklist'];
+    if (raw is Map) {
+      return raw.map((key, value) => MapEntry(key.toString(), value));
+    }
+    return null;
   }
+
+  /// True when the server listed [key] as missing.
+  bool isMissing(String key) => completionMissing.contains(key);
+
+  /// Whether the server reported a checklist at all.
+  bool get hasServerCompletion =>
+      completionScore != null || completionMissing.isNotEmpty;
 }

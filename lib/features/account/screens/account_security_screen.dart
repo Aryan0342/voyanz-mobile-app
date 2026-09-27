@@ -7,6 +7,7 @@ import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
+import 'package:voyanz/core/network/api_exception.dart';
 
 /// Password, email and account deletion (contracts P4).
 ///
@@ -151,13 +152,11 @@ class _AccountSecurityScreenState extends ConsumerState<AccountSecurityScreen> {
       if (!mounted) return;
       context.go('/login');
     } catch (e) {
-      final message = _clean(e);
-      _toast(
-        message.contains('account_deletion_in_session')
-            ? t.accountDeletionInSession
-            : message,
-        error: true,
-      );
+      // Match the key and code, never the prose: `err.message` is translated
+      // server-side and reworded (contract P2, code 1074).
+      final inSession =
+          e is ApiException && e.matches('account_deletion_in_session', 1074);
+      _toast(inSession ? t.accountDeletionInSession : _clean(e), error: true);
     } finally {
       if (mounted) setState(() => _deleting = false);
     }

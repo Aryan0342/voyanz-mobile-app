@@ -5,6 +5,7 @@ import 'package:voyanz/core/providers/websocket_provider.dart';
 import 'package:voyanz/core/utils/money.dart';
 
 void main() {
+  _amountFromApi();
   _priceFieldSeparator();
   setUpAll(() async => initializeDateFormatting());
   tearDown(() => Intl.defaultLocale = null);
@@ -97,6 +98,79 @@ void _priceFieldSeparator() {
         final parsed = double.tryParse(shown.replaceAll(',', '.'));
         expect(parsed, 2.5, reason: 'locale $locale showed "$shown"');
       }
+    });
+  });
+}
+
+// Amaury, 2026-09-27: raw cents accompany the French `…f` strings and are the
+// ones to use. Parsing the prose loses the thousands separator.
+void _amountFromApi() {
+  group('amountFromApi', () {
+    tearDown(() => Intl.defaultLocale = 'fr');
+
+    // `NumberFormat.currency` separates the amount from the symbol with a
+    // non-breaking space, so compare with ordinary spaces.
+    String plain(String text) => text.replaceAll(' ', ' ');
+
+    test('prefers raw cents over the formatted string', () {
+      Intl.defaultLocale = 'es';
+      final text = amountFromApi(
+        {'price': 4000, 'pricef': 'WRONG'},
+        centsKeys: const ['total', 'price'],
+        formattedKeys: const ['totalf', 'pricef'],
+      );
+      // Proves the cents won: the formatted string would have read "WRONG".
+      expect(plain(text), '40,00 €');
+    });
+
+    test('formats the cents in the app language', () {
+      Intl.defaultLocale = 'en';
+      final text = amountFromApi(
+        {'price': 4000},
+        centsKeys: const ['price'],
+        formattedKeys: const ['pricef'],
+      );
+      expect(plain(text), contains('40.00'));
+    });
+
+    test('a large amount keeps its thousands separator', () {
+      Intl.defaultLocale = 'en';
+      final text = amountFromApi(
+        {'price': 1234567},
+        centsKeys: const ['price'],
+        formattedKeys: const ['pricef'],
+      );
+      expect(plain(text), contains('12,345.67'));
+    });
+
+    test('falls back to the formatted string when cents are absent', () {
+      Intl.defaultLocale = 'fr';
+      final text = amountFromApi(
+        {'pricef': '40,00 €'},
+        centsKeys: const ['total', 'price'],
+        formattedKeys: const ['totalf', 'pricef'],
+      );
+      expect(text, '40,00 €');
+    });
+
+    test('a null price does not read as zero', () {
+      final text = amountFromApi(
+        {'price': null, 'pricef': '8,00 €'},
+        centsKeys: const ['price'],
+        formattedKeys: const ['pricef'],
+      );
+      expect(text, '8,00 €');
+    });
+
+    test('an empty row yields an empty string', () {
+      expect(
+        amountFromApi(
+          const {},
+          centsKeys: const ['price'],
+          formattedKeys: const ['pricef'],
+        ),
+        '',
+      );
     });
   });
 }

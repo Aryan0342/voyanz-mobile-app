@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:voyanz/core/config/api_endpoints.dart';
 import 'package:voyanz/features/professionals/models/professional_profile.dart';
+import 'package:voyanz/core/network/api_exception.dart';
 
 class ProfessionalAccountDataSource {
   final Dio _dio;
@@ -52,9 +53,16 @@ class ProfessionalAccountDataSource {
     if (err == null || err == false || err == 0) return;
 
     if (err is Map<String, dynamic>) {
+      final key = err['key']?.toString();
+      final rawCode = err['code'];
       final message =
-          err['message']?.toString() ?? err['key']?.toString() ?? 'API error';
-      throw Exception(message);
+          err['message']?.toString() ?? key ?? 'API error';
+      // Carry the key and code: the message is prose and cannot be matched on.
+      throw ApiException(
+        message,
+        key: key,
+        code: rawCode is int ? rawCode : int.tryParse('$rawCode'),
+      );
     }
 
     throw Exception(err.toString());
