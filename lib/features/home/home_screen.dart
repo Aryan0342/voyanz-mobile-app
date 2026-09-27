@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
+import 'package:voyanz/features/account/data/account_repository.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
@@ -370,14 +371,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
 
+    final previousPhone = (user?.phone ?? '').toString().trim();
+    final newPhone = phoneCtrl.text.trim();
+
     try {
-      await ref.read(accountRepositoryProvider).updateAccount(user.coId, {
-        'co_firstname': firstNameCtrl.text.trim(),
-        'co_name': lastNameCtrl.text.trim(),
-        'co_mobile1': phoneCtrl.text.trim(),
-        if (user.isProfessional == true && siretCtrl.text.trim().isNotEmpty)
-          'co_siret': siretCtrl.text.trim(),
-      });
+      final response = await ref
+          .read(accountRepositoryProvider)
+          .updateAccount(user.coId, {
+            'co_firstname': firstNameCtrl.text.trim(),
+            'co_name': lastNameCtrl.text.trim(),
+            'co_mobile1': newPhone,
+            if (user.isProfessional == true && siretCtrl.text.trim().isNotEmpty)
+              'co_siret': siretCtrl.text.trim(),
+          });
+      // P4: changing a professional's mobile requires SMS verification again,
+      // and until it is done the profile is absent from the catalogue. The
+      // response is the only place the server says so.
+      final needsReverification =
+          mobileReverificationRequired(response) && newPhone != previousPhone;
 
       if (user.isProfessional == true && descCtrl.text.trim().isNotEmpty) {
         await ref.read(accountRepositoryProvider).updateProDescription(
@@ -391,8 +402,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t.profileUpdated),
-          backgroundColor: AppColors.online,
+          content: Text(
+            needsReverification
+                ? t.mobileReverificationNeeded
+                : t.profileUpdated,
+          ),
+          backgroundColor: needsReverification
+              ? AppColors.warning
+              : AppColors.online,
+          duration: Duration(seconds: needsReverification ? 8 : 4),
         ),
       );
     } catch (e) {
@@ -784,6 +802,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         title: t.myProfile,
                         subtitle: t.catalogueChecklist,
                         onTap: () => context.push('/professional-profile'),
+                      ),
+                      const SizedBox(height: 10),
+                      // The dashboard only lists the five most recent sessions,
+                      // and the professional tab bar has no room for history,
+                      // so this is the way into the full list (spec 8.7).
+                      _ProfileTile(
+                        icon: Icons.history,
+                        title: t.sessionHistory,
+                        subtitle: t.pastConsultations,
+                        onTap: () => context.push('/history'),
                       ),
                     ],
                     const SizedBox(height: 10),

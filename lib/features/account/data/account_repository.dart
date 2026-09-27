@@ -30,3 +30,20 @@ class AccountRepository {
   Future<void> uploadProfileImage(String coId, String dataUri) =>
       _ds.uploadProfileImage(coId: coId, dataUri: dataUri);
 }
+
+/// True when the server asks for the mobile number to be verified again after
+/// a change (contract P4: professionals only).
+///
+/// Unverified mobile keeps a professional out of the catalogue, so this cannot
+/// be ignored: the response is the only place it is reported.
+bool mobileReverificationRequired(Map<String, dynamic> response) {
+  bool flagged(dynamic value) =>
+      value == true || value == 1 || value == '1' || value == 'true';
+
+  if (flagged(response['mobile_reverification_required'])) return true;
+  final data = response['data'];
+  if (data is Map && flagged(data['mobile_reverification_required'])) {
+    return true;
+  }
+  return false;
+}

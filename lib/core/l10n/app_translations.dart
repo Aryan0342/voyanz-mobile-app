@@ -397,6 +397,15 @@ class AppTranslations {
     'This list is not available yet. Your current choices are kept.',
     'Esta lista aún no está disponible. Se conservan tus selecciones actuales.',
   );
+  /// Shown after a professional changes their mobile number: the server
+  /// requires the new number to be verified by SMS again (contract P4), and an
+  /// unverified number keeps the profile out of the catalogue.
+  String get mobileReverificationNeeded => _l(
+    "Numéro enregistré. Il doit être vérifié par SMS à nouveau : sans cela votre profil n'apparaît pas dans le catalogue.",
+    'Number saved. It has to be verified by SMS again: until then your profile does not appear in the catalogue.',
+    'Número guardado. Debe verificarse por SMS de nuevo: hasta entonces tu perfil no aparece en el catálogo.',
+  );
+
   String get profilePhoto =>
       _l('Photo de profil', 'Profile photo', 'Foto de perfil');
   String get choosePhoto =>

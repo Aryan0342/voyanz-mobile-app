@@ -97,8 +97,17 @@ final routerProvider = Provider<RouterConfig<RouteMatchList>>((ref) {
             ),
             GoRoute(
               path: '/history',
-              builder: (context, state) =>
-                  const HistoryScreen(isProfessional: false),
+              // A professional's history comes from a different endpoint
+              // (GET /web/1.0/professional/history, spec 8.7), so the screen
+              // has to follow the signed-in role: hardcoding the customer mode
+              // served a professional the wrong endpoint.
+              builder: (context, state) {
+                final isPro = ProviderScope.containerOf(context)
+                    .read(authStateProvider)
+                    .valueOrNull
+                    ?.isProfessional;
+                return HistoryScreen(isProfessional: isPro ?? false);
+              },
             ),
             GoRoute(
               path: '/reviews',
