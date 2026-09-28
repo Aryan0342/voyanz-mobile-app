@@ -194,7 +194,7 @@ class ReviewsHistoryRepository {
     return postReview({
       'co_id_professional': coIdProfessional,
       'co_id_customer': coIdCustomer,
-      'rv_ispro': 1,
+      'rv_ispro': true,
       'rv_text': text,
     });
   }

@@ -1073,11 +1073,21 @@ String _channelLabel(String raw, dynamic t) {
   }
 }
 
-/// `di_how` arrives as a list, occasionally as a single string.
+/// `di_how` arrives as a list, occasionally as a single string, and on two
+/// legacy rows as an object `{"chat": true, "audio": true, "video": true}`.
+/// Channels combine; `['period']` and an empty list both mean every type.
 List<String> _extractHowValues(dynamic raw) {
   if (raw is List) {
     return raw
         .map((e) => e.toString().trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+  if (raw is Map) {
+    // Without this the whole map stringifies into one nonsense channel.
+    return raw.entries
+        .where((e) => e.value == true || e.value == 1 || e.value == '1')
+        .map((e) => e.key.toString().trim().toLowerCase())
         .where((e) => e.isNotEmpty)
         .toList();
   }

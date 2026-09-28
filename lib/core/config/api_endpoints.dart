@@ -6,6 +6,11 @@ class ApiEndpoints {
   static const String login = '/api/1.0/login';
   static const String forgetPassword = '/api/1.0/forgetpassword';
   static const String userInfos = '/web/1.0/user/infos';
+  /// The eleven account fields `user/infos` does not return (added
+  /// 2026-09-28): sex, birthday, country, mobile, legal structure, SIRET,
+  /// IBAN, address, zip, city. An empty date comes back as null.
+  static const String professionalAccountDetails =
+      '/web/1.0/professional/account-details';
 
   // ── Account ────────────────────────────────────────────────────────────
   static const String createAccount = '/web/1.0/account';

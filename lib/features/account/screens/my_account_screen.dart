@@ -7,7 +7,6 @@ import 'package:voyanz/core/l10n/app_translations.dart';
 import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/core/theme/widgets.dart';
-import 'package:voyanz/core/utils/date_utils.dart';
 import 'package:voyanz/features/account/data/account_repository.dart';
 import 'package:voyanz/features/account/providers/account_provider.dart';
 import 'package:voyanz/features/auth/providers/auth_provider.dart';
@@ -44,6 +43,7 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
   String? _legalStructure;
 
   bool _loading = true;
+  bool _detailsUnavailable = false;
   bool _saving = false;
   String? _loadError;
   String _initialMobile = '';
@@ -84,9 +84,27 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
   /// account record.
   Future<void> _load() async {
     try {
-      final data = await ref.read(accountRepositoryProvider).getUserInfos();
+      final repo = ref.read(accountRepositoryProvider);
+      final data = await repo.getUserInfos();
+      // The eleven fields `user/infos` omits come from their own endpoint. If
+      // it fails the form still opens -- nothing prefills, and the notice
+      // below explains why rather than silently showing blanks as if real.
+      Map<String, dynamic> details = const {};
+      var detailsFailed = false;
+      try {
+        details = await repo.getAccountDetails();
+      } catch (_) {
+        detailsFailed = true;
+      }
       if (!mounted) return;
-      String field(String key) => (data[key] ?? '').toString().trim();
+      String field(String key) {
+        // `details` wins: it is the endpoint that actually carries these.
+        final v = details[key] ?? data[key];
+        // An emptied date arrives as null, which must read as empty, not
+        // as the string "null".
+        if (v == null) return '';
+        return v.toString().trim();
+      }
 
       _firstName.text = field('co_firstname');
       _lastName.text = field('co_name');
@@ -130,6 +148,7 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
         _legalStructure = structure.isEmpty
             ? null
             : (structure == 'company' ? 'company' : 'individual');
+        _detailsUnavailable = detailsFailed;
         _loading = false;
       });
     } catch (e) {
@@ -237,6 +256,11 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
       await ref.read(authStateProvider.notifier).fetchUser();
       _initialMobile = _mobile.text.trim();
       _loaded.addAll(current);
+      // The PUT merges and ignores an empty string, so clearing a field does
+      // not clear it. Re-read rather than let the form claim otherwise.
+      if (current.values.any((v) => v.isEmpty)) {
+        await _load();
+      }
       _toast(
         needsReverification ? t.mobileReverificationNeeded : t.accountUpdated,
         error: needsReverification,
@@ -275,17 +299,18 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: Text(
-                      t.accountPartialLoadNotice,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        height: 1.4,
-                        color: AppColors.textMuted,
+                  if (_detailsUnavailable)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Text(
+                        t.accountPartialLoadNotice,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          height: 1.4,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ),
-                  ),
                   _Section(
                     title: t.identitySection,
                     children: [
@@ -436,7 +461,10 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
       'female': t.female,
       'na': t.other,
     };
-    return Row(
+    // Label above the chips, like every other field: side by side, the label
+    // ended up vertically centred against a two-line wrap.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           t.gender,
@@ -445,10 +473,12 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
             color: AppColors.textMuted,
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
           child: Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: options.entries
                 .map(
                   (entry) => ChoiceChip(

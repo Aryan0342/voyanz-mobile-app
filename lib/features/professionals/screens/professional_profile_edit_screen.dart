@@ -603,9 +603,10 @@ class _ChipSection extends ConsumerWidget {
   });
 
   /// The chip text. Languages are named from their ISO code rather than the
-  /// server label, because that translation is wrong for German: `li_key` "de"
-  /// comes back labelled "From" in English and "De" in French and Spanish
-  /// (observed 2026-09-27), while `li_val` correctly says "Allemand".
+  /// server label. The server's labels were wrong for German ("de" came back
+  /// as "From" in English) and were fixed on 2026-09-28; naming them locally
+  /// keeps this screen consistent with the filter chips on the directory,
+  /// which already name languages this way, and independent of the label.
   String _labelOf(CatalogItem item, AppTranslations t, String language) {
     if (isLanguages) return t.languageLabel(item.key);
     return item.labelFor(language);

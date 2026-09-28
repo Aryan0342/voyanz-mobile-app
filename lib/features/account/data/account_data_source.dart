@@ -32,6 +32,20 @@ class AccountDataSource {
     return {};
   }
 
+  /// The fields `user/infos` omits. Returns an empty map when the endpoint
+  /// is unavailable, so an older server just means nothing prefills.
+  Future<Map<String, dynamic>> getAccountDetails() async {
+    final response = await _dio.get(ApiEndpoints.professionalAccountDetails);
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      _throwIfApiError(body);
+      final data = body['data'];
+      if (data is Map<String, dynamic>) return data;
+      return body;
+    }
+    return {};
+  }
+
   Future<Map<String, dynamic>> updateAccount({
     required String coId,
     required Map<String, dynamic> body,
