@@ -1,94 +1,76 @@
-import 'dart:async';
-
-import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:voyanz/core/network/account_requirement_interceptor.dart';
+import 'package:voyanz/features/professionals/data/professional_account_data_source.dart';
+import 'package:voyanz/features/professionals/data/professional_account_repository.dart';
+import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
+import 'package:voyanz/features/professionals/screens/professional_cgs_gate.dart';
+
+/// Counts acceptances. The server saw two POST /accept-cgs seven seconds
+/// after a login on 2026-09-28, which is one tap too many.
+class _CountingRepository extends ProfessionalAccountRepository {
+  _CountingRepository() : super(_UnusedDataSource());
+  int accepts = 0;
+
+  @override
+  Future<void> acceptCgs() async {
+    accepts++;
+    // Long enough that a second tap lands while the first is in flight.
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+}
+
+class _UnusedDataSource implements ProfessionalAccountDataSource {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('the gate must not reach the network here');
+}
 
 void main() {
-  group('AccountRequirement.fromKeyOrCode', () {
-    test('recognises the CGS refusal by key and by code', () {
-      expect(
-        AccountRequirement.fromKeyOrCode('cgs_acceptance_required', null),
-        AccountRequirement.cgsAcceptance,
-      );
-      expect(
-        AccountRequirement.fromKeyOrCode(null, 1073),
-        AccountRequirement.cgsAcceptance,
-      );
-    });
+  late _CountingRepository repo;
 
-    test('recognises the verification refusals', () {
-      expect(
-        AccountRequirement.fromKeyOrCode('email_not_verified', null),
-        AccountRequirement.emailNotVerified,
-      );
-      expect(
-        AccountRequirement.fromKeyOrCode(null, 1031),
-        AccountRequirement.smsNotVerified,
-      );
-    });
+  Future<void> pumpGate(WidgetTester tester) async {
+    repo = _CountingRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          professionalAccountRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: const MaterialApp(home: Scaffold(body: ProfessionalCgsGate())),
+      ),
+    );
+    await tester.pump();
+  }
 
-    test('an unrelated error is not a requirement', () {
-      expect(AccountRequirement.fromKeyOrCode('wrong_password', 1004), isNull);
-      expect(AccountRequirement.fromKeyOrCode(null, null), isNull);
-    });
+  testWidgets('nothing is accepted just by showing the gate', (tester) async {
+    await pumpGate(tester);
+    expect(repo.accepts, 0);
   });
 
-  // The interceptor is what opens the gate: the profile's own `cgs_accepted`
-  // was observed still reporting `true` while the account was gated
-  // (2026-09-27), so the refusal must be the trigger.
-  group('AccountRequirementInterceptor', () {
-    late List<AccountRequirement> seen;
+  testWidgets('the button does nothing until the box is ticked',
+      (tester) async {
+    await pumpGate(tester);
+    final button = find.byType(FilledButton);
+    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    await tester.tap(button);
+    await tester.pump();
+    expect(repo.accepts, 0);
+  });
 
-    setUp(() {
-      seen = [];
-      AccountRequirementInterceptor.onRequirement = (r, _) => seen.add(r);
-    });
+  testWidgets('two taps in one frame accept exactly once', (tester) async {
+    await pumpGate(tester);
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pump();
 
-    tearDown(() => AccountRequirementInterceptor.onRequirement = null);
+    final button = find.byType(FilledButton);
+    expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
 
-    Response<dynamic> responseWith(dynamic body) => Response(
-      requestOptions: RequestOptions(path: '/web/1.0/professional/profile'),
-      data: body,
-      statusCode: 200,
-    );
+    // Both taps dispatch before the rebuild that disables the button.
+    await tester.tap(button);
+    await tester.tap(button, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
-    test('reports a refusal delivered as a 200 body', () {
-      AccountRequirementInterceptor().onResponse(
-        responseWith({
-          'err': {'key': 'cgs_acceptance_required', 'code': 1073},
-        }),
-        ResponseInterceptorHandler(),
-      );
-      expect(seen, [AccountRequirement.cgsAcceptance]);
-    });
-
-    test('reports a refusal delivered as an error', () {
-      // Passing the error along rejects the handler's future by design; the
-      // rejection is the transport's business, the callback is ours.
-      runZonedGuarded(() {
-        AccountRequirementInterceptor().onError(
-          DioException(
-            requestOptions: RequestOptions(path: '/web/1.0/balance'),
-            response: responseWith({
-              'err': {'key': 'cgs_acceptance_required', 'code': 1073},
-            }),
-          ),
-          ErrorInterceptorHandler(),
-        );
-      }, (_, __) {});
-      expect(seen, [AccountRequirement.cgsAcceptance]);
-    });
-
-    test('stays silent on a healthy response', () {
-      AccountRequirementInterceptor().onResponse(
-        responseWith({
-          'data': {'cgs_accepted': true},
-          'err': null,
-        }),
-        ResponseInterceptorHandler(),
-      );
-      expect(seen, isEmpty);
-    });
+    expect(repo.accepts, 1);
   });
 }

@@ -241,7 +241,11 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
 
     if (body.isEmpty) return _toast(t.nothingToSave);
 
-    setState(() => _saving = true);
+    // Disabling the button only lands on the next rebuild, so two taps in
+    // one frame would both send.
+    if (_saving) return;
+    _saving = true;
+    setState(() {});
     try {
       final response = await ref
           .read(accountRepositoryProvider)

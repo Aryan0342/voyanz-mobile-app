@@ -172,7 +172,11 @@ class _ProfessionalProfileEditScreenState
       );
     }
 
-    setState(() => _saving = true);
+    // Disabling the button only lands on the next rebuild, so two taps in
+    // one frame would both send.
+    if (_saving) return;
+    _saving = true;
+    setState(() {});
     try {
       // Every field, every time: the server replaces the whole profile.
       await ref.read(accountRepositoryProvider).updateProDescription(coId, {

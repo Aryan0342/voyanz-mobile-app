@@ -23,8 +23,13 @@ class _ProfessionalCgsGateState extends ConsumerState<ProfessionalCgsGate> {
   bool _submitting = false;
 
   Future<void> _submit() async {
+    // Re-entry guard. Disabling the button only takes effect on the next
+    // rebuild, so two taps dispatched in the same frame both get here and
+    // accept twice -- which is what the server saw on 2026-09-28.
+    if (_submitting) return;
+    _submitting = true;
     final t = ref.read(translationsProvider);
-    setState(() => _submitting = true);
+    setState(() {});
     try {
       await ref.read(professionalAccountRepositoryProvider).acceptCgs();
       // Clear the refusal that opened this gate, then reload the profile.
