@@ -6,6 +6,10 @@ import 'package:voyanz/core/providers/language_provider.dart';
 import 'package:voyanz/core/theme/app_colors.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 import 'package:voyanz/features/professionals/providers/cgs_provider.dart';
+import 'package:voyanz/features/reviews/providers/reviews_provider.dart';
+import 'package:voyanz/features/professionals/providers/presence_provider.dart';
+import 'package:voyanz/features/professionals/providers/professionals_provider.dart';
+import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 
 /// Shown in place of the professional space while the updated professional
 /// CGS have not been accepted (contract P3), the same way voyanz.com blocks
@@ -32,9 +36,19 @@ class _ProfessionalCgsGateState extends ConsumerState<ProfessionalCgsGate> {
     setState(() {});
     try {
       await ref.read(professionalAccountRepositoryProvider).acceptCgs();
-      // Clear the refusal that opened this gate, then reload the profile.
+      // Clear the refusal that opened this gate, then refetch everything it
+      // blocked. Every professional-side call made while the gate was up was
+      // refused with 1073, and those providers keep that failure: the
+      // dashboard showed a 0.0 rating after acceptance because the reviews it
+      // averages were never asked for again.
       ref.read(cgsRequiredProvider.notifier).state = false;
       ref.invalidate(professionalProfileProvider);
+      ref.invalidate(professionalAccountProvider);
+      ref.invalidate(professionalReviewsProvider);
+      ref.invalidate(professionalHistoryProvider);
+      ref.invalidate(professionalPresenceProvider);
+      ref.invalidate(professionalDisponibilitiesProvider);
+      ref.invalidate(walletBalanceProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
