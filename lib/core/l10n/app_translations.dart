@@ -561,6 +561,25 @@ class AppTranslations {
       _l('Choisir une photo', 'Choose a photo', 'Elegir una foto');
   String get photoUpdated =>
       _l('Photo mise à jour.', 'Photo updated.', 'Foto actualizada.');
+  /// Dashboard banner shown while the catalogue checklist is unfinished.
+  String get completeYourProfile => _l(
+    'Complétez votre profil',
+    'Complete your profile',
+    'Completa tu perfil',
+  );
+  String completeProfileProgress(int percent) => _l(
+    '$percent % terminé',
+    '$percent% complete',
+    '$percent % completado',
+  );
+  String get completeProfileWhy => _l(
+    "Un profil complet apparaît dans le catalogue et rassure vos clients.",
+    'A complete profile appears in the catalogue and reassures your clients.',
+    'Un perfil completo aparece en el catálogo y da confianza a tus clientes.',
+  );
+  String get completeProfileCta =>
+      _l('Compléter', 'Complete it', 'Completar');
+
   String get catalogueChecklist => _l(
     'Pour apparaître au catalogue',
     'To appear in the catalogue',

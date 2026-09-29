@@ -25,7 +25,10 @@ class _ProfessionalAvailabilityScreenState
 
   Future<void> _showAddSlotDialog() => _showSlotDialog();
 
-  Future<void> _showSlotDialog({String? diId, AvailabilityRule? initial}) async {
+  Future<void> _showSlotDialog({
+    String? diId,
+    AvailabilityRule? initial,
+  }) async {
     final t = ref.read(translationsProvider);
 
     // The editor owns its own state and controllers (contract §10.4): the rule
@@ -43,9 +46,9 @@ class _ProfessionalAvailabilityScreenState
             .read(professionalsRepositoryProvider)
             .updateDisponibility(diId, payload);
         ref.invalidate(professionalDisponibilitiesPayloadProvider);
-      // §10.4 side effect: saving a rule makes the server recalculate
-      // co_online straight away, so the dashboard switch must be resynced.
-      ref.invalidate(professionalProfileProvider);
+        // §10.4 side effect: saving a rule makes the server recalculate
+        // co_online straight away, so the dashboard switch must be resynced.
+        ref.invalidate(professionalProfileProvider);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -61,7 +64,9 @@ class _ProfessionalAvailabilityScreenState
       // Show it straight away; the entry is dropped once the same rule comes
       // back from the server.
       if (mounted) {
-        setState(() => _pendingCreatedItems.add(Map<String, dynamic>.from(payload)));
+        setState(
+          () => _pendingCreatedItems.add(Map<String, dynamic>.from(payload)),
+        );
       }
 
       ref.invalidate(professionalDisponibilitiesPayloadProvider);
@@ -359,62 +364,74 @@ class _ProfessionalAvailabilityScreenState
             (sum, row) => sum + row.slots.length,
           );
 
-          return ListView(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 110),
-            children: [
-              SoftEntrance(
-                duration: const Duration(milliseconds: 300),
-                offset: const Offset(0, 14),
-                child: _AvailabilityHero(
-                  dayCount: rows.length,
-                  slotCount: totalSlots,
-                  t: t,
-                ),
+          // Every other list in the app refreshes by pulling; this one only
+          // had the toolbar button.
+          return RefreshIndicator(
+            color: AppColors.mediumPurple,
+            backgroundColor: AppColors.surfaceCard,
+            onRefresh: () async {
+              ref.invalidate(professionalDisponibilitiesPayloadProvider);
+              await ref.read(professionalDisponibilitiesPayloadProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-              const SizedBox(height: 24),
-              if (rows.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 12),
-                  child: Text(
-                    t.weeklySlots,
-                    style: GoogleFonts.jost(
-                      color: AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              if (rows.isEmpty)
+              padding: EdgeInsets.fromLTRB(20, topContentInset, 20, 110),
+              children: [
                 SoftEntrance(
-                  duration: const Duration(milliseconds: 360),
-                  offset: const Offset(0, 12),
-                  child: _EmptyAvailabilityCard(
-                    onAdd: _showAddSlotDialog,
+                  duration: const Duration(milliseconds: 300),
+                  offset: const Offset(0, 14),
+                  child: _AvailabilityHero(
+                    dayCount: rows.length,
+                    slotCount: totalSlots,
                     t: t,
                   ),
                 ),
-              ...rows.map((row) {
-                final index = rows.indexOf(row);
-                return SoftEntrance(
-                  duration: Duration(milliseconds: 340 + (index * 30)),
-                  offset: const Offset(0, 10),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _DayCard(
-                      dayTitle: _formatDayTitle(row.day, t),
-                      day: row.day,
-                      slots: row.slots,
-                      busy: _submitting,
-                      t: t,
-                      onEdit: (slot) => _editSlot(row.day, slot),
-                      onDelete: _deleteSlot,
+                const SizedBox(height: 24),
+                if (rows.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 12),
+                    child: Text(
+                      t.weeklySlots,
+                      style: GoogleFonts.jost(
+                        color: AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
-                );
-              }),
-            ],
+                if (rows.isEmpty)
+                  SoftEntrance(
+                    duration: const Duration(milliseconds: 360),
+                    offset: const Offset(0, 12),
+                    child: _EmptyAvailabilityCard(
+                      onAdd: _showAddSlotDialog,
+                      t: t,
+                    ),
+                  ),
+                ...rows.map((row) {
+                  final index = rows.indexOf(row);
+                  return SoftEntrance(
+                    duration: Duration(milliseconds: 340 + (index * 30)),
+                    offset: const Offset(0, 10),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _DayCard(
+                        dayTitle: _formatDayTitle(row.day, t),
+                        day: row.day,
+                        slots: row.slots,
+                        busy: _submitting,
+                        t: t,
+                        onEdit: (slot) => _editSlot(row.day, slot),
+                        onDelete: _deleteSlot,
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
           );
         },
       ),
@@ -781,9 +798,7 @@ class _SlotRow extends StatelessWidget {
           // A rule with `di_include: false` blocks these hours rather than
           // offering them, so it must not read like an available slot.
           Icon(
-            slot.include
-                ? Icons.access_time_rounded
-                : Icons.block_rounded,
+            slot.include ? Icons.access_time_rounded : Icons.block_rounded,
             color: slot.include ? accent : AppColors.error,
             size: 18,
           ),
@@ -817,9 +832,7 @@ class _SlotRow extends StatelessWidget {
                 else if (slot.channels.isNotEmpty &&
                     !slot.channels.contains('period'))
                   Text(
-                    slot.channels
-                        .map((c) => _channelLabel(c, t))
-                        .join(' · '),
+                    slot.channels.map((c) => _channelLabel(c, t)).join(' · '),
                     style: GoogleFonts.montserrat(
                       fontSize: 11,
                       color: AppColors.textMuted,
@@ -1125,7 +1138,8 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
                 timeLabel: timeLabel,
                 channels: _extractHowValues(item['di_how']),
                 diId: diId,
-                include: item['di_include'] != false &&
+                include:
+                    item['di_include'] != false &&
                     item['di_include'] != 0 &&
                     item['di_include'] != '0',
                 what: item['di_what']?.toString() ?? '',
@@ -1134,7 +1148,8 @@ List<_AvailabilityRow> _normalizeDisponibilities(List<dynamic> items) {
                     .where((d) => d >= 1 && d <= 7)
                     .toList(),
                 how: _extractHowValues(item['di_how']),
-                dateFrom: item['di_date_from']?.toString().split(' ').first ?? '',
+                dateFrom:
+                    item['di_date_from']?.toString().split(' ').first ?? '',
                 dateTo: item['di_date_to']?.toString().split(' ').first ?? '',
               ),
             ],
@@ -1355,8 +1370,6 @@ String _formatDayTitle(String rawDay, AppTranslations t) {
   final dd = date.day.toString().padLeft(2, '0');
   return '$weekday  $dd/$mm/${date.year}';
 }
-
-
 
 int _toBackendWeekday(String englishDay) {
   const map = {

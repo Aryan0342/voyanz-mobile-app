@@ -21,6 +21,7 @@ import 'package:voyanz/features/professionals/providers/presence_provider.dart';
 import 'package:voyanz/features/professionals/providers/professional_account_provider.dart';
 import 'package:voyanz/features/professionals/screens/professional_cgs_gate.dart';
 import 'package:voyanz/features/professionals/providers/cgs_provider.dart';
+import 'package:voyanz/features/professionals/widgets/profile_completion_banner.dart';
 
 /// Dashboard screen for professionals showing upcoming sessions and stats.
 class ProfessionalDashboardScreen extends ConsumerStatefulWidget {
@@ -164,6 +165,17 @@ class _ProfessionalDashboardScreenState
                     onOpenChat: () => context.go('/chat'),
                   ),
                 ),
+              ),
+            ),
+
+            // ── Catalogue checklist ──
+            // Straight under the welcome card, where the website puts it.
+            // The banner removes itself once the server calls the profile
+            // complete, so no empty space is reserved for it.
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: ProfileCompletionBanner(),
               ),
             ),
 
