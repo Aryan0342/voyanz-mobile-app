@@ -348,7 +348,9 @@ class AppTranslations {
   );
   String get settings => _l('Paramètres', 'Settings', 'Ajustes');
   // ── Professional public profile (contract P1) ───────────────────────────────
-  String get myProfile => _l('Mon profil', 'My profile', 'Mi perfil');
+  /// Sits directly under "My account" in the profile menu; both reading
+  /// "My ..." made the two hard to tell apart at a glance.
+  String get myProfile => _l('Profil', 'Profile', 'Perfil');
   String get yourProfile =>
       _l('Votre profil', 'Your profile', 'Tu perfil');
   String get displayedName =>
