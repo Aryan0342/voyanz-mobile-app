@@ -16,6 +16,7 @@ import 'package:voyanz/features/wallet/models/topup_pack.dart';
 import 'package:voyanz/features/wallet/providers/wallet_provider.dart';
 import 'package:voyanz/core/config/stripe_config.dart';
 import 'package:voyanz/core/utils/money.dart';
+import 'package:flutter/foundation.dart';
 
 class TopUpScreen extends ConsumerWidget {
   const TopUpScreen({super.key});
@@ -531,6 +532,28 @@ class _PaymentLoadingCard extends StatelessWidget {
   }
 }
 
+/// Exposed for tests.
+@visibleForTesting
+String? promoPercentForTest(Map<String, dynamic> r) => _promoPercent(r);
+
+/// Reads the discount out of a `checkpromocode` reply. The payload nests it
+/// under `promo`, and older replies spell it differently.
+String? _promoPercent(Map<String, dynamic> result) {
+  final promo = result['promo'] ?? result['data'] ?? result;
+  if (promo is! Map) return null;
+  for (final key in const ['po_purcent', 'po_percent', 'percent', 'discount']) {
+    final value = promo[key];
+    if (value == null) continue;
+    final number = value is num ? value : num.tryParse('$value');
+    if (number != null && number > 0) {
+      return number == number.roundToDouble()
+          ? '${number.round()}'
+          : '$number';
+    }
+  }
+  return null;
+}
+
 class _PackCard extends StatelessWidget {
   final TopUpPack pack;
   final AppTranslations t;
@@ -748,15 +771,20 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                   setState(() => _loading = true);
                   try {
                     final repo = ref.read(walletRepositoryProvider);
-                    await repo.validatePromoCode(_controller.text.trim());
-                    ref.read(promoCodeProvider.notifier).state = _controller
-                        .text
-                        .trim();
+                    final code = _controller.text.trim();
+                    final result = await repo.validatePromoCode(code);
+                    ref.read(promoCodeProvider.notifier).state = code;
                     if (context.mounted) {
+                      // The discount comes from the server (`po_purcent`).
+                      // Passing an empty string here rendered the confirmation
+                      // as "Code X applied: %", with a bare percent sign.
+                      final percent = _promoPercent(result);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            widget.t.promoApplied(_controller.text.trim(), ''),
+                            percent == null
+                                ? widget.t.promoAppliedPlain(code)
+                                : widget.t.promoApplied(code, percent),
                           ),
                           backgroundColor: AppColors.success,
                         ),
@@ -764,9 +792,11 @@ class _PromoCodeSectionState extends ConsumerState<_PromoCodeSection> {
                     }
                   } catch (e) {
                     if (context.mounted) {
+                      // The server's reason is French prose ("Objet non
+                      // trouvé") and said nothing the user can act on.
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${widget.t.promoInvalid}: $e'),
+                          content: Text(widget.t.promoInvalid),
                           backgroundColor: AppColors.error,
                         ),
                       );

@@ -1490,6 +1490,12 @@ class AppTranslations {
     'Code $code applied: $discount%',
     'Código $code aplicado: $discount%',
   );
+  /// Used when the server confirms a code but names no discount.
+  String promoAppliedPlain(String code) => _l(
+    'Code $code appliqué',
+    'Code $code applied',
+    'Código $code aplicado',
+  );
   String get promoInvalid => _l(
     'Code promo invalide',
     'Invalid promo code',

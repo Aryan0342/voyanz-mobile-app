@@ -269,6 +269,11 @@ class _ProfessionalsListScreenState
         backgroundColor: AppColors.darkPurple,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        // The theme sets titleSpacing to 0, which suits a screen whose back
+        // button already indents the title. This one has no leading widget,
+        // so the title sat flush against the edge; 20 lines it up with the
+        // body below it.
+        titleSpacing: 20,
         title: Text(
           widget.favoritesOnly ? t.favoritesOnly : t.explore,
           style: GoogleFonts.jost(
