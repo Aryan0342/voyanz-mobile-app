@@ -798,7 +798,7 @@ class AppTranslations {
   );
   String get trustQualitySubtitle => _l(
     'Professionnels vérifiés et avis',
-    'Verified professionals and reviews',
+    'Verified psychics and reviews',
     'Profesionales verificados y reseñas',
   );
   String get sessionsLabel => _l('Sessions', 'Sessions', 'Sesiones');
@@ -836,7 +836,7 @@ class AppTranslations {
   );
   String get searchAdvisor => _l(
     'Rechercher des professionnels par nom ou spécialités',
-    'Search for professionals by name or specialties',
+    'Search psychics by name or specialty',
     'Buscar profesionales por nombre o especialidades',
   );
   String get search => _l('Rechercher', 'Search', 'Buscar');
@@ -892,7 +892,7 @@ class AppTranslations {
   );
   String get topProsReadyNow => _l(
     'Les meilleurs professionnels en ligne disponibles',
-    'Top online professionals ready now',
+    'Top psychics online right now',
     'Los mejores profesionales en línea disponibles',
   );
   String get noFeaturedAdvisors => _l(
@@ -1313,7 +1313,7 @@ class AppTranslations {
       _l('Choisir une session', 'Select a session', 'Seleccionar una sesión');
   String get noProfessionalsAvailable => _l(
     'Aucun professionnel disponible',
-    'No professionals available',
+    'No psychics available',
     'No hay profesionales disponibles',
   );
   String get noSessionsForProfessional => _l(

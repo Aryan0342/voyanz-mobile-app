@@ -10,7 +10,23 @@ class TokenStorage {
   TokenStorage({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
 
-  Future<String?> get accessToken => _storage.read(key: _accessKey);
+  /// The last access token this process read or wrote.
+  ///
+  /// Secure storage is async, but `Image.network` needs its headers when the
+  /// widget builds. Every authenticated request already reads the token, so
+  /// this is warm by the time any image is rendered; it is only ever a cache
+  /// of what secure storage holds, never the source of truth.
+  static String? _cachedAccess;
+
+  /// Null until the first read or write, and after [clear].
+  static String? get cachedAccessToken => _cachedAccess;
+
+  Future<String?> get accessToken async {
+    final value = await _storage.read(key: _accessKey);
+    _cachedAccess = value;
+    return value;
+  }
+
   Future<String?> get refreshToken => _storage.read(key: _refreshKey);
 
   Future<void> saveTokens({
@@ -18,12 +34,14 @@ class TokenStorage {
     String? refreshToken,
   }) async {
     await _storage.write(key: _accessKey, value: accessToken);
+    _cachedAccess = accessToken;
     if (refreshToken != null) {
       await _storage.write(key: _refreshKey, value: refreshToken);
     }
   }
 
   Future<void> clear() async {
+    _cachedAccess = null;
     await _storage.deleteAll();
   }
 }

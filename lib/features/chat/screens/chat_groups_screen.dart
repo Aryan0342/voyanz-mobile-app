@@ -8,6 +8,7 @@ import 'package:voyanz/core/theme/app_gradients.dart';
 import 'package:voyanz/core/theme/widgets.dart';
 import 'package:voyanz/core/utils/string_utils.dart';
 import 'package:voyanz/features/chat/providers/chat_provider.dart';
+import 'package:voyanz/core/network/authenticated_image.dart';
 
 class ChatGroupsScreen extends ConsumerStatefulWidget {
   const ChatGroupsScreen({super.key});
@@ -355,6 +356,7 @@ class _ConversationCard extends ConsumerWidget {
                   ? ClipOval(
                       child: Image.network(
                         group.otherUserAvatar!,
+                        headers: imageAuthHeaders(group.otherUserAvatar!),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stack) => const Center(
                           child: Icon(
@@ -589,7 +591,11 @@ class _PinnedAvatar extends StatelessWidget {
                   decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: image != null
                       ? ClipOval(
-                          child: Image.network(image!, fit: BoxFit.cover),
+                          child: Image.network(
+                            image!,
+                            headers: imageAuthHeaders(image!),
+                            fit: BoxFit.cover,
+                          ),
                         )
                       : Icon(icon, color: AppColors.textPrimary, size: 26),
                 ),

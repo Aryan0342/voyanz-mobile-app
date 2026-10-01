@@ -10,7 +10,9 @@ class AccountRepository {
 
   Future<Map<String, dynamic>> getUserInfos() => _ds.getUserInfos();
 
-  Future<Map<String, dynamic>> getAccountDetails() => _ds.getAccountDetails();
+  Future<Map<String, dynamic>> getAccountDetails({
+    required bool isProfessional,
+  }) => _ds.getAccountDetails(isProfessional: isProfessional);
 
   Future<Map<String, dynamic>> updateAccount(
     String coId,

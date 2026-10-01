@@ -28,7 +28,9 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
   Map<int, int> _buildRatingBreakdown(List<Map<String, dynamic>> reviews) {
     final result = <int, int>{1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     for (final review in reviews) {
-      final value = _reviewRating(review).round();
+      final rating = _reviewRatingOrNull(review);
+      if (rating == null) continue;
+      final value = rating.round();
       if (value >= 1 && value <= 5) {
         result[value] = (result[value] ?? 0) + 1;
       }
@@ -545,19 +547,22 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
             final filteredItems = _selectedFilter == 'All'
                 ? validItems
                 : validItems.where((item) {
-                    final rating = _reviewRating(item);
+                    final rating = _reviewRatingOrNull(item);
+                    if (rating == null) return false;
                     final filterValue = int.tryParse(_selectedFilter) ?? 0;
                     return rating.round() == filterValue;
                   }).toList();
 
             final totalReviews = validItems.length;
-            final avgRating = totalReviews > 0
-                ? validItems.fold<double>(
-                        0,
-                        (sum, item) => sum + _reviewRating(item),
-                      ) /
-                      totalReviews
-                : 0;
+            // Only rated reviews count towards the average; a review with no
+            // rating is not a zero-star review.
+            final ratedValues = validItems
+                .map(_reviewRatingOrNull)
+                .whereType<double>()
+                .toList();
+            final avgRating = ratedValues.isEmpty
+                ? 0.0
+                : ratedValues.reduce((a, b) => a + b) / ratedValues.length;
             final breakdown = _buildRatingBreakdown(validItems);
 
             return RefreshIndicator(
@@ -1047,7 +1052,7 @@ class _ReviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(authStateProvider).valueOrNull;
-    final rating = _reviewRating(review);
+    final rating = _reviewRatingOrNull(review);
     final comment = _reviewText(review);
     final author = _reviewAuthor(
       review,
@@ -1072,25 +1077,28 @@ class _ReviewCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.star_rounded,
-                    size: 16,
-                    color: AppColors.gold,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    rating.toStringAsFixed(1),
-                    style: GoogleFonts.manrope(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+              // A professional's review of a client carries no rating, so
+              // showing a star at all would read as zero stars.
+              if (rating != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 16,
                       color: AppColors.gold,
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 4),
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           if (_reviewSubject(review).isNotEmpty) ...[
@@ -1132,11 +1140,15 @@ class _ReviewCard extends ConsumerWidget {
   }
 }
 
-double _reviewRating(Map<String, dynamic> review) {
-  return double.tryParse(
-        (review['rv_note'] ?? review['re_rating'] ?? '').toString(),
-      ) ??
-      0;
+/// A professional reviewing a client sends no `rv_note` (§11.1), so an
+/// absent rating means "not rated", not "rated zero". Counting those as zero
+/// dragged the average down and drew an empty five-star row on the card.
+double? _reviewRatingOrNull(Map<String, dynamic> review) {
+  final raw = review['rv_note'] ?? review['re_rating'];
+  if (raw == null) return null;
+  final value = raw is num ? raw.toDouble() : double.tryParse(raw.toString());
+  if (value == null || value <= 0) return null;
+  return value;
 }
 
 String _reviewText(Map<String, dynamic> review) {

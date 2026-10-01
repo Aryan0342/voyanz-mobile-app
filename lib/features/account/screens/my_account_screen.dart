@@ -89,20 +89,18 @@ class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
       // The eleven fields `user/infos` omits come from their own endpoint. If
       // it fails the form still opens -- nothing prefills, and the notice
       // below explains why rather than silently showing blanks as if real.
-      // `professional/account-details` is the professional's endpoint and
-      // answers `not_found` for a customer, so asking would be a request that
-      // could never succeed. Customers have no read endpoint for these fields
-      // yet, which is exactly what the notice below says.
+      // Each role has its own endpoint; the customer's carries no legal
+      // structure, SIRET or IBAN, which that form does not show anyway.
       final isProfessional =
           ref.read(authStateProvider).valueOrNull?.isProfessional == true;
       Map<String, dynamic> details = const {};
-      var detailsFailed = !isProfessional;
-      if (isProfessional) {
-        try {
-          details = await repo.getAccountDetails();
-        } catch (_) {
-          detailsFailed = true;
-        }
+      var detailsFailed = false;
+      try {
+        details = await repo.getAccountDetails(
+          isProfessional: isProfessional,
+        );
+      } catch (_) {
+        detailsFailed = true;
       }
       if (!mounted) return;
       String field(String key) {

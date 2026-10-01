@@ -21,6 +21,7 @@ import 'package:voyanz/features/auth/providers/auth_provider.dart';
 import 'package:voyanz/features/chat/providers/chat_messages_notifier.dart';
 import 'package:voyanz/features/sessions/models/session_status.dart';
 import 'package:voyanz/features/sessions/providers/sessions_provider.dart';
+import 'package:voyanz/core/network/authenticated_image.dart';
 
 String _resolveMediaUrl(String raw) {
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
@@ -782,6 +783,10 @@ class _MessageBubble extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(16),
                         child: Image.network(
                           imageUrl,
+                          // Required since 2026-09-29; without them the
+                          // endpoint returns a JSON token_mandatory error
+                          // and this renders as a broken image.
+                          headers: imageAuthHeaders(imageUrl),
                           fit: BoxFit.cover,
                           width: 220,
                           height: 160,

@@ -9,6 +9,12 @@ class ApiEndpoints {
   /// The eleven account fields `user/infos` does not return (added
   /// 2026-09-28): sex, birthday, country, mobile, legal structure, SIRET,
   /// IBAN, address, zip, city. An empty date comes back as null.
+  /// The customer's equivalent (added 2026-10-02). Same rules: an empty date
+  /// is null, a missing value is "". It carries no legal-structure, SIRET or
+  /// IBAN, which are professional-only.
+  static const String customerAccountDetails =
+      '/web/1.0/customer/account-details';
+
   static const String professionalAccountDetails =
       '/web/1.0/professional/account-details';
 
